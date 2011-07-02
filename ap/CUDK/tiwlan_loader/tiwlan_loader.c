@@ -38,7 +38,7 @@
 #include "ipc_sta.h"
 #include "WlanDrvCommon.h"
 
-#define TIWLAN_DRV_NAME "wl"
+#define TIWLAN_DRV_NAME "tiap"
 
 #ifndef WIFI_AP_DRIVER_PROP_NAME
 #define WIFI_AP_DRIVER_PROP_NAME            ""

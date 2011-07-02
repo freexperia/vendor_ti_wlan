@@ -56,7 +56,7 @@
 #include "DrvMain.h"
 #include "windows_types.h"
 
-#define TIWLAN_DRV_NAME    "wlan"
+#define TIWLAN_DRV_NAME    "tiwlan"
 #define DRIVERWQ_NAME      "tiwlan_wq"
 #define TIWLAN_DRV_IF_NAME TIWLAN_DRV_NAME"%d"
 

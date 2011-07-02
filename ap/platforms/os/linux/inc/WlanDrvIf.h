@@ -52,9 +52,9 @@
 #include "DrvMain.h"
 #include "windows_types.h"
 
-#define TIWLAN_DRV_NAME    "wl"
+#define TIWLAN_DRV_NAME    "tiap"
 #define TIWLAN_WQ_NAME     "tiwlan_wq"
-#define TIWLAN_DRV_IF_NAME TIWLAN_DRV_NAME"%d.1"
+#define TIWLAN_DRV_IF_NAME TIWLAN_DRV_NAME"%d"
 
 
 #ifdef TI_DBG

@@ -60,7 +60,7 @@
 #define CHK_NULL(p)    (p)
 #endif
 
-#define TIWLAN_DRV_NAME "wl0.1"
+#define TIWLAN_DRV_NAME "tiap0"
 #ifdef ANDROID
 #define SUPPL_IF_FILE "/data/misc/wifi/sockets/" TIWLAN_DRV_NAME
 #else

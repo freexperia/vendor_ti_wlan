@@ -86,31 +86,8 @@ static TWlanDrvIfObj *pDrvStaticHandle;
 static DECLARE_WAIT_QUEUE_HEAD(resume_wait);
 static atomic_t is_suspended = ATOMIC_INIT(0);
 
-/* Determine if the driver is able to handle a suspend / resume in the current state */
-static int can_handle_suspendresume(TWlanDrvIfObj *drv)
-{
-	int ret;
-
-	switch(drv->tCommon.eDriverState) {
-	case DRV_STATE_FAILED:
-	case DRV_STATE_IDLE:
-		ret = 0;
-		break;
-	default:
-		ret = 1;
-		break;
-	}
-	return ret;
-}
-
 int wlanDrvIf_Suspend(void)
 {
-	if (!can_handle_suspendresume(pDrvStaticHandle)) {
-		ti_dprintf (TIWLAN_LOG_ERROR, "wlanDrvIf_Suspend() Driver in state %d, lets suspend\n",
-		            pDrvStaticHandle->tCommon.eDriverState);
-		return 0;
-	}
-
 	if(drvMain_InsertAction (pDrvStaticHandle->tCommon.hDrvMain, ACTION_TYPE_SUSPEND) == TI_NOK) {
 		printk(KERN_WARNING "TIWLAN: Suspend failed\n");
 		return -EAGAIN;
@@ -123,11 +100,6 @@ int wlanDrvIf_Suspend(void)
 
 int wlanDrvIf_Resume(void)
 {
-	if (!can_handle_suspendresume(pDrvStaticHandle)) {
-		ti_dprintf (TIWLAN_LOG_ERROR, "wlanDrvIf_Resume() Driver in state %d, lets resume\n",
-		            pDrvStaticHandle->tCommon.eDriverState);
-		return 0;
-	}
 	atomic_set(&is_suspended, 0);
 	wake_up(&resume_wait);
 	drvMain_InsertAction (pDrvStaticHandle->tCommon.hDrvMain, ACTION_TYPE_RESUME);
