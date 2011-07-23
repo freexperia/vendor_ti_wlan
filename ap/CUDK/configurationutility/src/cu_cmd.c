@@ -6068,7 +6068,7 @@ VOID CuCmd_ApRoleSendCmdToHostapd(THandle hCuCmd, ConParm_t parm[], U16 nParms)
 			return;
 		}
 #ifdef TI_HOSTAPD_CLI_LIB
-		HostapdCLI_RunCommand("wl0.1", &cmd);
+		HostapdCLI_RunCommand("tiap0", &cmd);
 #endif
 	}
 }
@@ -6079,7 +6079,7 @@ VOID CuCmd_SendResetCmdToHostapd(THandle hCuCmd,  ConParm_t parm[], U16 nParms)
 
 	cmd.eCmdType = HOSTAPD_CLI_CMD_RESET;
 #ifdef TI_HOSTAPD_CLI_LIB
-	HostapdCLI_RunCommand("wl0.1", &cmd);
+	HostapdCLI_RunCommand("tiap0", &cmd);
 #endif
 }
 
@@ -6089,7 +6089,7 @@ VOID CuCmd_SendStopCmdToHostapd(THandle hCuCmd,  ConParm_t parm[], U16 nParms)
 
 	cmd.eCmdType = HOSTAPD_CLI_CMD_STOP;
 #ifdef TI_HOSTAPD_CLI_LIB
-	HostapdCLI_RunCommand("wl0.1", &cmd);
+	HostapdCLI_RunCommand("tiap0", &cmd);
 #endif
 }
 
@@ -6105,7 +6105,7 @@ VOID CuCmd_SendStartCmdToHostapd(THandle hCuCmd, ConParm_t parm[], U16 nParms)
 	cmd.eCmdType = HOSTAPD_CLI_CMD_START;
 	os_memcpy((PVOID)cmd.u.tCmdStart.config_fname, parm[0].value, os_strlen(parm[0].value));
 #ifdef TI_HOSTAPD_CLI_LIB
-	HostapdCLI_RunCommand("wl0.1", &cmd);
+	HostapdCLI_RunCommand("tiap0", &cmd);
 #endif
 }
 

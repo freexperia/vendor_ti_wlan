@@ -368,7 +368,7 @@ static VOID IpcEvent_wext_event_rtm_newlink(IpcEvent_Child_t* pIpcEventChild, st
 	ifi = NLMSG_DATA(h);
 
 	/*
-	if ((if_nametoindex("wlan") != ifi->ifi_index) && (if_nametoindex("wifi") != ifi->ifi_index))
+	if ((if_nametoindex("tiwlan") != ifi->ifi_index) && (if_nametoindex("wifi") != ifi->ifi_index))
 	{
 	    os_error_printf(CU_MSG_ERROR, "ERROR - IpcEvent_wext_event_rtm_newlink - Ignore event for foreign ifindex %d",
 	           ifi->ifi_index);

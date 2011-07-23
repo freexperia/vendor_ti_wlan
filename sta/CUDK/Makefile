@@ -39,7 +39,7 @@ WLAN_LOADER_DIR = $(CUDK_ROOT)/tiwlan_loader/
 #
 CU_TARGET = $(OUTPUT_DIR)/wlan_cu
 OS_TARGET = $(OUTPUT_DIR)/$(TI_OS_LIB)
-LOADER_TARGET = $(OUTPUT_DIR)/tiwlan_loader
+LOADER_TARGET = $(OUTPUT_DIR)/wlan_loader
 ALL_TARGETS = $(OS_TARGET) $(LOADER_TARGET) $(CU_TARGET)
 #Supplicant directory, file and target
 

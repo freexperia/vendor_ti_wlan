@@ -1,5 +1,5 @@
 # Do not build unless BoardConfig define BOARD_SOFTAP_DEVICE.
-ifdef BOARD_SOFTAP_DEVICE
+ifndef BOARD_SOFTAP_DEVICE
 
 LOCAL_PATH:= $(call my-dir)
 SRC_MAIN := platforms/os/linux

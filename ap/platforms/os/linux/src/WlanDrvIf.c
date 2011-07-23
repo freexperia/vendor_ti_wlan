@@ -1165,6 +1165,8 @@ TI_BOOL wlanDrvIf_receivePacket(TI_HANDLE OsContext, void *pRxDesc ,void *pPacke
 
 
 	skb->data = pPacket;
+	skb->tail = pPacket;
+
 	skb_put(skb, Length);
 
 
