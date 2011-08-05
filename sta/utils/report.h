@@ -207,6 +207,12 @@ typedef enum {
 	FILE_ID_136	   ,    /*   roamingMngr_manualSM     */
 	FILE_ID_137	   ,    /*   cmdinterpretoid          */
 	FILE_ID_138	   ,    /*   wlandrvif                */
+	FILE_ID_139	   ,    /*   roamingMgrDebug          */
+	FILE_ID_140	   ,    /*   smeDebug                 */
+	FILE_ID_141	   ,    /*   osRgstry                 */
+	FILE_ID_142	   ,    /*   CmdInterpretWext         */
+	FILE_ID_143	   ,    /*   WlanDrvWext              */
+	FILE_ID_144	   ,    /*   osApi                    */
 	REPORT_FILES_NUM	/*   Number of files with trace reports   */
 
 } EReportFiles;

@@ -1,33 +1,33 @@
 /*
  * TxDbg.c
  *
- * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.      
- * All rights reserved.                                                  
- *                                                                       
- * Redistribution and use in source and binary forms, with or without    
- * modification, are permitted provided that the following conditions    
- * are met:                                                              
- *                                                                       
- *  * Redistributions of source code must retain the above copyright     
- *    notice, this list of conditions and the following disclaimer.      
- *  * Redistributions in binary form must reproduce the above copyright  
- *    notice, this list of conditions and the following disclaimer in    
- *    the documentation and/or other materials provided with the         
- *    distribution.                                                      
- *  * Neither the name Texas Instruments nor the names of its            
- *    contributors may be used to endorse or promote products derived    
- *    from this software without specific prior written permission.      
- *                                                                       
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS   
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT     
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT  
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT      
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT   
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -54,30 +54,29 @@ void printTxRxDbgFunctions(void);
 /*************************************************************************
  *							rxTxDebugFunction							 *
  *************************************************************************
-DESCRIPTION:   Call the requested Tx or Rx debug print function.               
+DESCRIPTION:   Call the requested Tx or Rx debug print function.
 ************************************************************************/
 
 void rxTxDebugFunction(TI_HANDLE hRxTxHandle, TI_UINT32 funcType, void *pParam)
 {
 	txCtrl_t *pTxCtrl = (txCtrl_t *)hRxTxHandle;  /* Relevant only for some of the cases below! */
 
-	switch ((ERxTxDbgFunc)funcType)
-	{
+	switch ((ERxTxDbgFunc)funcType) {
 	case TX_RX_DBG_FUNCTIONS:
 		printTxRxDbgFunctions();
 		break;
 
-	/* 
-	 *  TX DEBUG FUNCTIONS:
-	 *  ===================
-	 */
+		/*
+		 *  TX DEBUG FUNCTIONS:
+		 *  ===================
+		 */
 	case PRINT_TX_CTRL_INFO:
 		txCtrlParams_printInfo (hRxTxHandle);
 		break;
 
-    case PRINT_TX_CTRL_COUNTERS:
-        txCtrlParams_printDebugCounters (hRxTxHandle);
-        break;
+	case PRINT_TX_CTRL_COUNTERS:
+		txCtrlParams_printDebugCounters (hRxTxHandle);
+		break;
 
 	case PRINT_TX_DATA_QUEUE_INFO:
 		txDataQ_PrintModuleParams (pTxCtrl->hTxDataQ);
@@ -95,25 +94,25 @@ void rxTxDebugFunction(TI_HANDLE hRxTxHandle, TI_UINT32 funcType, void *pParam)
 		txMgmtQ_PrintQueueStatistics (pTxCtrl->hTxMgmtQ);
 		break;
 
-    case PRINT_TX_CTRL_BLK_INFO:
+	case PRINT_TX_CTRL_BLK_INFO:
 		TWD_PrintTxInfo (pTxCtrl->hTWD, TWD_PRINT_TX_CTRL_BLK_TBL);
-        break;
+		break;
 
-    case PRINT_TX_HW_QUEUE_INFO:
+	case PRINT_TX_HW_QUEUE_INFO:
 		TWD_PrintTxInfo (pTxCtrl->hTWD, TWD_PRINT_TX_HW_QUEUE_INFO);
-        break;
+		break;
 
-    case PRINT_TX_XFER_INFO:
+	case PRINT_TX_XFER_INFO:
 		TWD_PrintTxInfo (pTxCtrl->hTWD, TWD_PRINT_TX_XFER_INFO);
-        break;
+		break;
 
 	case PRINT_TX_RESULT_INFO:
 		TWD_PrintTxInfo (pTxCtrl->hTWD, TWD_PRINT_TX_RESULT_INFO);
-        break;
+		break;
 
 	case PRINT_TX_DATA_CLSFR_TABLE:
-        txDataClsfr_PrintClsfrTable (pTxCtrl->hTxDataQ);
-        break;
+		txDataClsfr_PrintClsfrTable (pTxCtrl->hTxDataQ);
+		break;
 
 
 	case RESET_TX_CTRL_COUNTERS:
@@ -124,15 +123,14 @@ void rxTxDebugFunction(TI_HANDLE hRxTxHandle, TI_UINT32 funcType, void *pParam)
 		txDataQ_ResetQueueStatistics (pTxCtrl->hTxDataQ);
 		break;
 
-    case RESET_TX_DATA_CLSFR_TABLE:
-        {
-            EClsfrType  myLocalType;
+	case RESET_TX_DATA_CLSFR_TABLE: {
+		EClsfrType  myLocalType;
 
-            /* Setting again the current classifier type clears the table */
-            txDataClsfr_GetClsfrType (pTxCtrl->hTxDataQ, &myLocalType);
-            txDataClsfr_SetClsfrType (pTxCtrl->hTxDataQ, myLocalType);
-        }
-		break;
+		/* Setting again the current classifier type clears the table */
+		txDataClsfr_GetClsfrType (pTxCtrl->hTxDataQ, &myLocalType);
+		txDataClsfr_SetClsfrType (pTxCtrl->hTxDataQ, myLocalType);
+	}
+	break;
 
 	case RESET_TX_MGMT_QUEUE_COUNTERS:
 		txMgmtQ_ResetQueueStatistics (pTxCtrl->hTxMgmtQ);
@@ -141,16 +139,16 @@ void rxTxDebugFunction(TI_HANDLE hRxTxHandle, TI_UINT32 funcType, void *pParam)
 	case RESET_TX_RESULT_COUNTERS:
 		TWD_PrintTxInfo (pTxCtrl->hTWD, TWD_CLEAR_TX_RESULT_INFO);
 		break;
-        
+
 	case RESET_TX_XFER_COUNTERS:
 		TWD_PrintTxInfo (pTxCtrl->hTWD, TWD_CLEAR_TX_XFER_INFO);
 		break;
-        
 
-	/* 
-	 *  RX DEBUG FUNCTIONS:
-	 *  ===================
-	 */
+
+		/*
+		 *  RX DEBUG FUNCTIONS:
+		 *  ===================
+		 */
 	case PRINT_RX_BLOCK:
 		WLAN_OS_REPORT(("RX DBG - Print Rx Block \n\n"));
 		rxData_printRxBlock(hRxTxHandle);
@@ -167,11 +165,11 @@ void rxTxDebugFunction(TI_HANDLE hRxTxHandle, TI_UINT32 funcType, void *pParam)
 		rxData_resetDbgCounters(hRxTxHandle);
 		break;
 
-    case PRINT_RX_THROUGHPUT_START:
+	case PRINT_RX_THROUGHPUT_START:
 		rxData_startRxThroughputTimer (hRxTxHandle);
 		break;
 
-    case PRINT_RX_THROUGHPUT_STOP:
+	case PRINT_RX_THROUGHPUT_STOP:
 		rxData_stopRxThroughputTimer (hRxTxHandle);
 		break;
 

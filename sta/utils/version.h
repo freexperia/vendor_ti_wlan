@@ -43,13 +43,17 @@
 #ifndef _VERSION_H_
 #define _VERSION_H_
 
-#define SW_VERSION_STR      "MoTI34.0.0.0.0 WiLink_Driver_6.1.0.0.144"
+#define SW_VERSION_STR      "WiLink_Driver_6.1.0.10.144"
 
 #define SW_RELEASE_MONTH    06
 #define SW_RELEASE_DAY      30
 #define SW_RELEASE_YEAR     2010
 
+/*
+WiLink_Driver_6.1.0.0.144 - formal driver version include SEMC suspend/resume
+WiLink_Driver_6.1.0.10.144 - Multicast MAC address fixup
 
+*/
 
 #endif /* _VERSION_H_ */
 

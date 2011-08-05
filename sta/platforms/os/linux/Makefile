@@ -123,7 +123,7 @@ WLAN_LOGGER = $(WLAN_CUDK_DIR)/output/wlan_logger
 # Location and filename of the WLAN loader utility
 #
 WLAN_LOADER_DIR = $(DK_ROOT)/CUDK/tiwlan_loader/
-WLAN_LOADER = $(WLAN_CUDK_DIR)/output/wlan_loader
+WLAN_LOADER = $(WLAN_CUDK_DIR)/output/tiwlan_loader
 
 #
 # Location and filename of the Linux Wireless Tools
@@ -226,7 +226,7 @@ ifeq "$(HOST_PLATFORM)" "zoom1"
 TARGET = apps.tar
 endif
 ifeq "$(HOST_PLATFORM)" "msm"
-TARGET = apps
+TARGET = apps.tar
 endif
 ifeq "$(HOST_PLATFORM)" "*UNDEFINED*"
 TARGET = help

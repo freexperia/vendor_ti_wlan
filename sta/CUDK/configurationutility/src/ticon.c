@@ -53,7 +53,7 @@
 #define CHK_NULL(p)    (p)
 #endif
 
-#define TIWLAN_DRV_NAME "tiwlan0"
+#define TIWLAN_DRV_NAME "wlan0"
 #ifdef ANDROID
 #define SUPPL_IF_FILE TIWLAN_DRV_NAME
 #else

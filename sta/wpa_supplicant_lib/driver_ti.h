@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef _DRIVER_TI_H_
 #define _DRIVER_TI_H_
 
@@ -28,15 +29,10 @@
 #include "wpa_ctrl.h"
 #include "wpa_supplicant_i.h"
 #include "config.h"
-#ifdef WPA_SUPPLICANT_VER_0_6_X
 #include "ieee802_11_defs.h"
-#else
-#include "wpa.h"
-#endif
 #include "cu_ostypes.h"
 #include "STADExternalIf.h"
 #include "convert.h"
-#include "shlist.h"
 
 #define TIWLAN_DRV_NAME         "tiwlan0"
 
@@ -65,15 +61,14 @@ struct wpa_driver_ti_data {
 	u8 own_addr[ETH_ALEN];          /* MAC address of WLAN interface */
 	int driver_is_loaded;           /* TRUE/FALSE flag if driver is already loaded and can be accessed */
 	int scan_type;                  /* SCAN_TYPE_NORMAL_ACTIVE or  SCAN_TYPE_NORMAL_PASSIVE */
-	int force_merge_flag;		/* Force scan results merge */
 	int scan_channels;              /* Number of allowed scan channels */
 	unsigned int link_speed;        /* Link Speed */
 	u32 btcoex_mode;		/* BtCoex Mode */
 	int last_scan;			/* Last scan type */
-	SHLIST scan_merge_list;		/* Previous scan list */
 #ifdef CONFIG_WPS
 	struct wpabuf *probe_req_ie;    /* Store the latest probe_req_ie for WSC */
 #endif
 	int errors;			/* Number of sequential errors */
+	int specific_scan;		/* Scan for specific AP? */
 };
 #endif

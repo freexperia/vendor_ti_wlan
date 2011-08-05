@@ -79,6 +79,7 @@ typedef struct {
 	TI_INT8         *pGenSMName;       /**< state machine name */
 	TI_INT8         **pStateDesc;      /**< State description strings */
 	TI_INT8         **pEventDesc;      /**< Event description strings */
+	TI_UINT32       uLastStates;       /**< 4 bits per state, hence the last 8 states are saved */
 } TGenSM;
 
 

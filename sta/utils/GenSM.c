@@ -143,6 +143,7 @@ void genSM_SetDefaults (TI_HANDLE hGenSM, TI_UINT32 uStateNum, TI_UINT32 uEventN
 	pGenSM->uModuleLogIndex = uModuleLogIndex;
 	pGenSM->bEventPending   = TI_FALSE;
 	pGenSM->bInAction       = TI_FALSE;
+	pGenSM->uLastStates     = 0;
 }
 
 void genSM_Event (TI_HANDLE hGenSM, TI_UINT32 uEvent, void *pData)
@@ -192,6 +193,10 @@ void genSM_Event (TI_HANDLE hGenSM, TI_UINT32 uEvent, void *pData)
 
 		/* mark that pending event is being handled */
 		pGenSM->bEventPending = TI_FALSE;
+
+		/* save last state in debug variable */
+		pGenSM->uLastStates  >>= 0x04;
+		pGenSM->uLastStates |= ((pCell->uNextState & 0xf) << 0x1c);
 
 		/* update current state */
 		pGenSM->uCurrentState = pCell->uNextState;

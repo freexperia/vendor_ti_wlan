@@ -1,45 +1,45 @@
 /*
  * siteMgrDebug.c
  *
- * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.      
- * All rights reserved.                                                  
- *                                                                       
- * Redistribution and use in source and binary forms, with or without    
- * modification, are permitted provided that the following conditions    
- * are met:                                                              
- *                                                                       
- *  * Redistributions of source code must retain the above copyright     
- *    notice, this list of conditions and the following disclaimer.      
- *  * Redistributions in binary form must reproduce the above copyright  
- *    notice, this list of conditions and the following disclaimer in    
- *    the documentation and/or other materials provided with the         
- *    distribution.                                                      
- *  * Neither the name Texas Instruments nor the names of its            
- *    contributors may be used to endorse or promote products derived    
- *    from this software without specific prior written permission.      
- *                                                                       
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS   
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT     
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT  
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT      
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT   
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+ * Copyright(c) 1998 - 2010 Texas Instruments. All rights reserved.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Texas Instruments nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /** \file reportReplvl.c
  *  \brief Report level implementation
- * 
+ *
  *  \see reportReplvl.h
  */
 
-/** \file   siteMgrDebug.c 
+/** \file   siteMgrDebug.c
  *  \brief  The siteMgrDebug module.
- *  
+ *
  *  \see    siteMgrDebug.h
  */
 
@@ -76,9 +76,9 @@ static void setRateSet(TI_UINT8 maxRate, TRates *pRates);
 void printSiteMgrHelpMenu(void);
 
 /*	Function implementation */
-void siteMgrDebugFunction (TI_HANDLE         hSiteMgr, 
+void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
                            TStadHandlesList *pStadHandles,
-                           TI_UINT32         funcType, 
+                           TI_UINT32         funcType,
                            void             *pParam)
 {
 	siteMgr_t *pSiteMgr = (siteMgr_t *)hSiteMgr;
@@ -93,9 +93,8 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 	newDesiredSsid.len = 5;
 	os_memoryCopy(pSiteMgr->hOs, (void *)newDesiredSsid.str, "yaeli", 5);
 
-	
-	switch (funcType)
-	{
+
+	switch (funcType) {
 	case SITE_MGR_DEBUG_HELP_MENU:
 		printSiteMgrHelpMenu();
 		break;
@@ -123,7 +122,7 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 		param.paramType = RSN_ENCRYPTION_STATUS_PARAM;
 		value = *((TI_UINT32 *)pParam);
 		param.content.rsnEncryptionStatus = (ECipherSuite)value;
-		cmdDispatch_SetParam(pStadHandles->hCmdDispatch, &param); 
+		cmdDispatch_SetParam(pStadHandles->hCmdDispatch, &param);
 		WLAN_OS_REPORT(("\nSetting RSN_DESIRED_CIPHER_SUITE_PARAM : %d\n", value));
 		break;
 
@@ -132,19 +131,19 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 		cmdDispatch_GetParam(pStadHandles->hCmdDispatch, &param);
 		WLAN_OS_REPORT(("\nGetting RSN_DESIRED_CIPHER_SUITE_PARAM: %d\n", param.content.rsnEncryptionStatus));
 		break;
- 
+
 	case SET_RSN_DESIRED_AUTH_TYPE_DBG:
 		param.paramType = RSN_EXT_AUTHENTICATION_MODE;
 		value = *((TI_UINT32 *)pParam);
 		param.content.rsnDesiredAuthType = (EAuthSuite)value;
-		cmdDispatch_SetParam(pStadHandles->hCmdDispatch, &param); 
+		cmdDispatch_SetParam(pStadHandles->hCmdDispatch, &param);
 		if (value == RSN_AUTH_OPEN)
 			WLAN_OS_REPORT(("\nSetting RSN_DESIRED_AUTH_TYPE_PARAM:	RSN_AUTH_OPEN\n"));
 		else if (value == RSN_AUTH_SHARED_KEY)
 			WLAN_OS_REPORT(("\nSetting RSN_DESIRED_AUTH_TYPE_PARAM:	RSN_AUTH_SHARED_KEY\n"));
 		else if (value == RSN_AUTH_AUTO_SWITCH)
 			WLAN_OS_REPORT(("\nSetting RSN_DESIRED_AUTH_TYPE_PARAM:	RSN_AUTH_AUTO_SWITCH\n"));
-		else 
+		else
 			WLAN_OS_REPORT(("\nSetting RSN_DESIRED_AUTH_TYPE_PARAM:	Invalid: %d\n", value));
 		break;
 
@@ -157,7 +156,7 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 			WLAN_OS_REPORT(("\nGetting RSN_DESIRED_AUTH_TYPE_PARAM:	RSN_AUTH_SHARED_KEY\n"));
 		else if (param.content.rsnDesiredAuthType == RSN_AUTH_AUTO_SWITCH)
 			WLAN_OS_REPORT(("\nGetting RSN_DESIRED_AUTH_TYPE_PARAM:	RSN_AUTH_AUTO_SWITCH\n"));
-		else 
+		else
 			WLAN_OS_REPORT(("\nGetting RSN_DESIRED_AUTH_TYPE_PARAM:	Invalid: %d\n", param.content.rsnDesiredAuthType));
 
 		break;
@@ -175,9 +174,9 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 			WLAN_OS_REPORT(("\nGetting SITE_MGR_CONNECTION_STATUS_PARAM:	STATUS_ASSOCIATED\n"));
 		else if (param.content.smeSmConnectionStatus == eDot11Disassociated)
 			WLAN_OS_REPORT(("\nGetting SITE_MGR_CONNECTION_STATUS_PARAM:	STATUS_DIS_ASSOCIATED\n"));
-        else if (param.content.smeSmConnectionStatus == eDot11RadioDisabled)
-            WLAN_OS_REPORT(("\nGetting SITE_MGR_CONNECTION_STATUS_PARAM:	STATUS_RADIO_DISABLED\n"));
-        else 
+		else if (param.content.smeSmConnectionStatus == eDot11RadioDisabled)
+			WLAN_OS_REPORT(("\nGetting SITE_MGR_CONNECTION_STATUS_PARAM:	STATUS_RADIO_DISABLED\n"));
+		else
 			WLAN_OS_REPORT(("\nGetting SITE_MGR_CONNECTION_STATUS_PARAM:	STATUS_ERROR\n"));
 		break;
 
@@ -196,17 +195,15 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 		WLAN_OS_REPORT(("\nGetting SITE_MGR_DESIRED_SUPPORTED_RATE_SET_PARAM\n"));
 		if(param.content.siteMgrDesiredSupportedRateSet.len == 0)
 			WLAN_OS_REPORT(("\nNo rates defined\n"));
-		else 
-		{	
+		else {
 			/* It looks like it never happens. Anyway decided to check */
-            if ( param.content.siteMgrDesiredSupportedRateSet.len > DOT11_MAX_SUPPORTED_RATES )
-            {
-                WLAN_OS_REPORT(("siteMgrDebugFunction. param.content.siteMgrDesiredSupportedRateSet.len=%d exceeds the limit %d\n",
-                         param.content.siteMgrDesiredSupportedRateSet.len, DOT11_MAX_SUPPORTED_RATES));
-                handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
-                param.content.siteMgrDesiredSupportedRateSet.len = DOT11_MAX_SUPPORTED_RATES;
-            }
-            for (i = 0; i < param.content.siteMgrDesiredSupportedRateSet.len; i++)
+			if ( param.content.siteMgrDesiredSupportedRateSet.len > DOT11_MAX_SUPPORTED_RATES ) {
+				WLAN_OS_REPORT(("siteMgrDebugFunction. param.content.siteMgrDesiredSupportedRateSet.len=%d exceeds the limit %d\n",
+				                param.content.siteMgrDesiredSupportedRateSet.len, DOT11_MAX_SUPPORTED_RATES));
+				handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
+				param.content.siteMgrDesiredSupportedRateSet.len = DOT11_MAX_SUPPORTED_RATES;
+			}
+			for (i = 0; i < param.content.siteMgrDesiredSupportedRateSet.len; i++)
 				WLAN_OS_REPORT(("\nRate %d is 0x%X\n", i +1, param.content.siteMgrDesiredSupportedRateSet.ratesString[i]));
 		}
 		break;
@@ -215,14 +212,14 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 		param.paramType = MLME_LEGACY_TYPE_PARAM;
 		value = *((TI_UINT32 *)pParam);
 		param.content.mlmeLegacyAuthType = (legacyAuthType_e)value;
-		cmdDispatch_SetParam(pStadHandles->hCmdDispatch, &param); 
+		cmdDispatch_SetParam(pStadHandles->hCmdDispatch, &param);
 		if (value == AUTH_LEGACY_OPEN_SYSTEM)
 			WLAN_OS_REPORT(("\nSetting MLME_LEGACY_TYPE_PARAM:	AUTH_LEGACY_OPEN_SYSTEM\n"));
 		else if (value == AUTH_LEGACY_SHARED_KEY)
 			WLAN_OS_REPORT(("\nSetting MLME_LEGACY_TYPE_PARAM:	AUTH_LEGACY_SHARED_KEY\n"));
 		else if (value == AUTH_LEGACY_AUTO_SWITCH)
 			WLAN_OS_REPORT(("\nSetting MLME_LEGACY_TYPE_PARAM:	AUTH_LEGACY_AUTO_SWITCH\n"));
-		else 
+		else
 			WLAN_OS_REPORT(("\nSetting MLME_LEGACY_TYPE_PARAM:	Invalid: %d\n", value));
 		break;
 
@@ -235,7 +232,7 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 			WLAN_OS_REPORT(("\nGetting MLME_LEGACY_TYPE_PARAM:	AUTH_LEGACY_SHARED_KEY\n"));
 		else if (param.content.rsnDesiredAuthType == AUTH_LEGACY_AUTO_SWITCH)
 			WLAN_OS_REPORT(("\nGetting MLME_LEGACY_TYPE_PARAM:	AUTH_AUTO_SWITCH\n"));
-		else 
+		else
 			WLAN_OS_REPORT(("\nGetting MLME_LEGACY_TYPE_PARAM:	Invalid: %d\n", param.content.rsnDesiredAuthType));
 
 		break;
@@ -244,41 +241,46 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 	case RADIO_STAND_BY_CHANGE_STATE:
 		WLAN_OS_REPORT(("\nChange GPIO-13 State...\n"));
 		break;
-		
 
-    case PRINT_FAILURE_EVENTS:
-        {
+
+	case PRINT_FAILURE_EVENTS: {
 
 		WLAN_OS_REPORT(("\n PRINT HEALTH MONITOR LOG\n"));
 		healthMonitor_printFailureEvents (pStadHandles->hHealthMonitor);
 		apConn_printStatistics(pStadHandles->hAPConnection);
-        conn_ibssPrintStatistics(pStadHandles->hConn);
-        if (((conn_t*)pStadHandles->hConn)->currentConnType==CONNECTION_INFRA)
-        {
-            switch (((conn_t*)pStadHandles->hConn)->state)
-            {
-            case   0:  WLAN_OS_REPORT((" CONN state is IDLE\n")); 
-                break;       
-             case   1:  WLAN_OS_REPORT((" CONN state is SCR_WAIT\n")); 
-                break;             
-             case   2:  WLAN_OS_REPORT((" CONN state is WAIT_JOIN_CMPLT\n")); 
-                break;            
-             case   3:  WLAN_OS_REPORT((" CONN state is MLME_WAIT\n")); 
-                break;           
-             case   4:  WLAN_OS_REPORT((" CONN state is RSN_WAIT\n")); 
-                break;            
-             case   5:  WLAN_OS_REPORT((" CONN state is CONFIG_HW\n")); 
-                break;        
-             case   6:  WLAN_OS_REPORT((" CONN state is CONNECTED\n")); 
-                break; 
-            case   7:  WLAN_OS_REPORT((" CONN state is DISASSOCC\n")); 
-               break; 
-            default:
-                break;
-            }
-        }
-        }
-        break;
+		conn_ibssPrintStatistics(pStadHandles->hConn);
+		if (((conn_t*)pStadHandles->hConn)->currentConnType==CONNECTION_INFRA) {
+			switch (((conn_t*)pStadHandles->hConn)->state) {
+			case   0:
+				WLAN_OS_REPORT((" CONN state is IDLE\n"));
+				break;
+			case   1:
+				WLAN_OS_REPORT((" CONN state is SCR_WAIT\n"));
+				break;
+			case   2:
+				WLAN_OS_REPORT((" CONN state is WAIT_JOIN_CMPLT\n"));
+				break;
+			case   3:
+				WLAN_OS_REPORT((" CONN state is MLME_WAIT\n"));
+				break;
+			case   4:
+				WLAN_OS_REPORT((" CONN state is RSN_WAIT\n"));
+				break;
+			case   5:
+				WLAN_OS_REPORT((" CONN state is CONFIG_HW\n"));
+				break;
+			case   6:
+				WLAN_OS_REPORT((" CONN state is CONNECTED\n"));
+				break;
+			case   7:
+				WLAN_OS_REPORT((" CONN state is DISASSOCC\n"));
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	break;
 
 	case FORCE_HW_RESET_RECOVERY:
 		WLAN_OS_REPORT(("\n Currently not supported!\n"));
@@ -291,7 +293,7 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 
 	case PERFORM_HEALTH_TEST:
 		WLAN_OS_REPORT(("\n PERFORM_HEALTH_TEST \n"));
-		healthMonitor_PerformTest(pStadHandles->hHealthMonitor, TI_FALSE);	
+		healthMonitor_PerformTest(pStadHandles->hHealthMonitor, TI_FALSE);
 		break;
 
 	case PRINT_SITE_TABLE_PER_SSID:
@@ -308,40 +310,38 @@ void siteMgrDebugFunction (TI_HANDLE         hSiteMgr,
 		WLAN_OS_REPORT(("Invalid function type in Debug Site Manager Function Command: %d\n\n", funcType));
 		break;
 	}
-} 
+}
 
 static void printPrimarySite(siteMgr_t *pSiteMgr)
 {
 	siteEntry_t *pSiteEntry;
-    TI_UINT8	len;
+	TI_UINT8	len;
 	char	ssid[MAX_SSID_LEN + 1];
-	
+
 	pSiteEntry = pSiteMgr->pSitesMgmtParams->pPrimarySite;
-	
-	if (pSiteEntry == NULL)
-	{
+
+	if (pSiteEntry == NULL) {
 		WLAN_OS_REPORT(("\n\n************************	PRIMARY SITE IS NULL	****************************\n\n\n"));
 		return;
 	}
 
 	WLAN_OS_REPORT(("\n\n************************	PRIMARY SITE	****************************\n\n\n"));
-	
-	WLAN_OS_REPORT(("BSSID			%2X-%2X-%2X-%2X-%2X-%2X	",	
-														pSiteEntry->bssid[0], 
-														pSiteEntry->bssid[1], 
-														pSiteEntry->bssid[2], 
-														pSiteEntry->bssid[3], 
-														pSiteEntry->bssid[4], 
-														pSiteEntry->bssid[5]));
-    len = pSiteEntry->ssid.len;
-    /* It looks like it never happens. Anyway decided to check */
-    if ( pSiteEntry->ssid.len > MAX_SSID_LEN )
-    {
-        WLAN_OS_REPORT(("printPrimarySite. pSiteEntry->ssid.len=%d exceeds the limit %d\n",
-                   pSiteEntry->ssid.len, MAX_SSID_LEN));
-        handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
-        len = MAX_SSID_LEN;
-    }
+
+	WLAN_OS_REPORT(("BSSID			%2X-%2X-%2X-%2X-%2X-%2X	",
+	                pSiteEntry->bssid[0],
+	                pSiteEntry->bssid[1],
+	                pSiteEntry->bssid[2],
+	                pSiteEntry->bssid[3],
+	                pSiteEntry->bssid[4],
+	                pSiteEntry->bssid[5]));
+	len = pSiteEntry->ssid.len;
+	/* It looks like it never happens. Anyway decided to check */
+	if ( pSiteEntry->ssid.len > MAX_SSID_LEN ) {
+		WLAN_OS_REPORT(("printPrimarySite. pSiteEntry->ssid.len=%d exceeds the limit %d\n",
+		                pSiteEntry->ssid.len, MAX_SSID_LEN));
+		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
+		len = MAX_SSID_LEN;
+	}
 	os_memoryCopy(pSiteMgr->hOs, ssid, (void *)pSiteEntry->ssid.str, len);
 	ssid[len] = '\0';
 	WLAN_OS_REPORT(("SSID			%s\n\n", ssid));
@@ -360,8 +360,7 @@ static void printPrimarySite(siteMgr_t *pSiteMgr)
 
 	WLAN_OS_REPORT(("\n"));
 
-	switch (pSiteEntry->maxBasicRate)
-	{
+	switch (pSiteEntry->maxBasicRate) {
 	case DRV_RATE_1M:
 		WLAN_OS_REPORT(("Max Basic Rate		RATE_1M_BIT\n"));
 		break;
@@ -415,8 +414,7 @@ static void printPrimarySite(siteMgr_t *pSiteMgr)
 		break;
 	}
 
-	switch (pSiteEntry->maxActiveRate)
-	{
+	switch (pSiteEntry->maxActiveRate) {
 	case DRV_RATE_1M:
 		WLAN_OS_REPORT(("Max Active Rate		RATE_1M_BIT\n"));
 		break;
@@ -538,56 +536,50 @@ static void printPrimarySite(siteMgr_t *pSiteMgr)
 
 	WLAN_OS_REPORT(("Fail status		%d\n", pSiteEntry->failStatus));
 
-	WLAN_OS_REPORT(("\n---------------------------------------------------------------\n\n")); 
+	WLAN_OS_REPORT(("\n---------------------------------------------------------------\n\n"));
 
 }
 
 void printSiteTable(siteMgr_t *pSiteMgr, char *desiredSsid)
 {
 	TI_UINT8	i, numOfSites = 0;
-	siteEntry_t *pSiteEntry;	
+	siteEntry_t *pSiteEntry;
 	char	ssid[MAX_SSID_LEN + 1];
-    siteTablesParams_t      *pCurrentSiteTable = pSiteMgr->pSitesMgmtParams->pCurrentSiteTable;
-    TI_UINT8                   tableIndex=2;
+	siteTablesParams_t      *pCurrentSiteTable = pSiteMgr->pSitesMgmtParams->pCurrentSiteTable;
+	TI_UINT8                   tableIndex=2;
 
-    WLAN_OS_REPORT(("\n\n************************	SITE TABLE	****************************\n\n\n"));
-	
-    /* It looks like it never happens. Anyway decided to check */
-    if ( pCurrentSiteTable->maxNumOfSites > MAX_SITES_BG_BAND )
-    {
-        WLAN_OS_REPORT(("printSiteTable. pCurrentSiteTable->maxNumOfSites=%d exceeds the limit %d\n",
-                   pCurrentSiteTable->maxNumOfSites, MAX_SITES_BG_BAND));
-        handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
-        pCurrentSiteTable->maxNumOfSites = MAX_SITES_BG_BAND;
-    }
+	WLAN_OS_REPORT(("\n\n************************	SITE TABLE	****************************\n\n\n"));
 
-    do
-	{
-        tableIndex--;
-		for (i = 0; i < pCurrentSiteTable->maxNumOfSites; i++)
-		{
+	/* It looks like it never happens. Anyway decided to check */
+	if ( pCurrentSiteTable->maxNumOfSites > MAX_SITES_BG_BAND ) {
+		WLAN_OS_REPORT(("printSiteTable. pCurrentSiteTable->maxNumOfSites=%d exceeds the limit %d\n",
+		                pCurrentSiteTable->maxNumOfSites, MAX_SITES_BG_BAND));
+		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
+		pCurrentSiteTable->maxNumOfSites = MAX_SITES_BG_BAND;
+	}
+
+	do {
+		tableIndex--;
+		for (i = 0; i < pCurrentSiteTable->maxNumOfSites; i++) {
 			pSiteEntry = &(pCurrentSiteTable->siteTable[i]);
-	
+
 			if (pSiteEntry->siteType == SITE_NULL)
 				continue;
-            /* It looks like it never happens. Anyway decided to check */
-            if ( pCurrentSiteTable->siteTable[i].ssid.len > MAX_SSID_LEN )
-            {
-                WLAN_OS_REPORT(("printSiteTable. pCurrentSiteTable->siteTable[%d].ssid.len=%d exceeds the limit %d\n",
-                         i, pCurrentSiteTable->siteTable[i].ssid.len, MAX_SSID_LEN));
-                handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
-                pCurrentSiteTable->siteTable[i].ssid.len = MAX_SSID_LEN;
-            }
+			/* It looks like it never happens. Anyway decided to check */
+			if ( pCurrentSiteTable->siteTable[i].ssid.len > MAX_SSID_LEN ) {
+				WLAN_OS_REPORT(("printSiteTable. pCurrentSiteTable->siteTable[%d].ssid.len=%d exceeds the limit %d\n",
+				                i, pCurrentSiteTable->siteTable[i].ssid.len, MAX_SSID_LEN));
+				handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
+				pCurrentSiteTable->siteTable[i].ssid.len = MAX_SSID_LEN;
+			}
 			os_memoryCopy(pSiteMgr->hOs ,ssid, (void *)pCurrentSiteTable->siteTable[i].ssid.str, pCurrentSiteTable->siteTable[i].ssid.len);
 			ssid[pCurrentSiteTable->siteTable[i].ssid.len] = '\0';
-			
-			if (desiredSsid != NULL)
-			{
+
+			if (desiredSsid != NULL) {
 				int desiredSsidLength = 0;
 				char * tmp = desiredSsid;
 
-				while (tmp != '\0')
-				{
+				while (tmp != '\0') {
 					desiredSsidLength++;
 					tmp++;
 				}
@@ -595,25 +587,25 @@ void printSiteTable(siteMgr_t *pSiteMgr, char *desiredSsid)
 				if (os_memoryCompare(pSiteMgr->hOs, (TI_UINT8 *)ssid, (TI_UINT8 *)desiredSsid, desiredSsidLength))
 					continue;
 			}
-			
+
 			WLAN_OS_REPORT(("SSID	%s\n\n", ssid));
-	
-			 
- 
+
+
+
 			if (pSiteEntry->siteType == SITE_PRIMARY)
 				WLAN_OS_REPORT( ("	 ENTRY PRIMARY %d \n", numOfSites));
 			else
 				WLAN_OS_REPORT( ("	ENTRY %d\n", i));
-	
-			WLAN_OS_REPORT(("BSSID			%2X-%2X-%2X-%2X-%2X-%2X	\n",	
-																pCurrentSiteTable->siteTable[i].bssid[0], 
-																pCurrentSiteTable->siteTable[i].bssid[1], 
-																pCurrentSiteTable->siteTable[i].bssid[2], 
-																pCurrentSiteTable->siteTable[i].bssid[3], 
-																pCurrentSiteTable->siteTable[i].bssid[4], 
-																pCurrentSiteTable->siteTable[i].bssid[5]));
-		
-		
+
+			WLAN_OS_REPORT(("BSSID			%2X-%2X-%2X-%2X-%2X-%2X	\n",
+			                pCurrentSiteTable->siteTable[i].bssid[0],
+			                pCurrentSiteTable->siteTable[i].bssid[1],
+			                pCurrentSiteTable->siteTable[i].bssid[2],
+			                pCurrentSiteTable->siteTable[i].bssid[3],
+			                pCurrentSiteTable->siteTable[i].bssid[4],
+			                pCurrentSiteTable->siteTable[i].bssid[5]));
+
+
 			if (pCurrentSiteTable->siteTable[i].bssType == BSS_INFRASTRUCTURE)
 				WLAN_OS_REPORT(("BSS Type		INFRASTRUCTURE\n\n"));
 			else if (pCurrentSiteTable->siteTable[i].bssType == BSS_INDEPENDENT)
@@ -622,85 +614,83 @@ void printSiteTable(siteMgr_t *pSiteMgr, char *desiredSsid)
 				WLAN_OS_REPORT(("BSS Type		ANY\n\n"));
 			else
 				WLAN_OS_REPORT(("BSS Type		INVALID\n\n"));
-		
-		
+
+
 			WLAN_OS_REPORT(("Channel			%d\n", pCurrentSiteTable->siteTable[i].channel));
-		
+
 			WLAN_OS_REPORT(("\n"));
-		
-			switch (pCurrentSiteTable->siteTable[i].maxBasicRate)
-			{
+
+			switch (pCurrentSiteTable->siteTable[i].maxBasicRate) {
 			case DRV_RATE_1M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_1M_BIT\n"));
 				break;
-	
+
 			case DRV_RATE_2M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_2M_BIT\n"));
 				break;
-	
+
 			case DRV_RATE_5_5M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_5_5M_BIT\n"));
 				break;
-	
+
 			case DRV_RATE_11M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_11M_BIT\n"));
 				break;
-	
+
 			case DRV_RATE_6M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_6M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_9M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_9M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_12M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_12M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_18M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_18M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_24M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_24M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_36M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_36M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_48M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_48M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_54M:
 				WLAN_OS_REPORT(("Max Basic Rate		RATE_54M_BIT\n"));
 				break;
 
 			default:
-					WLAN_OS_REPORT(("Max Basic Rate		INVALID,  0x%X\n", pCurrentSiteTable->siteTable[i].maxBasicRate));
+				WLAN_OS_REPORT(("Max Basic Rate		INVALID,  0x%X\n", pCurrentSiteTable->siteTable[i].maxBasicRate));
 				break;
 			}
-	
-				switch (pCurrentSiteTable->siteTable[i].maxActiveRate)
-			{
+
+			switch (pCurrentSiteTable->siteTable[i].maxActiveRate) {
 			case DRV_RATE_1M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_1M_BIT\n"));
 				break;
-	
+
 			case DRV_RATE_2M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_2M_BIT\n"));
 				break;
-	
+
 			case DRV_RATE_5_5M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_5_5M_BIT\n"));
 				break;
-	
+
 			case DRV_RATE_11M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_11M_BIT\n"));
 				break;
-	
+
 			case DRV_RATE_22M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_22M_BIT\n"));
 				break;
@@ -708,129 +698,125 @@ void printSiteTable(siteMgr_t *pSiteMgr, char *desiredSsid)
 			case DRV_RATE_6M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_6M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_9M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_9M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_12M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_12M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_18M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_18M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_24M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_24M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_36M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_36M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_48M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_48M_BIT\n"));
 				break;
-		
+
 			case DRV_RATE_54M:
 				WLAN_OS_REPORT(("Max Active Rate		RATE_54M_BIT\n"));
 				break;
-	
+
 			default:
-					WLAN_OS_REPORT(("Max Active Rate		INVALID,  0x%X\n", pCurrentSiteTable->siteTable[i].maxActiveRate));
+				WLAN_OS_REPORT(("Max Active Rate		INVALID,  0x%X\n", pCurrentSiteTable->siteTable[i].maxActiveRate));
 				break;
 			}
-	
+
 			WLAN_OS_REPORT(("\n"));
-	
-				if (pCurrentSiteTable->siteTable[i].probeModulation == DRV_MODULATION_QPSK)
+
+			if (pCurrentSiteTable->siteTable[i].probeModulation == DRV_MODULATION_QPSK)
 				WLAN_OS_REPORT(("Probe Modulation	QPSK\n"));
-				else if (pCurrentSiteTable->siteTable[i].probeModulation == DRV_MODULATION_CCK)
+			else if (pCurrentSiteTable->siteTable[i].probeModulation == DRV_MODULATION_CCK)
 				WLAN_OS_REPORT(("Probe Modulation	CCK\n"));
-				else if (pCurrentSiteTable->siteTable[i].probeModulation == DRV_MODULATION_PBCC)
-					WLAN_OS_REPORT(("Probe Modulation	PBCC\n"));
-				else
-					WLAN_OS_REPORT(("Probe Modulation	INVALID, %d\n", pCurrentSiteTable->siteTable[i].probeModulation));
-		
-				if (pCurrentSiteTable->siteTable[i].beaconModulation == DRV_MODULATION_QPSK)
-					WLAN_OS_REPORT(("Beacon Modulation	QPSK\n"));
-				else if (pCurrentSiteTable->siteTable[i].beaconModulation == DRV_MODULATION_CCK)
-					WLAN_OS_REPORT(("Beacon Modulation	CCK\n"));
-				else if (pCurrentSiteTable->siteTable[i].beaconModulation == DRV_MODULATION_PBCC)
-					WLAN_OS_REPORT(("Beacon Modulation	PBCC\n"));
-				else
-					WLAN_OS_REPORT(("Beacon Modulation	INVALID, %d\n", pCurrentSiteTable->siteTable[i].beaconModulation));
-		
-				WLAN_OS_REPORT(("\n"));
-		
-				if (pCurrentSiteTable->siteTable[i].privacy == TI_TRUE)
+			else if (pCurrentSiteTable->siteTable[i].probeModulation == DRV_MODULATION_PBCC)
+				WLAN_OS_REPORT(("Probe Modulation	PBCC\n"));
+			else
+				WLAN_OS_REPORT(("Probe Modulation	INVALID, %d\n", pCurrentSiteTable->siteTable[i].probeModulation));
+
+			if (pCurrentSiteTable->siteTable[i].beaconModulation == DRV_MODULATION_QPSK)
+				WLAN_OS_REPORT(("Beacon Modulation	QPSK\n"));
+			else if (pCurrentSiteTable->siteTable[i].beaconModulation == DRV_MODULATION_CCK)
+				WLAN_OS_REPORT(("Beacon Modulation	CCK\n"));
+			else if (pCurrentSiteTable->siteTable[i].beaconModulation == DRV_MODULATION_PBCC)
+				WLAN_OS_REPORT(("Beacon Modulation	PBCC\n"));
+			else
+				WLAN_OS_REPORT(("Beacon Modulation	INVALID, %d\n", pCurrentSiteTable->siteTable[i].beaconModulation));
+
+			WLAN_OS_REPORT(("\n"));
+
+			if (pCurrentSiteTable->siteTable[i].privacy == TI_TRUE)
 				WLAN_OS_REPORT(("Privacy			On\n"));
 			else
 				WLAN_OS_REPORT(("Privacy			Off\n"));
-	
-				if (pCurrentSiteTable->siteTable[i].currentPreambleType == PREAMBLE_SHORT)
+
+			if (pCurrentSiteTable->siteTable[i].currentPreambleType == PREAMBLE_SHORT)
 				WLAN_OS_REPORT(("Preamble Type		Short\n"));
-				else if (pCurrentSiteTable->siteTable[i].currentPreambleType == PREAMBLE_LONG)
+			else if (pCurrentSiteTable->siteTable[i].currentPreambleType == PREAMBLE_LONG)
 				WLAN_OS_REPORT(("Preamble Type		Long\n"));
 			else
-					WLAN_OS_REPORT(("Preamble	INVALID, %d\n", pCurrentSiteTable->siteTable[i].currentPreambleType));
-	
-	
+				WLAN_OS_REPORT(("Preamble	INVALID, %d\n", pCurrentSiteTable->siteTable[i].currentPreambleType));
+
+
 			WLAN_OS_REPORT(("\n"));
-	
-				WLAN_OS_REPORT(("Beacon interval		%d\n", pCurrentSiteTable->siteTable[i].beaconInterval));
-	
-				WLAN_OS_REPORT(("Local Time Stamp	%d\n", pCurrentSiteTable->siteTable[i].localTimeStamp));
-		
-				WLAN_OS_REPORT(("rssi			%d\n", pCurrentSiteTable->siteTable[i].rssi));
-		
-				WLAN_OS_REPORT(("\n"));
-		
-				WLAN_OS_REPORT(("Fail status		%d\n", pCurrentSiteTable->siteTable[i].failStatus));
-		
-				WLAN_OS_REPORT(("ATIM Window %d\n", pCurrentSiteTable->siteTable[i].atimWindow));
-	
-			WLAN_OS_REPORT(("\n---------------------------------------------------------------\n\n")); 
-	
+
+			WLAN_OS_REPORT(("Beacon interval		%d\n", pCurrentSiteTable->siteTable[i].beaconInterval));
+
+			WLAN_OS_REPORT(("Local Time Stamp	%d\n", pCurrentSiteTable->siteTable[i].localTimeStamp));
+
+			WLAN_OS_REPORT(("rssi			%d\n", pCurrentSiteTable->siteTable[i].rssi));
+
+			WLAN_OS_REPORT(("\n"));
+
+			WLAN_OS_REPORT(("Fail status		%d\n", pCurrentSiteTable->siteTable[i].failStatus));
+
+			WLAN_OS_REPORT(("ATIM Window %d\n", pCurrentSiteTable->siteTable[i].atimWindow));
+
+			WLAN_OS_REPORT(("\n---------------------------------------------------------------\n\n"));
+
 			numOfSites++;
 		}
-	
-		WLAN_OS_REPORT(("\n		Number Of Sites:	%d\n", numOfSites)); 
-		WLAN_OS_REPORT(("\n---------------------------------------------------------------\n")); 
-		
-		   if ((pSiteMgr->pDesiredParams->siteMgrDesiredDot11Mode == DOT11_DUAL_MODE) && (tableIndex==1))
-		   {   /* change site table */
-			   if (pCurrentSiteTable == &pSiteMgr->pSitesMgmtParams->dot11BG_sitesTables)
-				  {
-                   WLAN_OS_REPORT(("\n		dot11A_sitesTables	\n")); 
 
-                   pCurrentSiteTable = (siteTablesParams_t *)&pSiteMgr->pSitesMgmtParams->dot11A_sitesTables;
-				  }
-			   else
-				  {
-                   WLAN_OS_REPORT(("\n		dot11BG_sitesTables	\n")); 
+		WLAN_OS_REPORT(("\n		Number Of Sites:	%d\n", numOfSites));
+		WLAN_OS_REPORT(("\n---------------------------------------------------------------\n"));
 
-                   pCurrentSiteTable = &pSiteMgr->pSitesMgmtParams->dot11BG_sitesTables;
-				  }
-		   }
+		if ((pSiteMgr->pDesiredParams->siteMgrDesiredDot11Mode == DOT11_DUAL_MODE) && (tableIndex==1)) {
+			/* change site table */
+			if (pCurrentSiteTable == &pSiteMgr->pSitesMgmtParams->dot11BG_sitesTables) {
+				WLAN_OS_REPORT(("\n		dot11A_sitesTables	\n"));
 
-    } while (tableIndex>0);
+				pCurrentSiteTable = (siteTablesParams_t *)&pSiteMgr->pSitesMgmtParams->dot11A_sitesTables;
+			} else {
+				WLAN_OS_REPORT(("\n		dot11BG_sitesTables	\n"));
+
+				pCurrentSiteTable = &pSiteMgr->pSitesMgmtParams->dot11BG_sitesTables;
+			}
+		}
+
+	} while (tableIndex>0);
 }
 
 static void printDesiredParams(siteMgr_t *pSiteMgr, TI_HANDLE hCmdDispatch)
-{  
+{
 	paramInfo_t		param;
-	
+
 	WLAN_OS_REPORT(("\n\n*****************************************"));
 	WLAN_OS_REPORT(("*****************************************\n\n"));
 
 	WLAN_OS_REPORT(("Channel			%d\n", pSiteMgr->pDesiredParams->siteMgrDesiredChannel));
-	
+
 	WLAN_OS_REPORT(("\n*****************************************\n\n"));
 
-	switch (pSiteMgr->pDesiredParams->siteMgrDesiredRatePair.maxBasic)
-	{
+	switch (pSiteMgr->pDesiredParams->siteMgrDesiredRatePair.maxBasic) {
 	case DRV_RATE_1M:
 		WLAN_OS_REPORT(("Max Basic Rate		RATE_1M_BIT\n"));
 		break;
@@ -888,8 +874,7 @@ static void printDesiredParams(siteMgr_t *pSiteMgr, TI_HANDLE hCmdDispatch)
 		break;
 	}
 
-	switch (pSiteMgr->pDesiredParams->siteMgrDesiredRatePair.maxActive)
-	{
+	switch (pSiteMgr->pDesiredParams->siteMgrDesiredRatePair.maxActive) {
 	case DRV_RATE_1M:
 		WLAN_OS_REPORT(("Max Active Rate		RATE_1M_BIT\n"));
 		break;
@@ -967,7 +952,7 @@ static void printDesiredParams(siteMgr_t *pSiteMgr, TI_HANDLE hCmdDispatch)
 		WLAN_OS_REPORT(("Authentication Type	Open System\n"));
 	else if (param.content.rsnDesiredAuthType == RSN_AUTH_SHARED_KEY)
 		WLAN_OS_REPORT(("Authentication Type	Shared Key\n"));
-	else 
+	else
 		WLAN_OS_REPORT(("Authentication Type	Invalid: %d\n", param.content.rsnDesiredAuthType));
 
 	param.paramType = RSN_ENCRYPTION_STATUS_PARAM;
@@ -976,9 +961,9 @@ static void printDesiredParams(siteMgr_t *pSiteMgr, TI_HANDLE hCmdDispatch)
 		WLAN_OS_REPORT(("WEP 				Off\n"));
 	else if (param.content.rsnEncryptionStatus == TWD_CIPHER_WEP)
 		WLAN_OS_REPORT(("WEP 				On\n"));
-	else 
+	else
 		WLAN_OS_REPORT(("WEP 		Invalid: %d\n", param.content.rsnEncryptionStatus));
-		
+
 	WLAN_OS_REPORT(("\n"));
 
 
@@ -991,7 +976,7 @@ static void printDesiredParams(siteMgr_t *pSiteMgr, TI_HANDLE hCmdDispatch)
 		WLAN_OS_REPORT(("Desired dot11mode		11a\n"));
 	else if(pSiteMgr->pDesiredParams->siteMgrDesiredDot11Mode == DOT11_DUAL_MODE)
 		WLAN_OS_REPORT(("Desired dot11mode		dual 11a/g\n"));
-	else 
+	else
 		WLAN_OS_REPORT(("Desired dot11mode		INVALID\n"));
 
 	WLAN_OS_REPORT(("\n*****************************************\n\n"));
@@ -1025,20 +1010,20 @@ static void printPrimarySiteDesc(siteMgr_t *pSiteMgr, OS_802_11_BSSID *pPrimaryS
 	TI_UINT8 rateIndex, maxNumOfRates;
 	char ssid[MAX_SSID_LEN + 1];
 
-	
-	WLAN_OS_REPORT(("\n^^^^^^^^^^^^^^^	PRIMARY SITE DESCRIPTION	^^^^^^^^^^^^^^^^^^^\n\n")); 
 
-	
-	/* MacAddress */		
-	WLAN_OS_REPORT(("BSSID				0x%X-0x%X-0x%X-0x%X-0x%X-0x%X\n",	pPrimarySiteDesc->MacAddress[0], 
-																	pPrimarySiteDesc->MacAddress[1], 
-																	pPrimarySiteDesc->MacAddress[2], 
-																	pPrimarySiteDesc->MacAddress[3], 
-																	pPrimarySiteDesc->MacAddress[4], 
-																	pPrimarySiteDesc->MacAddress[5])); 
+	WLAN_OS_REPORT(("\n^^^^^^^^^^^^^^^	PRIMARY SITE DESCRIPTION	^^^^^^^^^^^^^^^^^^^\n\n"));
+
+
+	/* MacAddress */
+	WLAN_OS_REPORT(("BSSID				0x%X-0x%X-0x%X-0x%X-0x%X-0x%X\n",	pPrimarySiteDesc->MacAddress[0],
+	                pPrimarySiteDesc->MacAddress[1],
+	                pPrimarySiteDesc->MacAddress[2],
+	                pPrimarySiteDesc->MacAddress[3],
+	                pPrimarySiteDesc->MacAddress[4],
+	                pPrimarySiteDesc->MacAddress[5]));
 
 	/* Capabilities */
-	WLAN_OS_REPORT(("Capabilities		0x%X\n",	pPrimarySiteDesc->Capabilities)); 
+	WLAN_OS_REPORT(("Capabilities		0x%X\n",	pPrimarySiteDesc->Capabilities));
 
 	/* SSID */
 	os_memoryCopy(pSiteMgr->hOs, ssid, (void *)pPrimarySiteDesc->Ssid.Ssid, pPrimarySiteDesc->Ssid.SsidLength);
@@ -1051,7 +1036,7 @@ static void printPrimarySiteDesc(siteMgr_t *pSiteMgr, OS_802_11_BSSID *pPrimaryS
 	else
 		WLAN_OS_REPORT(("Privacy				OFF\n"));
 
-	/* RSSI */				
+	/* RSSI */
 	WLAN_OS_REPORT(("RSSI					%d\n", ((pPrimarySiteDesc->Rssi)>>16)));
 
 	if (pPrimarySiteDesc->InfrastructureMode == os802_11IBSS)
@@ -1060,15 +1045,14 @@ static void printPrimarySiteDesc(siteMgr_t *pSiteMgr, OS_802_11_BSSID *pPrimaryS
 		WLAN_OS_REPORT(("BSS Type				INFRASTRUCTURE\n"));
 
 
-	maxNumOfRates = sizeof(pPrimarySiteDesc->SupportedRates) / sizeof(pPrimarySiteDesc->SupportedRates[0]); 
+	maxNumOfRates = sizeof(pPrimarySiteDesc->SupportedRates) / sizeof(pPrimarySiteDesc->SupportedRates[0]);
 	/* SupportedRates */
-	for (rateIndex = 0; rateIndex < maxNumOfRates; rateIndex++)
-	{
+	for (rateIndex = 0; rateIndex < maxNumOfRates; rateIndex++) {
 		if (pPrimarySiteDesc->SupportedRates[rateIndex] != 0)
 			WLAN_OS_REPORT(("Rate					0x%X\n", pPrimarySiteDesc->SupportedRates[rateIndex]));
 	}
 
-	WLAN_OS_REPORT(("\n---------------------------------------------------------------\n\n")); 
+	WLAN_OS_REPORT(("\n---------------------------------------------------------------\n\n"));
 
 }
 
@@ -1076,8 +1060,7 @@ static void setRateSet(TI_UINT8 maxRate, TRates *pRates)
 {
 	TI_UINT8 i = 0;
 
-	switch (maxRate)
-	{
+	switch (maxRate) {
 
 	case DRV_RATE_54M:
 		pRates->ratesString[i] = 108;
@@ -1189,7 +1172,7 @@ void printSiteMgrHelpMenu(void)
 	WLAN_OS_REPORT(("        %03d - SET_FOREGROUND_SCAN_PARAM \n", SET_FOREGROUND_SCAN_PARAM));
 	WLAN_OS_REPORT(("        %03d - ENABLE_PERIODIC_FOREGROUND_SCAN_PARAM \n", ENABLE_PERIODIC_FOREGROUND_SCAN_PARAM));
 	WLAN_OS_REPORT(("        %03d - DISABLE_PERIODIC_FOREGROUND_SCAN_PARAM \n", DISABLE_PERIODIC_FOREGROUND_SCAN_PARAM));
-	
+
 	WLAN_OS_REPORT(("        %03d - SET_CHANNEL_NUMBER \n", SET_CHANNEL_NUMBER));
 	WLAN_OS_REPORT(("        %03d - SET_RSSI_GAP_THRSH \n", SET_RSSI_GAP_THRSH));
 	WLAN_OS_REPORT(("        %03d - SET_FAST_SCAN_TIMEOUT \n", SET_FAST_SCAN_TIMEOUT));
@@ -1202,17 +1185,17 @@ void printSiteMgrHelpMenu(void)
 
 	WLAN_OS_REPORT(("        %03d - RESET_ROAMING_EVENTS \n", RESET_ROAMING_EVENTS));
 	WLAN_OS_REPORT(("        %03d - SET_DESIRED_CONS_TX_ERRORS_THREH\n", SET_DESIRED_CONS_TX_ERRORS_THREH));
-	
-	WLAN_OS_REPORT(("        %03d - GET_CURRENT_ROAMING_STATUS \n", GET_CURRENT_ROAMING_STATUS));
-	
 
-    WLAN_OS_REPORT(("        %03d - TOGGLE_LNA_ON \n", TEST_TOGGLE_LNA_ON));
-    WLAN_OS_REPORT(("        %03d - TOGGLE_LNA_OFF \n", TEST_TOGGLE_LNA_OFF));
+	WLAN_OS_REPORT(("        %03d - GET_CURRENT_ROAMING_STATUS \n", GET_CURRENT_ROAMING_STATUS));
+
+
+	WLAN_OS_REPORT(("        %03d - TOGGLE_LNA_ON \n", TEST_TOGGLE_LNA_ON));
+	WLAN_OS_REPORT(("        %03d - TOGGLE_LNA_OFF \n", TEST_TOGGLE_LNA_OFF));
 
 	WLAN_OS_REPORT(("        %03d - PRINT_SITE_TABLE_PER_SSID\n", PRINT_SITE_TABLE_PER_SSID));
-	
+
 	WLAN_OS_REPORT(("        %03d - SET_DESIRED_CHANNEL\n", SET_DESIRED_CHANNEL));
-	
+
 	WLAN_OS_REPORT(("        %03d - START_PRE_AUTH\n", START_PRE_AUTH));
 
 	WLAN_OS_REPORT(("\n------------------------\n"));

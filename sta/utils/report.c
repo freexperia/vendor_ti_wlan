@@ -209,6 +209,12 @@ TI_HANDLE report_Create (TI_HANDLE hOs)
 	os_memoryCopy(hOs, (void *)(pReport->aFileName[FILE_ID_136]),  "roamingMngr_manualSM    "  ,  sizeof("roamingMngr_manualSM    "));
 	os_memoryCopy(hOs, (void *)(pReport->aFileName[FILE_ID_137]),  "cmdinterpretoid         "  ,  sizeof("cmdinterpretoid         "));
 	os_memoryCopy(hOs, (void *)(pReport->aFileName[FILE_ID_138]),  "WlanDrvIf               "  ,  sizeof("WlanDrvIf               "));
+	os_memoryCopy(hOs, (void *)(pReport->aFileName[FILE_ID_139]),  "roamingMgrDebug         "  ,  sizeof("roamingMgrDebug         "));
+	os_memoryCopy(hOs, (void *)(pReport->aFileName[FILE_ID_140]),  "smeDebug                "  ,  sizeof("smeDebug                "));
+	os_memoryCopy(hOs, (void *)(pReport->aFileName[FILE_ID_141]),  "osRgstry                "  ,  sizeof("osRgstry                "));
+	os_memoryCopy(hOs, (void *)(pReport->aFileName[FILE_ID_142]),  "CmdInterpretWext        "  ,  sizeof("CmdInterpretWext        "));
+	os_memoryCopy(hOs, (void *)(pReport->aFileName[FILE_ID_143]),  "WlanDrvWext             "  ,  sizeof("WlanDrvWext             "));
+	os_memoryCopy(hOs, (void *)(pReport->aFileName[FILE_ID_144]),  "osApi                   "  ,  sizeof("osApi                   "));
 
 #endif  /* PRINTF_ROLLBACK */
 

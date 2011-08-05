@@ -43,7 +43,7 @@ INCLUDES = \
 
 OUTPUT_DIR ?= $(CUDK_ROOT)/output
 
-TARGET = $(OUTPUT_DIR)/wlan_loader
+TARGET = $(OUTPUT_DIR)/tiwlan_loader
 SRCS := \
 	tiwlan_loader.c
 

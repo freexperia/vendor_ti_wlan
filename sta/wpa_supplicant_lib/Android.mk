@@ -15,6 +15,9 @@
 #
 LOCAL_PATH := $(call my-dir)
 
+# This makefile is only included if BOARD_WLAN_TI_STA_DK_ROOT_SEMC is set,
+# and if we're not building for the simulator.
+ifdef BOARD_WLAN_TI_STA_DK_ROOT_SEMC
 ifeq ($(TARGET_SIMULATOR),true)
   $(error This makefile must not be included when building the simulator)
 endif
@@ -35,10 +38,11 @@ WPA_SUPPL_DIR_INCLUDE += $(WPA_SUPPL_DIR)/src \
 	$(WPA_SUPPL_DIR)/src/drivers \
 	$(WPA_SUPPL_DIR)/src/l2_packet \
 	$(WPA_SUPPL_DIR)/src/utils \
-	$(WPA_SUPPL_DIR)/src/wps
+	$(WPA_SUPPL_DIR)/src/wps \
+	$(WPA_SUPPL_DIR)/src/wapi
 endif
 
-DK_ROOT = hardware/ti/wlan/$(BOARD_WLAN_DEVICE)
+DK_ROOT = $(BOARD_WLAN_TI_STA_DK_ROOT_SEMC)
 OS_ROOT = $(DK_ROOT)/platforms
 STAD	= $(DK_ROOT)/stad
 UTILS	= $(DK_ROOT)/utils
@@ -46,7 +50,7 @@ TWD	= $(DK_ROOT)/TWD
 COMMON  = $(DK_ROOT)/common
 TXN	= $(DK_ROOT)/Txn
 CUDK	= $(DK_ROOT)/CUDK
-LIB	= ../../lib
+LIB	= $(DK_ROOT)/wpa_supplicant_lib/lib
 
 include $(WPA_SUPPL_DIR)/.config
 
@@ -63,13 +67,13 @@ INCLUDES = $(STAD)/Export_Inc \
 	$(CUDK)/configurationutility/inc \
 	$(CUDK)/os/common/inc \
 	external/openssl/include \
+	frameworks/base/cmds/keystore \
 	$(WPA_SUPPL_DIR_INCLUDE) \
-	$(DK_ROOT)/../lib
-  
+	$(LIB)
+
 L_CFLAGS = -DCONFIG_DRIVER_CUSTOM -DHOST_COMPILE -D__BYTE_ORDER_LITTLE_ENDIAN
-#L_CFLAGS += -DCONFIG_CONNECTION_SCAN
 L_CFLAGS += -DWPA_SUPPLICANT_$(WPA_SUPPLICANT_VERSION)
-OBJS = driver_ti.c $(LIB)/scanmerge.c $(LIB)/shlist.c
+OBJS = driver_ti.c
 
 # To force sizeof(enum) = 4
 ifneq ($(TARGET_SIMULATOR),true)
@@ -92,15 +96,19 @@ ifdef CONFIG_IEEE8021X_EAPOL
 L_CFLAGS += -DIEEE8021X_EAPOL
 endif
 
+ifdef CONFIG_WAPI
+L_CFLAGS += -DTI_WAPI
+endif
+
 ifdef CONFIG_WPS
 L_CFLAGS += -DCONFIG_WPS
 endif
 
 ########################
- 
+
 include $(CLEAR_VARS)
-LOCAL_MODULE_TAGS := eng
 LOCAL_MODULE := libCustomWifi
+LOCAL_MODULE_TAGS := optional
 LOCAL_SHARED_LIBRARIES := libc libcutils
 LOCAL_CFLAGS := $(L_CFLAGS)
 LOCAL_SRC_FILES := $(OBJS)
@@ -108,3 +116,4 @@ LOCAL_C_INCLUDES := $(INCLUDES)
 include $(BUILD_STATIC_LIBRARY)
 
 ########################
+endif
