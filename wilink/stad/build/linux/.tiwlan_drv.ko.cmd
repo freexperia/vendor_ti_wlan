@@ -1,0 +1,1 @@
+cmd_/android/cm7-test3/vendor/ti/wilink/stad/build/linux/tiwlan_drv.ko := /android/cm7-test3/prebuilt/linux-x86/toolchain/arm-eabi-4.3.1/bin/arm-eabi-ld -EL -r   --build-id -o /android/cm7-test3/vendor/ti/wilink/stad/build/linux/tiwlan_drv.ko /android/cm7-test3/vendor/ti/wilink/stad/build/linux/tiwlan_drv.o /android/cm7-test3/vendor/ti/wilink/stad/build/linux/tiwlan_drv.mod.o
