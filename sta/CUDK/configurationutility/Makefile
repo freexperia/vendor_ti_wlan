@@ -89,7 +89,7 @@ INCLUDES += \
 endif
 
 CFLAGS = $(OPT) -Wall -Wstrict-prototypes $(DEBUGFLAGS) $(INCLUDES) -D__LINUX__ $(DK_DEFINES) -D__BYTE_ORDER_LITTLE_ENDIAN
-CFLAGS += -DDRV_NAME='"wlan"'
+CFLAGS += -DDRV_NAME='"tiwlan"'
 
 ifneq "$(CROSS_COMPILE)" ""		#compile for ARM
 	CFLAGS += $(ARMFLAGS)

@@ -226,7 +226,7 @@ S32 user_main(S32 argc, PPS8 argv)
 	}
 
 	if( !g_drv_name[0] ) {
-		os_strcpy(g_drv_name, (PS8)TIWLAN_DRV_NAME "0" );
+		os_strcpy(g_drv_name, (PS8)TIWLAN_DRV_NAME "0.1" );
 	}
 
 #ifdef ANDROID

@@ -1,0 +1,10 @@
+wilink 1271/1273 semc drivers
+
+device msm7x30
+ap
+sta
+
+
+devices ms7x27
+wilink_ap
+wilink_sta

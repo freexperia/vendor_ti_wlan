@@ -47,7 +47,7 @@
 
 /* TODO: Platform specific constant */
 /* This is extremely ugly but will do for the bringup */
-#define TNETW_IRQ		MSM_GPIO_TO_INT(147)
+#define TNETW_IRQ		MSM_GPIO_TO_INT(147) // msm8255
 #define TIWLAN_IRQ_POLL_INTERVAL	    (HZ/100)
 
 
