@@ -51,10 +51,10 @@ CORE_INCS = \
     $(COMSRC)/RolesAndLinks \
     $(COMSRC)/Connection_Managment
 
-ifeq ($(DEBUG),y)
+#ifeq ($(DEBUG),y)
     CORE_INCS += \
         $(TESTSRC)/
-endif 
+#endif 
 
 #start of CORE_INCS_XCC#     do not remove or change this comment
 ifeq ($(XCC),y)

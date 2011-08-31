@@ -10,7 +10,7 @@ EXTRA_CFLAGS += $(addprefix -I, $(WLAN_INCS))
 
 SDIO_IN_BAND ?= n
 TRACE ?= n
-STRIP = n
+STRIP = y
 
 ifeq ($(SDIO_IN_BAND),y)
 EXTRA_CFLAGS += -DSDIO_IN_BAND_INTERRUPT

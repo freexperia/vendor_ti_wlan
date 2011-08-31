@@ -1,5 +1,5 @@
 # Do not build unless BoardConfig define BOARD_WLAN_TI_STA_DK_ROOT_SEMC.
-ifdef BOARD_WLAN_TI_STA_DK_ROOT_SEMC
+ifdef BOARD_WLAN_TI_STA_DK_ROOT_SEMCE
 
 LOCAL_PATH:= $(call my-dir)
 SRC_MAIN := platforms/os/linux

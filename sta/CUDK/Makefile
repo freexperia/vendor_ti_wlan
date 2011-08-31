@@ -4,7 +4,7 @@
 # compiling the OAL as static lib
 STATIC_LIB ?= y
 # compiling in debug mode
-DEBUG ?= y
+DEBUG ?= n
 # build the supplicant
 BUILD_SUPPL ?= y
 # type of supplicant to build

@@ -1,5 +1,5 @@
 STATIC_LIB ?= y
-DEBUG ?= y
+DEBUG ?= n
 BUILD_SUPPL ?= y
 WPA_ENTERPRISE ?= y
 XCC ?= n
