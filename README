@@ -1,10 +1,1 @@
 wilink 1271/1273 semc drivers
-
-device msm7x30
-ap - shipped semc driver patched
-sta - shipped semc driver patched
-
-devices ms7x27
-wilink - shipped semc driver patched
-wilink_ap - needs fix
-wilink_sta - needs fix
