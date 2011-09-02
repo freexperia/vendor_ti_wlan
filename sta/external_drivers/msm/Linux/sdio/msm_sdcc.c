@@ -1230,9 +1230,8 @@ int msmsdcc_probe(struct platform_device *pdev)
 
 	memset(&host->timer, 0, sizeof(host->timer));
 
-  if (stat_irqres && !(stat_irqres->flags & IORESOURCE_DISABLED)) {
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
+  if (stat_irqres && !(stat_irqres->flags & IORESOURCE_DISABLED)) {
     unsigned long irqflags = IRQF_SHARED |
                              (stat_irqres->flags & IRQF_TRIGGER_MASK);
 
