@@ -267,12 +267,10 @@ TI_STATUS rsn_SetDefaults (TI_HANDLE hRsn, TRsnInitParams *pInitParam)
 	/* Create the module's timers */
 	pRsn->hMicFailureReportWaitTimer = tmr_CreateTimer (pRsn->hTimer);
 	if (pRsn->hMicFailureReportWaitTimer == NULL) {
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, "rsn_SetDefaults(): Failed to create hMicFailureReportWaitTimer!\n");
 		return TI_NOK;
 	}
 	pRsn->hMicFailureGroupReKeyTimer = tmr_CreateTimer (pRsn->hTimer);
 	if (pRsn->hMicFailureGroupReKeyTimer == NULL) {
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, "rsn_SetDefaults(): Failed to create hMicFailureGroupReKeyTimer!\n");
 		return TI_NOK;
 	}
 
@@ -282,7 +280,6 @@ TI_STATUS rsn_SetDefaults (TI_HANDLE hRsn, TRsnInitParams *pInitParam)
 
 	pRsn->hMicFailurePairwiseReKeyTimer = tmr_CreateTimer (pRsn->hTimer);
 	if (pRsn->hMicFailurePairwiseReKeyTimer == NULL) {
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, "rsn_SetDefaults(): Failed to create hMicFailurePairwiseReKeyTimer!\n");
 		return TI_NOK;
 	}
 
@@ -388,7 +385,6 @@ TI_STATUS rsn_setDefaultKeys(rsn_t *pRsn)
 			status = pRsn->pMainSecSm->setKey (pRsn->pMainSecSm, &pRsn->keys[keyIndex]);
 
 			if (status != TI_OK) {
-				TRACE1(pRsn->hReport, REPORT_SEVERITY_ERROR, "RSN: Setting key #%d failed \n", keyIndex);
 				return status;
 			}
 		}
@@ -402,7 +398,6 @@ TI_STATUS rsn_setDefaultKeys(rsn_t *pRsn)
 		tTwdParam.content.configureCmdCBParams.hCb = NULL;
 		status = TWD_SetParam (pRsn->hTWD, &tTwdParam);
 
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: default key ID =%d \n", pRsn->defaultKeyId);
 	}
 
 	return status;
@@ -441,7 +436,6 @@ TI_STATUS rsn_start(TI_HANDLE hRsn)
 		return TI_NOK;
 	}
 
-	TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_start ...\n");
 
 	pRsn->rsnStartedTs = os_timeStampMs (pRsn->hOs);
 
@@ -512,12 +506,10 @@ TI_STATUS rsn_removedDefKeys (TI_HANDLE hRsn)
 	TI_UINT8  keyIndex;
 	rsn_t  *pRsn = (rsn_t*)hRsn;
 
-	TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_removedDefKeys Enter \n");
 
 	for (keyIndex = 0; keyIndex < MAX_KEYS_NUM; keyIndex++) {
 		TSecurityKeys   key;
 
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_removedDefKeys, Remove keyId=%d\n", keyIndex);
 
 		pRsn->wepDefaultKeys[keyIndex] = TI_FALSE;
 		os_memoryCopy (pRsn->hOs, &key, &pRsn->keys[keyIndex], sizeof(TSecurityKeys));
@@ -564,16 +556,13 @@ TI_STATUS rsn_stop (TI_HANDLE hRsn, TI_BOOL removeKeys)
 		return TI_NOK;
 	}
 
-	TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: calling STOP... removeKeys=%d\n", removeKeys);
 
 	for (keyIndex = 0; keyIndex < MAX_KEYS_NUM; keyIndex++) {
 		os_memoryCopy (pRsn->hOs, &key, &pRsn->keys[keyIndex], sizeof(TSecurityKeys));
 		key.keyIndex = keyIndex;
 
 		if (!pRsn->wepDefaultKeys[keyIndex]) {	/* Remove only dynamic keys. Default keys are removed by calling: rsn_removedDefKeys() */
-			TRACE2(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_stop, Remove keyIndex=%d, key.keyIndex=%d\n",keyIndex, key.keyIndex);
 
-			TRACE_INFO_HEX(pRsn->hReport, (TI_UINT8 *)key.macAddress, 6);
 
 			pRsn->removeKey (pRsn, &key);
 		}
@@ -653,7 +642,6 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
 		pParam->content.pRsnKey = &pRsn->keys[pParam->content.pRsnKey->keyIndex];
 		if (pParam->content.pRsnKey->keyIndex == pRsn->defaultKeyId) {
 			pParam->content.pRsnKey->keyIndex |= 0x80000000;
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_WARNING, "default Key: %d\n", pRsn->defaultKeyId);
 		}
 		break;
 
@@ -692,13 +680,11 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
 
 	case  RSN_WPA_PROMOTE_AVAILABLE_OPTIONS:
 		status = pRsn->pAdmCtrl->getWPAMixedModeSupport (pRsn->pAdmCtrl, &pParam->content.rsnWPAMixedModeSupport);
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Get WPA Mixed MODE support  %d \n",pParam->content.rsnWPAMixedModeSupport);
 		break;
 
 	case RSN_WPA_PROMOTE_OPTIONS:
 		status = pRsn->pAdmCtrl->getPromoteFlags (pRsn->pAdmCtrl,
 		         &pParam->content.rsnWPAPromoteFlags);
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Get WPA promote flags  %d \n",pParam->content.rsnWPAPromoteFlags);
 
 		break;
 
@@ -709,22 +695,18 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
 #endif
 	case RSN_EAP_TYPE:
 		pParam->content.eapType = pRsn->eapType;
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Get RSN_EAP_TYPE eapType  %d \n", pParam->content.eapType);
 		break;
 
 	case WPA_801_1X_AKM_EXISTS:
 
 		status = pRsn->pAdmCtrl->get802_1x_AkmExists(pRsn->pAdmCtrl, &pParam->content.wpa_802_1x_AkmExists);
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Get WPA_801_1X_AKM_EXISTS  %d \n", pParam->content.wpa_802_1x_AkmExists);
 		break;
 
 	case RSN_DEFAULT_KEY_ID:
 		pParam->content.rsnDefaultKeyID = pRsn->defaultKeyId;
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Get RSN_DEFAULT_KEY_ID  %d \n", pParam->content.rsnDefaultKeyID);
 		break;
 
 	case RSN_PORT_STATUS_PARAM:
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Get Port Status\n"  );
 
 		if (pRsn->bRsnExternalMode) {
 			pParam->content.rsnPortStatus = pRsn->getPortStatus( pRsn );
@@ -734,7 +716,6 @@ TI_STATUS rsn_getParam(TI_HANDLE hRsn, void *param)
 		break;
 
 	case RSN_EXTERNAL_MODE_PARAM:
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Get External Mode\n"  );
 
 		pParam->content.rsnExternalMode = pRsn->bRsnExternalMode;
 		break;
@@ -779,7 +760,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 		return TI_NOK;
 	}
 
-	TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set rsn_setParam   %X \n", pParam->paramType);
 
 	switch (pParam->paramType) {
 
@@ -789,7 +769,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 		defKeyId = pParam->content.rsnDefaultKeyID;
 
 		if (defKeyId >= MAX_KEYS_NUM) {
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, "RSN: Error - the value of the default Key Id  is incorrect \n");
 			return TI_NOK;
 		}
 
@@ -808,7 +787,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 		tTwdParam.content.configureCmdCBParams.hCb = NULL;
 		status = TWD_SetParam (pRsn->hTWD, &tTwdParam);
 
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: default key ID =%d \n", pRsn->defaultKeyId);
 
 		sme_Restart (pRsn->hSmeSm);
 		break;
@@ -823,7 +801,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 			return status;
 		}
 
-		TRACE2(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_ADD_KEY_PARAM KeyIndex  %x , keyLength=%d\n", pParam->content.rsnOsKey.KeyIndex,pParam->content.rsnOsKey.KeyLength);
 		keyIndex = (TI_UINT8)pParam->content.rsnOsKey.KeyIndex;
 		if (keyIndex >= MAX_KEYS_NUM) {
 			return TI_NOK;
@@ -832,7 +809,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 		status = pRsn->pKeyParser->recv (pRsn->pKeyParser, (TI_UINT8*)&pParam->content.rsnOsKey, sizeof(pParam->content.rsnOsKey));
 
 		if (status != TI_OK) {
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_WARNING, ": pRsn->pKeyParser->recv satus returned with status=%x. returning with NOK\n", status);
 			return TI_NOK;
 		}
 
@@ -841,8 +817,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 
 		/* If default Key not cleaned by calling rsn_removedDefKeys for keyIndex, Clean it */
 		if (pRsn->wepDefaultKeys[keyIndex] == TI_TRUE) {
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "Set RSN_ADD_KEY_PARAM KeyIndex  %x\n", keyIndex);
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "Set RSN_ADD_KEY_PARAM wepDefaultKeys=%d\n", pRsn->wepDefaultKeys[keyIndex]);
 
 			pRsn->wepDefaultKeys[keyIndex] = TI_FALSE;
 
@@ -869,7 +843,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 		}
 
 		if (pRsn->defaultKeysOn) {  /* This is a WEP default key */
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN_ADD_KEY_PARAM, Default key configured - keyIndex=%d-TI_TRUE\n", keyIndex);
 
 			pRsn->wepDefaultKeys[keyIndex] = TI_TRUE;
 			pRsn->wepStaticKey = TI_TRUE;
@@ -887,11 +860,9 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 		}
 		/*if (cipherSuite == RSN_CIPHER_NONE)
 		{
-		    TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, "RSN: Error Remove Wep/Key when no encryption \n");
 		    return TI_NOK;
 		}*/
 
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_REMOVE_KEY_PARAM KeyIndex  %x \n", pParam->content.rsnOsKey.KeyIndex);
 		keyIndex = (TI_UINT8)pParam->content.rsnOsKey.KeyIndex;
 		if (keyIndex >= MAX_KEYS_NUM) {
 			return TI_NOK;
@@ -912,13 +883,10 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 	case RSN_ENCRYPTION_STATUS_PARAM: {
 		ECipherSuite   cipherSuite;
 
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_ENCRYPTION_STATUS_PARAM rsnEncryptionStatus  %d \n", pParam->content.rsnEncryptionStatus);
-
 		pRsn->pAdmCtrl->getCipherSuite (pRsn->pAdmCtrl, &cipherSuite);
 		if (cipherSuite != pParam->content.rsnEncryptionStatus) {
 			status = pRsn->pAdmCtrl->setUcastSuite (pRsn->pAdmCtrl, pParam->content.rsnEncryptionStatus);
 			status = pRsn->pAdmCtrl->setBcastSuite (pRsn->pAdmCtrl, pParam->content.rsnEncryptionStatus);
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, " status = %d \n", status);
 		}
 		pRsn->defaultKeysOn = TI_TRUE;
 	}
@@ -929,10 +897,8 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 
 		pRsn->pAdmCtrl->getExtAuthMode (pRsn->pAdmCtrl, &extAuthMode);
 		if (pParam->content.rsnExtAuthneticationMode!=extAuthMode) {
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_EXT_AUTHENTICATION_MODE rsnExtAuthneticationMode  %d \n", pParam->content.rsnExtAuthneticationMode);
 
 			/*
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: remove all Keys\n");
 
 			for (keyIndex=0; keyIndex<MAX_KEYS_NUM; keyIndex++)
 			{
@@ -953,7 +919,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 
 		pRsn->pAdmCtrl->getNetworkEap (pRsn->pAdmCtrl, &networkEap);
 		if (networkEap != pParam->content.networkEap) {
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_XCC_NETWORK_EAP networkEap  %d \n", pParam->content.networkEap);
 
 			status = pRsn->pAdmCtrl->setNetworkEap (pRsn->pAdmCtrl, pParam->content.networkEap);
 			if (status == TI_OK) {
@@ -970,36 +935,22 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 		if (mixedMode!=pParam->content.rsnMixedMode) {
 			status = pRsn->pAdmCtrl->setMixedMode (pRsn->pAdmCtrl, pParam->content.rsnMixedMode);
 
-			TRACE2(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_MIXED_MODE mixedMode  %d, status=%d \n", pParam->content.rsnMixedMode, status);
 		}
 		break;
 	}
 
 	case RSN_PMKID_LIST:
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_PMKID_LIST \n");
 
-		TRACE_INFO_HEX(pRsn->hReport, (TI_UINT8*)&pParam->content.rsnPMKIDList ,sizeof(OS_802_11_PMKID));
 		status = pRsn->pAdmCtrl->setPmkidList (pRsn->pAdmCtrl,
 		                                       &pParam->content.rsnPMKIDList);
-		if (status == TI_OK) {
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_PMKID_LIST:   %d PMKID entries has been added to the cache.\n", pParam->content.rsnPMKIDList.BSSIDInfoCount);
-		} else {
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_PMKID_LIST failure");
-		}
 		break;
 
 	case RSN_WPA_PROMOTE_OPTIONS:
 		status = pRsn->pAdmCtrl->setPromoteFlags (pRsn->pAdmCtrl,
 		         pParam->content.rsnWPAPromoteFlags);
-		if (status == TI_OK) {
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set WPA promote options:  %d \n", pParam->content.rsnWPAPromoteFlags);
-		} else {
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set WPA promote options failure");
-		}
 		break;
 
 	case RSN_EAP_TYPE:
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set RSN_EAP_TYPE eapType  %d \n", pParam->content.eapType);
 
 		pRsn->eapType = pParam->content.eapType;
 		pRsn->defaultKeysOn = TI_TRUE;
@@ -1010,7 +961,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 		TI_UINT32     keyIndex;
 		TI_UINT8      j=0;
 
-		TRACE2(pRsn->hReport,REPORT_SEVERITY_INFORMATION,"RSN:Set RSN_SET_KEY_PARAM KeyIndex %x,keyLength=%d\n",pSecurityKey->keyIndex,pSecurityKey->encLen);
 
 		if (pSecurityKey->keyIndex >= MAX_KEYS_NUM) {
 			return TI_NOK;
@@ -1057,7 +1007,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 			}
 
 			if (pRsn->defaultKeysOn) {  /* This is a WEP default key */
-				TRACE1(pRsn->hReport,REPORT_SEVERITY_INFORMATION, "RSN_SET_KEY_PARAM, Default key configured-keyIndex=%d-TI_TRUE\n", keyIndex);
 
 				pRsn->wepDefaultKeys[keyIndex] = TI_TRUE;
 				pRsn->wepStaticKey = TI_TRUE;
@@ -1069,7 +1018,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 
 
 	case RSN_PORT_STATUS_PARAM:
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set Port Status %d \n", pParam->content.rsnPortStatus);
 
 		if (pRsn->bRsnExternalMode) {
 			status = pRsn->setPortStatus( hRsn, pParam->content.rsnPortStatus );
@@ -1079,9 +1027,6 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 		break;
 
 	case RSN_GENERIC_IE_PARAM:
-		TRACE4(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set Generic IE: length=%d, IE=%02x%02x%02x... \n",
-		       pParam->content.rsnGenericIE.length,
-		       pParam->content.rsnGenericIE.data[0], pParam->content.rsnGenericIE.data[1],pParam->content.rsnGenericIE.data[2] );
 
 		status = TI_OK;
 
@@ -1095,13 +1040,11 @@ TI_STATUS rsn_setParam (TI_HANDLE hRsn, void *param)
 			/* Deleting the IE */
 			pRsn->genericIE.length = pParam->content.rsnGenericIE.length;
 		} else {
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, "RSN: Set Generic IE: FAILED sanity checks \n" );
 			status = TI_NOK;
 		}
 		break;
 
 	case RSN_EXTERNAL_MODE_PARAM:
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Set External Mode\n"  );
 
 		pRsn->bRsnExternalMode = pParam->content.rsnExternalMode;
 		break;
@@ -1203,7 +1146,6 @@ TI_STATUS rsn_reportStatus (rsn_t *pRsn, TI_STATUS rsnStatus)
 		EvHandlerSendEvent (pRsn->hEvHandler, IPC_EVENT_AUTH_SUCC, NULL, 0);
 	}
 
-	TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: rsn_reportStatus \n");
 
 	return TI_OK;
 }
@@ -1237,7 +1179,6 @@ TI_STATUS rsn_setPaeConfig(rsn_t *pRsn, TRsnPaeConfig *pPaeConfig)
 		return TI_NOK;
 	}
 
-	TRACE2(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: Calling set PAE config..., unicastSuite = %d, broadcastSuite = %d \n", pPaeConfig->unicastSuite, pPaeConfig->broadcastSuite);
 
 	os_memoryCopy(pRsn->hOs, &pRsn->paeConfig, pPaeConfig, sizeof(TRsnPaeConfig));
 
@@ -1333,7 +1274,6 @@ TI_STATUS rsn_evalSite(TI_HANDLE hRsn, TRsnData *pRsnData, TRsnSiteParams *pRsnS
 
 	if (rsn_isSiteBanned(hRsn, pRsnSiteParams->bssid) == TI_TRUE) {
 		*pMetric = 0;
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Site is banned!\n");
 		return TI_NOK;
 	}
 
@@ -1344,7 +1284,6 @@ TI_STATUS rsn_evalSite(TI_HANDLE hRsn, TRsnData *pRsnData, TRsnSiteParams *pRsnS
 		status = pRsn->pAdmCtrl->evalSite (pRsn->pAdmCtrl, pRsnData, pRsnSiteParams, pMetric);
 	}
 
-	TRACE2(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": pMetric=%d status=%d\n", *pMetric, status);
 
 	return status;
 }
@@ -1386,10 +1325,8 @@ TI_STATUS rsn_getInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT32 *pRsnIe
 
 		status = pRsn->pAdmCtrl->getInfoElement (pRsn->pAdmCtrl, pRsnIe, &ie_len);
 
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_getInfoElement pRsnIeLen= %d\n",*pRsnIeLen);
 
 		if ( status != TI_OK ) {
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, "rsn_getInfoElement() - pAdmCtrl->getInfoElement() returned error. Returning. \n");
 			return status;
 		}
 	} else {   /* LiorC: We assume the generic IE should be set only in external mode */
@@ -1437,7 +1374,6 @@ TI_STATUS rsn_getXCCExtendedInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UIN
 
 	status = admCtrlXCC_getInfoElement (pRsn->pAdmCtrl, pRsnIe, pRsnIeLen);
 
-	TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_getXCCExtendedInfoElement pRsnIeLen= %d\n",*pRsnIeLen);
 
 	return status;
 }
@@ -1477,7 +1413,6 @@ TI_STATUS rsn_setSite(TI_HANDLE hRsn, TRsnData *pRsnData, TI_UINT8 *pAssocIe, TI
 
 	status = pRsn->pAdmCtrl->setSite (pRsn->pAdmCtrl, pRsnData, pAssocIe, pAssocIeLen);
 
-	TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_setSite ieLen= %d\n",pRsnData->ieLen);
 	return status;
 }
 
@@ -1571,7 +1506,6 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
 			}
 
 			if (macIsBroadcast) {
-				TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: rsn_setKey, Group ReKey timer started\n");
 				tmr_StopTimer (pRsn->hMicFailureGroupReKeyTimer);
 				tmr_StartTimer (pRsn->hMicFailureGroupReKeyTimer,
 				                rsn_groupReKeyTimeout,
@@ -1581,7 +1515,6 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
 				pRsn->eGroupKeyUpdate = GROUP_KEY_UPDATE_TRUE;
 			} else {
 				if (pRsn->bPairwiseMicFailureFilter) {	/* the value of this flag is taken from registry */
-					TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: rsn_setKey, Pairwise ReKey timer started\n");
 					tmr_StopTimer (pRsn->hMicFailurePairwiseReKeyTimer);
 					tmr_StartTimer (pRsn->hMicFailurePairwiseReKeyTimer,
 					                rsn_pairwiseReKeyTimeout,
@@ -1601,22 +1534,8 @@ TI_STATUS rsn_setKey (rsn_t *pRsn, TSecurityKeys *pKey)
 		tTwdParam.content.configureCmdCBParams.fCb = NULL;
 		tTwdParam.content.configureCmdCBParams.hCb = NULL;
 		status = TWD_SetParam (pRsn->hTWD, &tTwdParam);
-		TRACE3(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: rsn_setKey, KeyType=%d, KeyId = 0x%lx,encLen=0x%x\n", pKey->keyType,pKey->keyIndex, pKey->encLen);
 
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "\nEncKey = ");
 
-		TRACE_INFO_HEX(pRsn->hReport, (TI_UINT8 *)pKey->encKey, pKey->encLen);
-
-		if (pKey->keyType != KEY_WEP) {
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "\nMac address = ");
-			TRACE_INFO_HEX(pRsn->hReport, (TI_UINT8 *)pKey->macAddress, MAC_ADDR_LEN);
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "\nRSC = ");
-			TRACE_INFO_HEX(pRsn->hReport, (TI_UINT8 *)pKey->keyRsc, KEY_RSC_LEN);
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "\nMic RX = ");
-			TRACE_INFO_HEX(pRsn->hReport, (TI_UINT8 *)pKey->micRxKey, MAX_KEY_LEN);
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "\nMic TX = ");
-			TRACE_INFO_HEX(pRsn->hReport, (TI_UINT8 *)pKey->micTxKey, MAX_KEY_LEN);
-		}
 	}
 
 	return status;
@@ -1639,7 +1558,6 @@ TI_STATUS rsn_removeKey (rsn_t *pRsn, TSecurityKeys *pKey)
 		return TI_NOK;
 	}
 
-	TRACE2(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_removeKey Entry, keyType=%d, keyIndex=0x%lx\n",pKey->keyType, keyIndex);
 
 	/* Now set to the RSN structure. */
 	if (pRsn->keys_en[keyIndex]) {
@@ -1676,7 +1594,6 @@ TI_STATUS rsn_removeKey (rsn_t *pRsn, TSecurityKeys *pKey)
 
 		status = TWD_SetParam (pRsn->hTWD, &tTwdParam);
 
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_removeKey in whal, status =%d\n", status);
 
 		/* clean the key flags*/
 		pRsn->keys[keyIndex].keyIndex &= 0x000000FF;
@@ -1705,7 +1622,6 @@ TI_STATUS rsn_setDefaultKeyId(rsn_t *pRsn, TI_UINT8 keyId)
 	tTwdParam.content.configureCmdCBParams.hCb = NULL;
 	status = TWD_SetParam (pRsn->hTWD, &tTwdParam);
 
-	TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "RSN: rsn_setDefaultKeyId, KeyId = 0x%lx\n", keyId);
 	return status;
 }
 
@@ -1725,17 +1641,12 @@ TI_STATUS rsn_reportAuthFailure(TI_HANDLE hRsn, EAuthStatus authStatus)
 	/* Remove AP from candidate list for a specified amount of time */
 	param.paramType = CTRL_DATA_CURRENT_BSSID_PARAM;
 	status = ctrlData_getParam(pRsn->hCtrlData, &param);
-	if (status != TI_OK) {
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, "rsn_reportAuthFailure, unable to retrieve BSSID \n");
-	} else {
-		TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "current station is banned from the roaming candidates list for %d Ms\n", RSN_AUTH_FAILURE_TIMEOUT);
-
+	if (status == TI_OK) {
 		rsn_banSite(hRsn, param.content.ctrlDataCurrentBSSID, RSN_SITE_BAN_LEVEL_FULL, RSN_AUTH_FAILURE_TIMEOUT);
 	}
 
 
 #ifdef XCC_MODULE_INCLUDED
-	TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "CALLING rougeAP, status= %d \n",authStatus);
 	status = XCCMngr_rogueApDetected (pRsn->hXCCMngr, authStatus);
 #endif
 	TI_VOIDCAST(pRsn);
@@ -1763,7 +1674,6 @@ TI_STATUS rsn_reportMicFailure(TI_HANDLE hRsn, TI_UINT8 *pType, TI_UINT32 Length
 		/* was performed during the last 3 seconds */
 		if ((failureType == KEY_TKIP_MIC_GROUP) &&
 		        (pRsn->eGroupKeyUpdate == GROUP_KEY_UPDATE_TRUE)) {
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Group MIC failure ignored, key update was performed within the last 3 seconds.\n");
 			return TI_OK;
 		}
 
@@ -1771,7 +1681,6 @@ TI_STATUS rsn_reportMicFailure(TI_HANDLE hRsn, TI_UINT8 *pType, TI_UINT32 Length
 		/* was performed during the last 3 seconds */
 		if ((failureType == KEY_TKIP_MIC_PAIRWISE) &&
 		        (pRsn->ePairwiseKeyUpdate == PAIRWISE_KEY_UPDATE_TRUE)) {
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Pairwise MIC failure ignored, key update was performed within the last 3 seconds.\n");
 			return TI_OK;
 		}
 
@@ -1809,7 +1718,6 @@ TI_STATUS rsn_reportMicFailure(TI_HANDLE hRsn, TI_UINT8 *pType, TI_UINT32 Length
 		banLevel = rsn_banSite (hRsn, param.content.ctrlDataCurrentBSSID, RSN_SITE_BAN_LEVEL_HALF, RSN_MIC_FAILURE_TIMEOUT);
 		if (banLevel == RSN_SITE_BAN_LEVEL_FULL) {
 			/* Site is banned so prepare to disconnect */
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Second MIC failure, closing Rx port...\n");
 
 			param.paramType = RX_DATA_PORT_STATUS_PARAM;
 			param.content.rxDataPortStatus = CLOSE;
@@ -1823,9 +1731,6 @@ TI_STATUS rsn_reportMicFailure(TI_HANDLE hRsn, TI_UINT8 *pType, TI_UINT32 Length
 			                (TI_HANDLE)pRsn,
 			                RSN_MIC_FAILURE_REPORT_TIMEOUT,
 			                TI_FALSE);
-		} else {
-			/* Site is only half banned so nothing needs to be done for now */
-			TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": First MIC failure, business as usual for now...\n");
 		}
 	}
 
@@ -1869,8 +1774,6 @@ void rsn_micFailureReportTimeout (TI_HANDLE hRsn, TI_BOOL bTwdInitOccured)
 	if (pRsn == NULL) {
 		return;
 	}
-
-	TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": MIC failure reported, disassociating...\n");
 
 	apConn_reportRoamingEvent (pRsn->hAPConn, ROAMING_TRIGGER_SECURITY_ATTACK, NULL);
 }
@@ -1949,8 +1852,6 @@ TI_STATUS rsn_startPreAuth(TI_HANDLE hRsn, TBssidList4PreAuth *pBssidList)
 
 	status = pRsn->pAdmCtrl->startPreAuth (pRsn->pAdmCtrl, pBssidList);
 
-	TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_startPreAuth \n");
-
 	return status;
 }
 
@@ -1975,15 +1876,12 @@ TI_STATUS rsn_startPreAuth(TI_HANDLE hRsn, TBssidList4PreAuth *pBssidList)
  */
 TI_BOOL rsn_isSiteBanned(TI_HANDLE hRsn, TMacAddr siteBssid)
 {
-	rsn_t * pRsn = (rsn_t *) hRsn;
 	rsn_siteBanEntry_t * entry;
 
 	/* Check if site is in the list */
 	if ((entry = findBannedSiteAndCleanup(hRsn, siteBssid)) == NULL) {
 		return TI_FALSE;
 	}
-
-	TRACE7(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Site %02X-%02X-%02X-%02X-%02X-%02X found with ban level %d...\n", siteBssid[0], siteBssid[1], siteBssid[2], siteBssid[3], siteBssid[4], siteBssid[5], entry->banLevel);
 
 	return (entry->banLevel == RSN_SITE_BAN_LEVEL_FULL);
 }
@@ -2051,13 +1949,9 @@ ERsnSiteBanLevel rsn_banSite(TI_HANDLE hRsn, TMacAddr siteBssid, ERsnSiteBanLeve
 	/* Try finding the site in the list */
 	if ((entry = findBannedSiteAndCleanup(hRsn, siteBssid)) != NULL) {
 		/* Site found so a previous ban is still in effect */
-		TRACE6(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Site %02X-%02X-%02X-%02X-%02X-%02X found and has been set to ban level full!\n", siteBssid[0], siteBssid[1], siteBssid[2], siteBssid[3], siteBssid[4], siteBssid[5]);
-
 		entry->banLevel = RSN_SITE_BAN_LEVEL_FULL;
 	} else {
 		/* Site doesn't appear in the list, so find a place to insert it */
-		TRACE7(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Site %02X-%02X-%02X-%02X-%02X-%02X added with ban level %d!\n", siteBssid[0], siteBssid[1], siteBssid[2], siteBssid[3], siteBssid[4], siteBssid[5], banLevel);
-
 		entry = findEntryForInsert (hRsn);
 
 		MAC_COPY (entry->siteBssid, siteBssid);
@@ -2096,8 +1990,6 @@ static rsn_siteBanEntry_t * findEntryForInsert(TI_HANDLE hRsn)
 
 	/* In the extreme case that the list is full we overwrite an old entry */
 	if (pRsn->numOfBannedSites == RSN_MAX_NUMBER_OF_BANNED_SITES) {
-		TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, ": No room left to insert new banned site, overwriting old one!\n");
-
 		return &(pRsn->bannedSites[0]);
 	}
 
@@ -2136,7 +2028,6 @@ static rsn_siteBanEntry_t * findBannedSiteAndCleanup(TI_HANDLE hRsn, TMacAddr si
 	for (iter = 0; iter < pRsn->numOfBannedSites; iter++) {
 		/* If this entry has expired we'd like to clean it up */
 		if (os_timeStampMs(pRsn->hOs) - pRsn->bannedSites[iter].banStartedMs >= pRsn->bannedSites[iter].banDurationMs) {
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Found expired entry at index %d, cleaning it up...\n", iter);
 
 			/* Replace this entry with the last one */
 			pRsn->bannedSites[iter] = pRsn->bannedSites[pRsn->numOfBannedSites - 1];
@@ -2150,14 +2041,9 @@ static rsn_siteBanEntry_t * findBannedSiteAndCleanup(TI_HANDLE hRsn, TMacAddr si
 
 		/* Is this the entry for the site we're looking for? */
 		if (MAC_EQUAL (siteBssid, pRsn->bannedSites[iter].siteBssid)) {
-			TRACE7(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Site %02X-%02X-%02X-%02X-%02X-%02X found at index %d!\n", siteBssid[0], siteBssid[1], siteBssid[2], siteBssid[3], siteBssid[4], siteBssid[5], iter);
-
 			return &pRsn->bannedSites[iter];
 		}
 	}
-
-	/* Entry not found... */
-	TRACE6(pRsn->hReport, REPORT_SEVERITY_INFORMATION, ": Site %02X-%02X-%02X-%02X-%02X-%02X not found...\n", siteBssid[0], siteBssid[1], siteBssid[2], siteBssid[3], siteBssid[4], siteBssid[5]);
 
 	return NULL;
 }
@@ -2237,7 +2123,6 @@ TI_STATUS rsn_getGenInfoElement(rsn_t *pRsn, TI_UINT8 *out_buff, TI_UINT32 *out_
  */
 void rsn_clearGenInfoElement(rsn_t *pRsn )
 {
-	TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_clearGenInfoElement: clearing Generic IE \n");
 	os_memoryZero(pRsn->hOs, &pRsn->genericIE, sizeof(pRsn->genericIE));
 }
 

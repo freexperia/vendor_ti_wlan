@@ -261,12 +261,6 @@ TI_STATUS SoftGemini_SetDefaults (TI_HANDLE hSoftGemini, SoftGeminiInitParams_t 
 		status = SoftGemini_setEnableParam(hSoftGemini, pSoftGeminiInitParams->SoftGeminiEnable, TI_FALSE);
 	}
 
-	if (status == TI_OK) {
-		TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INIT, "  SoftGemini_config() - configured successfully\n");
-	} else {
-		TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, "  SoftGemini_config() - Error configuring module \n");
-	}
-
 	return status;
 }
 
@@ -318,8 +312,6 @@ TI_STATUS SoftGemini_setParam(TI_HANDLE	hSoftGemini,
 	SoftGemini_t *pSoftGemini = (SoftGemini_t *)hSoftGemini;
 	TI_STATUS return_value = TI_OK;
 
-	TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "  SoftGemini_setParam() (0x%x)\n", pParam->paramType);
-
 	switch (pParam->paramType) {
 
 	case SOFT_GEMINI_SET_ENABLE:
@@ -345,7 +337,6 @@ TI_STATUS SoftGemini_setParam(TI_HANDLE	hSoftGemini,
 		break;
 
 	default:
-		TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, "  SoftGemini_setParam(), Params is not supported, %d\n\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 	}
 
@@ -395,14 +386,11 @@ static TI_STATUS SoftGemini_setEnableParam(TI_HANDLE hSoftGemini, ESoftGeminiEna
 	TTwdParamInfo	param;
 	TI_STATUS return_value = TI_OK;
 
-	TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "  setSoftGeminiEnableParam() - Old value = , New value = \n");
-
 
 	/*
 	 * PsPoll work around is active. Just save the value and configure it later
 	 */
 	if ( pSoftGemini->bPsPollFailureActive ) {
-		TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "  setSoftGeminiEnableParam() - while PsPollFailure is active\n");
 
 		pSoftGemini->PsPollFailureLastEnableValue = SoftGeminiEnable;
 		return TI_OK;
@@ -417,7 +405,6 @@ static TI_STATUS SoftGemini_setEnableParam(TI_HANDLE hSoftGemini, ESoftGeminiEna
 	/*			  	   \|/							   \|/			    */
 
 	if ((pSoftGemini->SoftGeminiEnable == SoftGeminiEnable) && !recovery) {
-		TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, "   - setting same value \n");
 		return TI_NOK;
 	}
 
@@ -450,16 +437,11 @@ static TI_STATUS SoftGemini_setEnableParam(TI_HANDLE hSoftGemini, ESoftGeminiEna
 		break;
 
 	default:
-		TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, " defualt :%d\n",SoftGeminiEnable);
 		return TI_NOK;
 	}
 
 	/* Pass to the new enable state */
 	pSoftGemini->SoftGeminiEnable = SoftGeminiEnable;
-
-	if (TI_OK != return_value) {
-		TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, " can't configure enable param to FW :\n");
-	}
 
 	return return_value;
 }
@@ -588,8 +570,6 @@ static TI_STATUS SoftGemini_EnableDriver(TI_HANDLE hSoftGemini)
 	SoftGemini_t	*pSoftGemini = (SoftGemini_t *)hSoftGemini;
 	TI_STATUS return_value = TI_OK;
 
-	TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
-
 	pSoftGemini->bDriverEnabled = TI_TRUE;
 
 	/* Check if coexAutoPsMode - Co-ex is enabled to enter/exit P.S */
@@ -614,8 +594,6 @@ static TI_STATUS SoftGemini_DisableDriver(TI_HANDLE hSoftGemini)
 {
 	SoftGemini_t	*pSoftGemini = (SoftGemini_t *)hSoftGemini;
 	TI_STATUS return_value = TI_OK;
-
-	TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
 
 	pSoftGemini->bDriverEnabled = TI_FALSE;
 
@@ -650,15 +628,10 @@ static TI_STATUS SoftGemini_SetPS(SoftGemini_t	*pSoftGemini)
 
 	if (pSoftGemini->hCurrBss) {
 		pBssInfo = currBSS_getBssInfo(pSoftGemini->hCurrBss);
-	} else {
-		TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_ERROR, "SoftGemini_SetPS: hCurrBss = NULL!!!\n");
 	}
-
-	TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
 
 	if (pBssInfo) {
 		if ((pBssInfo->band == RADIO_BAND_2_4_GHZ)) {
-			TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, " SG-setPS: band == RADIO_BAND_2_4_GHZ");
 
 			/* Set Params to Power Mgr for SG priority */
 			param.paramType = POWER_MGR_POWER_MODE;
@@ -670,8 +643,6 @@ static TI_STATUS SoftGemini_SetPS(SoftGemini_t	*pSoftGemini)
 			param.paramType = POWER_MGR_ENABLE_PRIORITY;
 			param.content.powerMngPriority = POWER_MANAGER_SG_PRIORITY;
 			return powerMgr_setParam(pSoftGemini->hPowerMgr,&param);
-		} else {
-			TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, " SG-setPS: band == RADIO_BAND_5_GHZ");
 		}
 	}
 	return TI_OK;
@@ -688,8 +659,6 @@ static TI_STATUS SoftGemini_SetPS(SoftGemini_t	*pSoftGemini)
 static TI_STATUS SoftGemini_unSetPS(SoftGemini_t	*pSoftGemini)
 {
 	paramInfo_t param;
-
-	TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, ", SG-unSetPS \n");
 
 	/* disable SG priority for Power Mgr*/
 	param.paramType = POWER_MGR_DISABLE_PRIORITY;
@@ -725,9 +694,6 @@ void SoftGemini_EnableProtectiveMode(TI_HANDLE hSoftGemini)
 	                               pSoftGemini->SoftGeminiParam.coexParams[SOFT_GEMINI_HV3_MAX_OVERRIDE],
 	                               pSoftGemini->SoftGeminiParam.coexParams[SOFT_GEMINI_ACTIVE_SCAN_DURATION_FACTOR_HV3]);
 
-	/* Call the power manager to enter short doze */
-	TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, " SoftGemini_EnableProtectiveMode set SD");
-
 	/* Set Params to Power Mgr for SG priority */
 	param.paramType = POWER_MGR_POWER_MODE;
 	param.content.powerMngPowerMode.PowerMode = POWER_MODE_SHORT_DOZE;
@@ -746,8 +712,6 @@ void SoftGemini_EnableProtectiveMode(TI_HANDLE hSoftGemini)
 void SoftGemini_DisableProtectiveMode(TI_HANDLE hSoftGemini)
 {
 	SoftGemini_t	*pSoftGemini = (SoftGemini_t *)hSoftGemini;
-
-	TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
 
 	pSoftGemini->bProtectiveMode = TI_FALSE;
 
@@ -769,8 +733,6 @@ void SoftGemini_RemoveProtectiveModeParameters(TI_HANDLE hSoftGemini)
 {
 	SoftGemini_t	*pSoftGemini = (SoftGemini_t *)hSoftGemini;
 	paramInfo_t  	param;
-
-	TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
 
 	/* don't use the SG roaming parameters */
 	currBSS_SGconfigureBSSLoss(pSoftGemini->hCurrBss,0,TI_FALSE);
@@ -803,7 +765,6 @@ void SoftGemini_SenseIndicationCB( TI_HANDLE hSoftGemini, char* str, TI_UINT32 s
 	SoftGemini_t	*pSoftGemini = (SoftGemini_t *)hSoftGemini;
 
 	if (pSoftGemini->SoftGeminiEnable == SG_DISABLE) {
-		TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_WARNING, ": SG is disabled, existing");
 		return;
 	}
 
@@ -830,18 +791,12 @@ void SoftGemini_ProtectiveIndicationCB( TI_HANDLE hSoftGemini, char* str, TI_UIN
 {
 	SoftGemini_t	*pSoftGemini = (SoftGemini_t *)hSoftGemini;
 
-	TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, " with 0x%x\n",*str);
-
 	if (SG_DISABLE != pSoftGemini->SoftGeminiEnable) {
 		if ((!pSoftGemini->bProtectiveMode) && (PROTECTIVE_MODE_ON == *str)) {
 			SoftGemini_EnableProtectiveMode(hSoftGemini);
 		} else if ((pSoftGemini->bProtectiveMode) && (PROTECTIVE_MODE_OFF == *str)) {
 			SoftGemini_DisableProtectiveMode(hSoftGemini);
-		} else {
-			TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, " : Protective mode  called when Protective mode is  \n");
 		}
-	} else {
-		TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_WARNING, " : Protective mode  called when SG mode is  ? \n");
 	}
 }
 
@@ -890,13 +845,11 @@ TI_STATUS SoftGemini_handleRecovery(TI_HANDLE hSoftGemini)
 	realSoftGeminiEnableMode = pSoftGemini->SoftGeminiEnable;
 	/* Disable the SG */
 	SoftGemini_setEnableParam(hSoftGemini, SG_DISABLE, TI_TRUE);
-	TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "Disable SG \n");
 
 	pSoftGemini->SoftGeminiEnable = realSoftGeminiEnableMode;
 	/* Set enable param */
 
 	SoftGemini_setEnableParam(hSoftGemini, pSoftGemini->SoftGeminiEnable, TI_TRUE);
-	TRACE1(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "Set SG to-%d\n", pSoftGemini->SoftGeminiEnable);
 
 	/* Config the params to FW */
 
@@ -915,8 +868,6 @@ void SoftGemini_startPsPollFailure(TI_HANDLE hSoftGemini)
 {
 	SoftGemini_t	*pSoftGemini = (SoftGemini_t *)hSoftGemini;
 
-	TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
-
 	if ( (!pSoftGemini->bPsPollFailureActive) && (pSoftGemini->SoftGeminiParam.coexParams[SOFT_GEMINI_AUTO_PS_MODE] == TI_TRUE) ) {
 		pSoftGemini->PsPollFailureLastEnableValue = pSoftGemini->SoftGeminiEnable;
 
@@ -926,8 +877,6 @@ void SoftGemini_startPsPollFailure(TI_HANDLE hSoftGemini)
 		}
 
 		pSoftGemini->bPsPollFailureActive = TI_TRUE;
-	} else { /* Calling SoftGemini_startPsPollFailure twice ? */
-		TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_WARNING, "Calling  SoftGemini_startPsPollFailure while bPsPollFailureActive is TRUE\n");
 	}
 }
 
@@ -942,8 +891,6 @@ void SoftGemini_endPsPollFailure(TI_HANDLE hSoftGemini)
 {
 	SoftGemini_t	*pSoftGemini = (SoftGemini_t *)hSoftGemini;
 
-	TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_INFORMATION, "\n");
-
 	if ( pSoftGemini->bPsPollFailureActive ) {
 		pSoftGemini->bPsPollFailureActive = TI_FALSE;
 
@@ -951,8 +898,6 @@ void SoftGemini_endPsPollFailure(TI_HANDLE hSoftGemini)
 		if ( pSoftGemini->PsPollFailureLastEnableValue != SG_DISABLE ) {
 			SoftGemini_setEnableParam(hSoftGemini, pSoftGemini->PsPollFailureLastEnableValue, TI_FALSE);
 		}
-	} else { /* Calling SoftGemini_endPsPollFailure twice ? */
-		TRACE0(pSoftGemini->hReport, REPORT_SEVERITY_WARNING, "Calling  SoftGemini_endPsPollFailure while bPsPollFailureActive is FALSE\n");
 	}
 }
 

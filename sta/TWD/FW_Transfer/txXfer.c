@@ -180,7 +180,6 @@ void txXfer_RegisterCb (TI_HANDLE hTxXfer, TI_UINT32 CallBackID, void *CBFunc, T
 {
 	TTxXferObj* pTxXfer = (TTxXferObj*)hTxXfer;
 
-	TRACE3(pTxXfer->hReport, REPORT_SEVERITY_INFORMATION, "txXfer_RegisterCb: CallBackID=%d, CBFunc=0x%x, CBObj=0x%x\n", CallBackID, CBFunc, CBObj);
 
 	switch (CallBackID) {
 		/* Save upper layers Transfer-Done callback */
@@ -192,7 +191,6 @@ void txXfer_RegisterCb (TI_HANDLE hTxXfer, TI_UINT32 CallBackID, void *CBFunc, T
 		break;
 
 	default:
-		TRACE0(pTxXfer->hReport, REPORT_SEVERITY_ERROR, " - Illegal value\n");
 		break;
 	}
 }
@@ -313,9 +311,7 @@ static ETxnStatus txXfer_SendAggregatedPkts (TTxXferObj *pTxXfer, TI_BOOL bLastP
 
 #ifdef TI_DBG
 	pTxXfer->aDbgCountPktAggreg[pTxXfer->uAggregPktsNum]++;
-	TRACE5(pTxXfer->hReport, REPORT_SEVERITY_INFORMATION, "txXfer_SendAggregatedPkts: Status=%d, NumPkts=%d, AggregLen=%d, pFirstPkt=0x%x, pLastPkt=0x%x\n", eStatus, pTxXfer->uAggregPktsNum, pTxXfer->uAggregPktsLen, pTxXfer->pAggregFirstPkt, pTxXfer->pAggregLastPkt);
 	if (eStatus == TXN_STATUS_ERROR) {
-		TRACE5(pTxXfer->hReport, REPORT_SEVERITY_ERROR, "txXfer_SendAggregatedPkts: Status=%d, NumPkts=%d, AggregLen=%d, pFirstPkt=0x%x, pLastPkt=0x%x\n", eStatus, pTxXfer->uAggregPktsNum, pTxXfer->uAggregPktsLen, pTxXfer->pAggregFirstPkt, pTxXfer->pAggregLastPkt);
 		return eStatus;
 	}
 #endif  /* TI_DBG */
@@ -385,7 +381,6 @@ static void txXfer_TransferDoneCb (TI_HANDLE hTxXfer, TTxnStruct *pTxn)
 		pCurrPkt = pCurrPkt->pNextAggregEntry;
 	}
 
-	TRACE3(pTxXfer->hReport, REPORT_SEVERITY_INFORMATION, "txXfer_TransferDoneCb: NumPkts=%d, pInputPkt=0x%x, pCurrPkt=0x%x\n", i + 1, pInputPkt, pCurrPkt);
 }
 
 

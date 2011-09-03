@@ -181,11 +181,9 @@ TI_STATUS auth_skSMEvent(TI_UINT8 *currentState, TI_UINT8 event, TI_HANDLE hAuth
 
 	status = fsm_GetNextState(pAuth->pAuthSm, *currentState, event, &nextState);
 	if (status != TI_OK) {
-		TRACE0(pAuth->hReport, REPORT_SEVERITY_SM, "State machine error, failed getting next state\n");
 		return(TI_NOK);
 	}
 
-	TRACE3(pAuth->hReport, REPORT_SEVERITY_INFORMATION, "auth_skSMEvent: <currentState = %d, event = %d> --> nextState = %d\n", *currentState, event, nextState);
 
 	status = fsm_Event(pAuth->pAuthSm, currentState, event, (void *)pAuth);
 
@@ -227,7 +225,6 @@ TI_STATUS sharedKeyAuth_Recv(TI_HANDLE hAuth, mlmeFrameInfo_t *pFrame)
 	/* check response status */
 	authAlgo = ENDIAN_HANDLE_WORD(pFrame->content.auth.authAlgo);
 	if (authAlgo != AUTH_LEGACY_SHARED_KEY) {
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_SM, "SHARED_KEY_AUTH_SM: DEBUG recieved authentication message with wrong algorithm \n");
 		return TI_NOK;
 	}
 
@@ -241,10 +238,8 @@ TI_STATUS sharedKeyAuth_Recv(TI_HANDLE hAuth, mlmeFrameInfo_t *pFrame)
 	if (pHandle->authData.status == STATUS_SUCCESSFUL) {
 		switch (rspSeq) {
 		case 2:
-			TRACE0(pHandle->hReport, REPORT_SEVERITY_SM, "SHARED_KEY_AUTH_SM: DEBUG Success authenticating to AP stage 1\n");
 
 			if (pFrame->content.auth.pChallenge->hdr[0] != CHALLANGE_TEXT_IE_ID) {
-				TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "SHARED_KEY_AUTH_SM: Wrong element ID for challange \n");
 				status = TI_NOK;
 				break;
 			}
@@ -253,13 +248,11 @@ TI_STATUS sharedKeyAuth_Recv(TI_HANDLE hAuth, mlmeFrameInfo_t *pFrame)
 			break;
 
 		case 4:
-			TRACE0(pHandle->hReport, REPORT_SEVERITY_SM, "SHARED_KEY_AUTH_SM: DEBUG Success authenticating to AP stage 2\n");
 
 			status = auth_skSMEvent(&pHandle->currentState, SHARED_KEY_AUTH_SM_EVENT_SUCCESS_2, hAuth);
 			break;
 
 		default:
-			TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "SHARED_KEY_AUTH_SM: Wrong sequence number \n");
 			status = TI_NOK;
 			break;
 		}

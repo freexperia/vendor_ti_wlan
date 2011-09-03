@@ -118,7 +118,6 @@ TI_STATUS keyDeriveTkip_derive(struct _keyDerive_t *pKeyDerive, encodedKeyMateri
 	/* Note: Reduce 2 bytes from the size of keyMaterialTkip_t in the following check,
 	         because it is added as padding at the end due to the OS_PACKED removal. */
 	if ( pEncodedKey->keyLen < (sizeof(keyMaterialTkip_t) - 2) ) {
-		TRACE1(pKeyDerive->hReport, REPORT_SEVERITY_ERROR, "KEY_DERIVE_TKIP: ERROR: wrong key length %d !!!\n", pEncodedKey->keyLen);
 		return TI_NOK;
 	}
 

@@ -161,7 +161,6 @@ void sme_SetDefaults (TI_HANDLE hSme, TSmeModifiedInitParams *pModifiedInitParam
 
 	pSme->tSsid.len = pModifiedInitParams->tDesiredSsid.len;
 	if ( pSme->tSsid.len > MAX_SSID_LEN ) {
-		TRACE2( pSme->hReport, REPORT_SEVERITY_ERROR, "sme_SetDefaults. pSme->tSsid.len=%d exceeds the limit %d\n", pSme->tSsid.len, MAX_SSID_LEN);
 		pSme->tSsid.len = MAX_SSID_LEN;
 	}
 	os_memoryCopy (pSme->hOS, &(pSme->tSsid.str[ 0 ]), &(pModifiedInitParams->tDesiredSsid.str[ 0 ]), pSme->tSsid.len);
@@ -250,8 +249,6 @@ void sme_Start (TI_HANDLE hSme)
 {
 	TSme                *pSme = (TSme*)hSme;
 
-	TRACE1(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_Start: called, bRadioOn = %d\n", pSme->bRadioOn);
-
 	pSme->bRunning = TI_TRUE;
 
 	/*
@@ -282,8 +279,6 @@ void sme_Stop (TI_HANDLE hSme)
 {
 	TSme                *pSme = (TSme*)hSme;
 
-	TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_Stop called\n");
-
 	pSme->bRunning = TI_FALSE;
 
 	/* mark that running flag is send a stop event to the SM */
@@ -306,8 +301,6 @@ void sme_StopNoWait (TI_HANDLE hSme)
 {
 	TSme                *pSme = (TSme*)hSme;
 
-	TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION,
-		"sme_StopNoWait called\n");
 
 	pSme->bRunning = TI_FALSE;
 
@@ -329,7 +322,6 @@ void sme_Restart (TI_HANDLE hSme)
 {
 	TSme                *pSme = (TSme*)hSme;
 
-	TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_Restart called.\n");
 
 	pSme->uScanCount = 0;
 
@@ -351,8 +343,6 @@ void sme_Restart (TI_HANDLE hSme)
 TI_STATUS sme_SetParam (TI_HANDLE hSme, paramInfo_t *pParam)
 {
 	TSme                *pSme = (TSme*)hSme;
-
-	TRACE1(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_SetParam: param type is 0x%x\n", pParam->paramType);
 
 	switch (pParam->paramType) {
 	case SME_RADIO_ON_PARAM:
@@ -481,7 +471,6 @@ TI_STATUS sme_SetParam (TI_HANDLE hSme, paramInfo_t *pParam)
 		break;
 
 	default:
-		TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_SetParam: unrecognized param type %d\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 		/* break;*/
 	}
@@ -503,8 +492,6 @@ TI_STATUS sme_SetParam (TI_HANDLE hSme, paramInfo_t *pParam)
 TI_STATUS sme_GetParam (TI_HANDLE hSme, paramInfo_t *pParam)
 {
 	TSme                *pSme = (TSme*)hSme;
-
-	TRACE1(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_GetParam: param type is 0x%x\n", pParam->paramType);
 
 	switch (pParam->paramType) {
 	case SME_RADIO_ON_PARAM:
@@ -553,7 +540,6 @@ TI_STATUS sme_GetParam (TI_HANDLE hSme, paramInfo_t *pParam)
 		break;
 
 	default:
-		TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_GetParam: unrecognized param type %d\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 		/* break;*/
 	}
@@ -583,7 +569,6 @@ void sme_ScanResultCB (TI_HANDLE hSme, EScanCncnResultStatus eStatus,
 		/* a frame was received - update the scan result table */
 	case SCAN_CRS_RECEIVED_FRAME:
 
-		TRACE6(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_ScanResultCB: received frame from BSSID %02x:%02x:%02x:%02x:%02x:%02x\n", (*pFrameInfo->bssId)[ 0 ], (*pFrameInfo->bssId)[ 1 ], (*pFrameInfo->bssId)[ 2 ], (*pFrameInfo->bssId)[ 3 ], (*pFrameInfo->bssId)[ 4 ], (*pFrameInfo->bssId)[ 5 ]);
 
 		/*
 		 * in auto mode in order to find country IE only !!!
@@ -602,20 +587,17 @@ void sme_ScanResultCB (TI_HANDLE hSme, EScanCncnResultStatus eStatus,
 				{
 
 					if (TI_OK != scanResultTable_UpdateEntry (pSme->hScanResultTable, pFrameInfo->bssId, pFrameInfo)) {
-						TRACE6(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_ScanResultCB: unable to update specific entry for BSSID %02x:%02x:%02x:%02x:%02x:%02x\n", (*pFrameInfo->bssId)[ 0 ], (*pFrameInfo->bssId)[ 1 ], (*pFrameInfo->bssId)[ 2 ], (*pFrameInfo->bssId)[ 3 ], (*pFrameInfo->bssId)[ 4 ], (*pFrameInfo->bssId)[ 5 ]);
 					}
 				}
 			} else {
 
 				if (TI_OK != scanResultTable_UpdateEntry (pSme->hScanResultTable, pFrameInfo->bssId, pFrameInfo)) {
-					TRACE6(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_ScanResultCB: unable to update entry for BSSID %02x:%02x:%02x:%02x:%02x:%02x because table is full\n", (*pFrameInfo->bssId)[ 0 ], (*pFrameInfo->bssId)[ 1 ], (*pFrameInfo->bssId)[ 2 ], (*pFrameInfo->bssId)[ 3 ], (*pFrameInfo->bssId)[ 4 ], (*pFrameInfo->bssId)[ 5 ]);
 				}
 			}
 		} else
 			/* manual mode */
 		{
 			if (TI_OK != scanResultTable_UpdateEntry (pSme->hSmeScanResultTable, pFrameInfo->bssId, pFrameInfo)) {
-				TRACE6(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_ScanResultCB: unable to update application scan entry for BSSID %02x:%02x:%02x:%02x:%02x:%02x\n", (*pFrameInfo->bssId)[ 0 ], (*pFrameInfo->bssId)[ 1 ], (*pFrameInfo->bssId)[ 2 ], (*pFrameInfo->bssId)[ 3 ], (*pFrameInfo->bssId)[ 4 ], (*pFrameInfo->bssId)[ 5 ]);
 			}
 		}
 		break;
@@ -627,7 +609,6 @@ void sme_ScanResultCB (TI_HANDLE hSme, EScanCncnResultStatus eStatus,
 	case SCAN_CRS_SCAN_ABORTED_HIGHER_PRIORITY:
 	case SCAN_CRS_SCAN_FAILED:
 	case SCAN_CRS_TSF_ERROR:
-		TRACE1(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_ScanResultCB: received scan complete indication with status %d\n", eStatus);
 
 		/* stablizie the scan result table - delete its contenst if no results were recived during last scan */
 		scanResultTable_SetStableState (pSme->hScanResultTable);
@@ -641,7 +622,6 @@ void sme_ScanResultCB (TI_HANDLE hSme, EScanCncnResultStatus eStatus,
 			if (NULL == pSme->pCandidate) {
 				/* for IBSS or any, if no entries where found, add the self site */
 				if (pSme->eBssType == BSS_INFRASTRUCTURE) {
-					TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_ScanResultCB: No candidate available, sending connect failure\n");
 
 					sme_SmEvent (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
 					break;
@@ -670,7 +650,6 @@ void sme_ScanResultCB (TI_HANDLE hSme, EScanCncnResultStatus eStatus,
 
 					regulatoryDomain_getParam (pSme->hRegDomain,&param);
 					if (!param.content.channelCapabilityRet.channelValidity) {
-						TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "IBSS SELECT FAILURE  - No channel !!!\n\n");
 
 						sme_SmEvent (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
 
@@ -680,17 +659,12 @@ void sme_ScanResultCB (TI_HANDLE hSme, EScanCncnResultStatus eStatus,
 					pSme->pCandidate = (TSiteEntry *)addSelfSite(pSme->hSiteMgr);
 
 					if (pSme->pCandidate == NULL) {
-						TRACE0(pSme->hReport, REPORT_SEVERITY_ERROR , "IBSS SELECT FAILURE  - could not open self site !!!\n\n");
 
 						sme_SmEvent (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
 
 						break;
 					}
 
-#ifdef REPORT_LOG
-					TRACE6(pSme->hReport, REPORT_SEVERITY_CONSOLE,"%%%%%%%%%%%%%%	SELF SELECT SUCCESS, bssid: %X-%X-%X-%X-%X-%X	%%%%%%%%%%%%%%\n\n", pSme->pCandidate->bssid[0], pSme->pCandidate->bssid[1], pSme->pCandidate->bssid[2], pSme->pCandidate->bssid[3], pSme->pCandidate->bssid[4], pSme->pCandidate->bssid[5]);
-					WLAN_OS_REPORT (("%%%%%%%%%%%%%%	SELF SELECT SUCCESS, bssid: %02x.%02x.%02x.%02x.%02x.%02x %%%%%%%%%%%%%%\n\n", pSme->pCandidate->bssid[0], pSme->pCandidate->bssid[1], pSme->pCandidate->bssid[2], pSme->pCandidate->bssid[3], pSme->pCandidate->bssid[4], pSme->pCandidate->bssid[5]));
-#endif
 				}
 			}
 
@@ -704,12 +678,10 @@ void sme_ScanResultCB (TI_HANDLE hSme, EScanCncnResultStatus eStatus,
 		 * connect failure event to move out of disconnecting
 		 */
 	case SCAN_CRS_SCAN_STOPPED:
-		TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_ScanResultCB: received scan stopped indication\n");
 		sme_SmEvent (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
 		break;
 
 	default:
-		TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_ScanResultCB: received unrecognized status %d\n", eStatus);
 		break;
 	}
 }
@@ -731,11 +703,7 @@ void sme_MeansurementScanResult (TI_HANDLE hSme, EScanCncnResultStatus eStatus, 
 	switch (eStatus) {
 		/* a frame was received - update the scan result table */
 	case SCAN_CRS_RECEIVED_FRAME:
-		TRACE6(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_MeansurementScanResult: received frame from BSSID %02x:%02x:%02x:%02x:%02x:%02x\n", (*pFrameInfo->bssId)[ 0 ], (*pFrameInfo->bssId)[ 1 ], (*pFrameInfo->bssId)[ 2 ], (*pFrameInfo->bssId)[ 3 ], (*pFrameInfo->bssId)[ 4 ], (*pFrameInfo->bssId)[ 5 ]);
 
-		if (TI_OK != scanResultTable_UpdateEntry (pSme->hSmeScanResultTable, pFrameInfo->bssId, pFrameInfo)) {
-			TRACE6(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_MeansurementScanResult: unable to update entry for BSSID %02x:%02x:%02x:%02x:%02x:%02x because table is full\n", (*pFrameInfo->bssId)[ 0 ], (*pFrameInfo->bssId)[ 1 ], (*pFrameInfo->bssId)[ 2 ], (*pFrameInfo->bssId)[ 3 ], (*pFrameInfo->bssId)[ 4 ], (*pFrameInfo->bssId)[ 5 ]);
-		}
 		break;
 
 		/* scan was completed successfully */
@@ -746,14 +714,12 @@ void sme_MeansurementScanResult (TI_HANDLE hSme, EScanCncnResultStatus eStatus, 
 	case SCAN_CRS_SCAN_ABORTED_HIGHER_PRIORITY:
 	case SCAN_CRS_SCAN_FAILED:
 	case SCAN_CRS_TSF_ERROR:
-		TRACE1(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_MeansurementScanResult: received scan complete indication with status %d\n", eStatus);
 
 		/* stablizie the scan result table - delete its contenst if no results were recived during last scan */
 		scanResultTable_SetStableState (pSme->hSmeScanResultTable);
 		break;
 
 	default:
-		TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_AppScanResult: received unrecognized status %d\n", eStatus);
 		break;
 	}
 
@@ -776,7 +742,6 @@ void sme_ReportConnStatus (TI_HANDLE hSme, mgmtStatus_e eStatusType, TI_UINT32 u
 {
 	TSme                *pSme = (TSme*)hSme;
 
-	TRACE2(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_ReportConnStatus: statusType = %d, uStatusCode = %d\n", eStatusType, uStatusCode);
 
 	/* Act according to status */
 	switch (eStatusType) {
@@ -821,7 +786,6 @@ void sme_ReportConnStatus (TI_HANDLE hSme, mgmtStatus_e eStatusType, TI_UINT32 u
 		break;
 
 	default:
-		TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_ReportConnStatus: unknown statusType = %d\n", eStatusType);
 		break;
 	}
 }
@@ -842,8 +806,6 @@ void sme_ReportApConnStatus (TI_HANDLE hSme, mgmtStatus_e eStatusType, TI_UINT32
 {
 	TSme                *pSme = (TSme*)hSme;
 
-	TRACE2(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_ReportApConnStatus: statusType = %d, uStatusCode = %d\n", eStatusType, uStatusCode);
-
 	/* Act according to status */
 	switch (eStatusType) {
 
@@ -856,7 +818,6 @@ void sme_ReportApConnStatus (TI_HANDLE hSme, mgmtStatus_e eStatusType, TI_UINT32
 
 		/* shouldn't happen (not from AP conn) */
 	case STATUS_SUCCESSFUL:
-		TRACE0(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_ReportApConnStatus: received STATUS_SUCCESSFUL\n");
 		break;
 
 	case STATUS_UNSPECIFIED:
@@ -884,8 +845,7 @@ void sme_ReportApConnStatus (TI_HANDLE hSme, mgmtStatus_e eStatusType, TI_UINT32
 		}
 		break;
 
-	default:
-		TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_ReportApConnStatus: received unrecognized status: %d\n", eStatusType);
+	default: {}
 
 	}
 }
@@ -965,9 +925,7 @@ void SME_Disconnect (TI_HANDLE hSme)
 
 void sme_SmEvent(TI_HANDLE hGenSm, TI_UINT32 uEvent, void* pData)
 {
-	TSme *pSme = (TSme*)pData;
 	TGenSM    *pGenSM = (TGenSM*)hGenSm;
 
-	TRACE2(pSme->hReport, REPORT_SEVERITY_INFORMATION, "sme_SmEvent: Current State = %d, sending event %d\n", (pGenSM->uCurrentState), (uEvent));
 	genSM_Event(pGenSM, uEvent, pData);
 }

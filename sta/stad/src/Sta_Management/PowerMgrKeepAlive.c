@@ -239,8 +239,6 @@ TI_STATUS powerMgrKL_setParam (TI_HANDLE hPowerMgrKL, paramInfo_t *pParam)
 	TKeepAliveTemplate  *pNewTmpl;
 	TI_STATUS           status = TI_OK;
 
-	TRACE1(pPowerMgrKL->hReport, REPORT_SEVERITY_INFORMATION , "Keep-alive set param called with param type %d\n", pParam->paramType);
-
 	switch (pParam->paramType) {
 		/* global keep-alive enable / disable flag */
 	case POWER_MGR_KEEP_ALIVE_ENA_DIS:
@@ -264,7 +262,6 @@ TI_STATUS powerMgrKL_setParam (TI_HANDLE hPowerMgrKL, paramInfo_t *pParam)
 				pPowerMgrKL->tCurrentConfig.templates[ uIndex ].keepAliveParams.enaDisFlag = TI_FALSE;
 				status = TWD_CfgKeepAlive (pPowerMgrKL->hTWD, &(pPowerMgrKL->tCurrentConfig.templates[ uIndex ].keepAliveParams));
 				if (TI_OK != status) {
-					TRACE1(pPowerMgrKL->hReport, REPORT_SEVERITY_ERROR , "powerMgrKL_setParam: error trying to clear current template %d\n", status);
 					return status;
 				}
 			}
@@ -286,7 +283,6 @@ TI_STATUS powerMgrKL_setParam (TI_HANDLE hPowerMgrKL, paramInfo_t *pParam)
 		break;
 
 	default:
-		TRACE1(pPowerMgrKL->hReport, REPORT_SEVERITY_ERROR , "power manager keep-alive: set param with unknown param type %d\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 		break;
 	}
@@ -307,7 +303,6 @@ TI_STATUS powerMgrKL_getParam (TI_HANDLE hPowerMgrKL, paramInfo_t *pParam)
 {
 	TPowerMgrKL     *pPowerMgrKL = (TPowerMgrKL*)hPowerMgrKL;
 
-	TRACE1(pPowerMgrKL->hReport, REPORT_SEVERITY_INFORMATION , "Keep-alive get param called with param type %d\n", pParam->paramType);
 
 	switch (pParam->paramType) {
 	case POWER_MGR_KEEP_ALIVE_GET_CONFIG:
@@ -320,7 +315,6 @@ TI_STATUS powerMgrKL_getParam (TI_HANDLE hPowerMgrKL, paramInfo_t *pParam)
 		break;
 
 	default:
-		TRACE1(pPowerMgrKL->hReport, REPORT_SEVERITY_ERROR , "power manager keep-alive: get param with unknown param type %d\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 		break;
 	}
@@ -359,14 +353,12 @@ TI_STATUS powerMgrKLConfigureMessage (TI_HANDLE hPowerMgrKL, TI_UINT32 uMessageI
 		tTemplate.uRateMask = RATE_MASK_UNSPECIFIED;
 		status = TWD_CmdTemplate (pPowerMgrKL->hTWD, &tTemplate, NULL, NULL);
 		if (TI_OK != status) {
-			TRACE1(pPowerMgrKL->hReport, REPORT_SEVERITY_ERROR , "powerMgrKLConfigureMessage: error trying to set new template %d\n", status);
 			return status;
 		}
 
 		/* and than the parameters */
 		status = TWD_CfgKeepAlive (pPowerMgrKL->hTWD, &(pPowerMgrKL->tCurrentConfig.templates[ uMessageIndex ].keepAliveParams));
 		if (TI_OK != status) {
-			TRACE1(pPowerMgrKL->hReport, REPORT_SEVERITY_ERROR , "powerMgrKLConfigureMessage: error trying to set new keep-alive params %d\n", status);
 			return status;
 		}
 	}
@@ -374,7 +366,6 @@ TI_STATUS powerMgrKLConfigureMessage (TI_HANDLE hPowerMgrKL, TI_UINT32 uMessageI
 	else {
 		status = TWD_CfgKeepAlive (pPowerMgrKL->hTWD, &(pPowerMgrKL->tCurrentConfig.templates[ uMessageIndex ].keepAliveParams));
 		if (TI_OK != status) {
-			TRACE1(pPowerMgrKL->hReport, REPORT_SEVERITY_ERROR , "powerMgrKLConfigureMessage: error trying to set new keep-alive params %d\n", status);
 			return status;
 		}
 	}

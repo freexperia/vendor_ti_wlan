@@ -132,7 +132,6 @@ TI_STATUS keyParserExternal_recv(struct _keyParser_t *pKeyParser,
 
 
 	if (pKeyData == NULL) {
-		TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: NULL KEY Data\n");
 		return TI_NOK;
 	}
 
@@ -153,7 +152,6 @@ TI_STATUS keyParserExternal_recv(struct _keyParser_t *pKeyParser,
 	status = ctrlData_getParam(pKeyParser->hCtrlData, &macParam);
 
 	if (status != TI_OK) {
-		TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Cannot get MAC address !!!\n");
 		return TI_NOK;
 	}
 
@@ -165,7 +163,6 @@ TI_STATUS keyParserExternal_recv(struct _keyParser_t *pKeyParser,
 	        (pKeyDesc->KeyLength != AES_KEY_LEN) )
 
 	{
-		TRACE1(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Incorrect key length - %d \n", pKeyDesc->KeyLength);
 		return TI_NOK;
 	}
 	if (MAC_EQUAL(macParam.content.ctrlDataCurrentBSSID, pKeyDesc->BSSID)) {
@@ -183,14 +180,12 @@ TI_STATUS keyParserExternal_recv(struct _keyParser_t *pKeyParser,
 
 	if (pKeyDesc->KeyIndex & EXT_KEY_SUPP_AUTHENTICATOR_MASK) { /* The key is being set by an Authenticator - not allowed in IBSS mode */
 		if (pKeyParser->pParent->pParent->pParent->pAdmCtrl->networkMode == RSN_IBSS) {	/* in IBSS only Broadcast MAC is allowed */
-			TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Authenticator set key in IBSS mode !!!\n");
 			return TI_NOK;
 		}
 
 	}
 
 	if (pKeyDesc->KeyIndex & EXT_KEY_REMAIN_BITS_MASK) { /* the reamining bits in the key index are not 0 (when they should be) */
-		TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Key index bits 8-27 should be 0 !!!\n");
 		return TI_NOK;
 	}
 
@@ -199,7 +194,6 @@ TI_STATUS keyParserExternal_recv(struct _keyParser_t *pKeyParser,
 	if (wepKey) {
 		if (!((pKeyDesc->KeyLength == WEP_KEY_LEN_40) || (pKeyDesc->KeyLength == WEP_KEY_LEN_104)
 		        || (pKeyDesc->KeyLength == WEP_KEY_LEN_232))) {	/*Invalid key length*/
-			TRACE1(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "WEP_KEY_PARSER: ERROR: Invalid Key length: %d !!!\n", pKeyDesc->KeyLength);
 			return TI_NOK;
 		}
 
@@ -225,17 +219,14 @@ TI_STATUS keyParserExternal_recv(struct _keyParser_t *pKeyParser,
 
 	encodedKeyMaterial.keyId  = pKeyDesc->KeyIndex;
 
-	TRACE2(pKeyParser->hReport, REPORT_SEVERITY_INFORMATION, "EXT_KEY_PARSER: Key received keyId=%x, keyLen=%d \n",						    pKeyDesc->KeyIndex, pKeyDesc->KeyLength                             );
 
 	if (pKeyDesc->KeyIndex & EXT_KEY_PAIRWISE_GROUP_MASK) {	/* Pairwise key */
 		/* check that the lower 8 bits of the key index are 0 */
 		if (!wepKey && (pKeyDesc->KeyIndex & 0xff)) {
-			TRACE0(pKeyParser->hReport, REPORT_SEVERITY_WARNING, "EXT_KEY_PARSER: ERROR: Pairwise key must have index 0 !!!\n");
 			return TI_NOK;
 		}
 
 		if (macIsBroadcast) {
-			TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Broadcast MAC address for unicast !!!\n");
 			return TI_NOK;
 		}
 		if (pKeyDesc->KeyIndex & EXT_KEY_TRANSMIT_MASK) {	/* tx only pairwase key */
@@ -245,14 +236,12 @@ TI_STATUS keyParserExternal_recv(struct _keyParser_t *pKeyParser,
 			}
 		} else {
 			/* recieve only pairwase keys are not allowed */
-			TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: recieve only pairwase keys are not allowed !!!\n");
 			return TI_NOK;
 		}
 
 	} else {  /* set broadcast keys */
 		if (!macIsBroadcast) {	/* not broadcast MAC */
 			if (pKeyParser->pParent->pParent->pParent->pAdmCtrl->networkMode == RSN_IBSS) {	/* in IBSS only Broadcast MAC is allowed */
-				TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: not broadcast MAC in IBSS mode !!!\n");
 				return TI_NOK;
 			} else if (!macEqual2Associated) {	/* ESS mode and MAC is different than the associated one */
 				/* save the key for later */
@@ -300,18 +289,15 @@ TI_STATUS keyParserExternal_remove(struct _keyParser_t *pKeyParser, TI_UINT8 *pK
 	TI_UINT8                keyBuffer[MAC_ADDR_LEN+KEY_RSC_LEN+MAX_EXT_KEY_DATA_LENGTH];
 
 	if (pKeyData == NULL) {
-		TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: NULL KEY Data\n");
 		return TI_NOK;
 	}
 
 	pKeyDesc = (OS_802_11_KEY*)pKeyData;
 
 	if (pKeyDesc->KeyIndex & EXT_KEY_TRANSMIT_MASK) {	/* Bit 31 should always be zero */
-		TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Remove TX bit in key index can't be 1\n");
 		return TI_NOK;
 	}
 	if (pKeyDesc->KeyIndex & EXT_KEY_REMAIN_BITS_MASK) {	/* Bits 8-29 should always be zero */
-		TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Remove none zero key index\n");
 		return TI_NOK;
 	}
 
@@ -326,7 +312,6 @@ TI_STATUS keyParserExternal_remove(struct _keyParser_t *pKeyParser, TI_UINT8 *pK
 			macParam.paramType = CTRL_DATA_CURRENT_BSSID_PARAM;
 			status = ctrlData_getParam(pKeyParser->hCtrlData, &macParam);
 			if (status != TI_OK) {
-				TRACE0(pKeyParser->hReport, REPORT_SEVERITY_ERROR, "EXT_KEY_PARSER: ERROR: Cannot get MAC address !!!\n");
 				return TI_NOK;
 			}
 

@@ -47,7 +47,7 @@
 #define __FILE_ID__  FILE_ID_99
 #include "osApi.h"
 #include "tidef.h"
-#include "report.h"
+//#include "report.h"
 #include "context.h"
 #include "TWDriver.h"
 #include "txCtrlBlk_api.h"
@@ -180,7 +180,6 @@ TTxCtrlBlk *txCtrlBlk_Alloc (TI_HANDLE hTxCtrlBlk)
 #ifdef TI_DBG
 	/* If no free entries, print error (not expected to happen) and return NULL. */
 	if (pCurrentEntry->pNextFreeEntry == NULL) {
-		TRACE1(pTxCtrlBlk->hReport, REPORT_SEVERITY_ERROR, "txCtrlBlk_alloc():  No free entry,  UsedEntries=%d\n", pTxCtrlBlk->uNumUsedEntries);
 		context_LeaveCriticalSection (pTxCtrlBlk->hContext);
 		return NULL;
 	}
@@ -221,7 +220,6 @@ void txCtrlBlk_Free (TI_HANDLE hTxCtrlBlk, TTxCtrlBlk *pCurrentEntry)
 #ifdef TI_DBG
 	/* If the pointed entry is already free, print error and exit (not expected to happen). */
 	if (pCurrentEntry->pNextFreeEntry != 0) {
-		TRACE2(pTxCtrlBlk->hReport, REPORT_SEVERITY_ERROR, "txCtrlBlk_free(): Entry %d alredy free, UsedEntries=%d\n", 			pCurrentEntry->tTxDescriptor.descID, pTxCtrlBlk->uNumUsedEntries);
 		return;
 	}
 	pTxCtrlBlk->uNumUsedEntries--;

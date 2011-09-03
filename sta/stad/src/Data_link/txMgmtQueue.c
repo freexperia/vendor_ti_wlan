@@ -244,7 +244,6 @@ void txMgmtQ_Init (TStadHandlesList *pStadHandles)
 
 		/* If any Queues' allocation failed, print error, free TxMgmtQueue module and exit */
 		if (pTxMgmtQ->aQueues[uQueId] == NULL) {
-			TRACE0(pTxMgmtQ->hReport, REPORT_SEVERITY_CONSOLE , "Failed to create queue\n");
 			WLAN_OS_REPORT(("Failed to create queue\n"));
 			os_memoryFree (pTxMgmtQ->hOs, pTxMgmtQ, sizeof(TTxMgmtQ));
 			return;
@@ -262,7 +261,6 @@ void txMgmtQ_Init (TStadHandlesList *pStadHandles)
 	                       "TX_MGMT",
 	                       sizeof("TX_MGMT"));
 
-	TRACE0(pTxMgmtQ->hReport, REPORT_SEVERITY_INIT, ".....Tx Mgmt Queue configured successfully\n");
 }
 
 
@@ -287,7 +285,6 @@ TI_STATUS txMgmtQ_Destroy (TI_HANDLE hTxMgmtQ)
 	/* free Mgmt queues */
 	for (uQueId = 0 ; uQueId < NUM_OF_MGMT_QUEUES ; uQueId++) {
 		if (que_Destroy(pTxMgmtQ->aQueues[uQueId]) != TI_OK) {
-			TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, "txMgmtQueue_unLoad: fail to free Mgmt Queue number: %d\n",uQueId);
 
 			eStatus = TI_NOK;
 		}
@@ -557,8 +554,7 @@ void txMgmtQ_SetConnState (TI_HANDLE hTxMgmtQ, ETxConnState eTxConnState)
 		mgmtQueuesSM(pTxMgmtQ, SM_EVENT_OPEN);
 		break;
 
-	default:
-		TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, ": Unknown eTxConnState = %d\n", eTxConnState);
+	default: {}
 	}
 }
 
@@ -623,9 +619,6 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, ESmEvent eSmEvent)
 		 * EAPOL packets are also permitted (expected in MGMT or CLOSE state), so enable the
 		 *   EAPOL queue and run the scheduler (to send packets from EAPOL queue if waiting).
 		 */
-		if ( (ePrevState != SM_STATE_CLOSE) && (ePrevState != SM_STATE_MGMT) ) {
-			TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, "mgmtQueuesSM: Got SmEvent=EAPOL when eSmState=%d\n", ePrevState);
-		}
 		pTxMgmtQ->eSmState = SM_STATE_EAPOL;
 		pTxMgmtQ->aQueueEnabledBySM[QUEUE_TYPE_MGMT]  = TI_TRUE;
 		pTxMgmtQ->aQueueEnabledBySM[QUEUE_TYPE_EAPOL] = TI_TRUE;
@@ -637,9 +630,6 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, ESmEvent eSmEvent)
 		 * All packets are now permitted (expected in EAPOL state), so if the mgmt-queues
 		 *   are empty disable them and enable the data queues via txPort module.
 		 */
-		if (ePrevState != SM_STATE_EAPOL) {
-			TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, "mgmtQueuesSM: Got SmEvent=OPEN when eSmState=%d\n", ePrevState);
-		}
 		if ( ARE_ALL_MGMT_QUEUES_EMPTY(pTxMgmtQ->aQueues) ) {
 			pTxMgmtQ->eSmState = SM_STATE_OPEN_DATA;
 			pTxMgmtQ->aQueueEnabledBySM[QUEUE_TYPE_MGMT]  = TI_FALSE;
@@ -660,9 +650,6 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, ESmEvent eSmEvent)
 			pTxMgmtQ->aQueueEnabledBySM[QUEUE_TYPE_MGMT]  = TI_FALSE;
 			pTxMgmtQ->aQueueEnabledBySM[QUEUE_TYPE_EAPOL] = TI_FALSE;
 			eSmAction = SM_ACTION_ENABLE_DATA;
-		} else {
-			/* This may happen so it's just a warning and not an error. */
-			TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_WARNING, "mgmtQueuesSM: Got SmEvent=QUEUES_EMPTY when eSmState=%d\n", ePrevState);
 		}
 		break;
 
@@ -690,18 +677,12 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, ESmEvent eSmEvent)
 			eSmAction = SM_ACTION_RUN_SCHEDULER;
 		}
 
-		else {
-			/* This may happen so it's just a warning and not an error. */
-			TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_WARNING, "mgmtQueuesSM: Got SmEvent=QUEUES_NOT_EMPTY when eSmState=%d\n", ePrevState);
-		}
 		break;
 
 	default:
-		TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, "mgmtQueuesSM: Unknown SmEvent = %d\n", eSmEvent);
 		break;
 	}
 
-	TRACE6( pTxMgmtQ->hReport, REPORT_SEVERITY_INFORMATION, "mgmtQueuesSM: <currentState = %d, event = %d> --> nextState = %d, action = %d, MgmtQueEnbl=%d, EapolQueEnbl=%d\n", ePrevState, eSmEvent, pTxMgmtQ->eSmState, eSmAction, pTxMgmtQ->aQueueEnabledBySM[0], pTxMgmtQ->aQueueEnabledBySM[1]);
 
 	/*
 	 * Execute the required action.
@@ -724,7 +705,6 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, ESmEvent eSmEvent)
 		break;
 
 	default:
-		TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, ": Unknown SmAction = %d\n", eSmAction);
 		break;
 	}
 }

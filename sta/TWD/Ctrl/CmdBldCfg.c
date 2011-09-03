@@ -40,7 +40,7 @@
 #define __FILE_ID__  FILE_ID_91
 #include "osApi.h"
 #include "tidef.h"
-#include "report.h"
+//#include "report.h"
 #include "CmdBld.h"
 #include "CmdBldCfgIE.h"
 #include "TWDriverInternal.h"
@@ -139,16 +139,13 @@ TI_STATUS cmdBld_CfgGroupAddressTable (TI_HANDLE        hCmdBld,
                                        void             *fCb,
                                        TI_HANDLE        hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 	TI_UINT32    i;
 
 	if (uNumGroupAddr > MAX_MULTICAST_GROUP_ADDRS) {
-		TRACE1(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "cmdBld_CfgGroupAddressTable: numGroupAddrs=%d\n", uNumGroupAddr);
 		return PARAM_VALUE_NOT_VALID;
 	}
 
 	if (NULL == pGroupAddr) {
-		TRACE2(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "cmdBld_CfgGroupAddressTable: numGroupAddrs=%d Group_addr=0x%x  !!!\n", uNumGroupAddr, pGroupAddr);
 		return PARAM_VALUE_NOT_VALID;
 	}
 
@@ -328,14 +325,12 @@ typedef enum { HW_CLOCK_40_MHZ = 40, HW_CLOCK_80_MHZ = 80 } EHwClock;
  ****************************************************************************/
 TI_STATUS cmdBld_CfgArmClock (TI_HANDLE hCmdBld, TI_UINT32 uArmClock, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 	TWlanParams *pWlanParams = &DB_WLAN(hCmdBld);
 
 	pWlanParams->ArmClock = uArmClock;
 
 	/* Illegal combination Mac=80, Arm=40 ==> force setting 40/40*/
 	if (pWlanParams->MacClock == HW_CLOCK_80_MHZ && pWlanParams->ArmClock == HW_CLOCK_40_MHZ) {
-		TRACE0(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "cmdBld_ArmClockSet: Illegal combination Mac=80, Arm=40 ==> force setting 40/40\n");
 		pWlanParams->MacClock = HW_CLOCK_40_MHZ;
 	}
 
@@ -361,7 +356,6 @@ TI_STATUS cmdBld_CfgArmClock (TI_HANDLE hCmdBld, TI_UINT32 uArmClock, void *fCb,
  ****************************************************************************/
 TI_STATUS cmdBld_CfgMacClock (TI_HANDLE hCmdBld, TI_UINT32 uMacClock, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 	TWlanParams *pWlanParams = &DB_WLAN(hCmdBld);
 
 	pWlanParams->MacClock = uMacClock;
@@ -371,7 +365,6 @@ TI_STATUS cmdBld_CfgMacClock (TI_HANDLE hCmdBld, TI_UINT32 uMacClock, void *fCb,
 
 	/* Illegal combination Mac=80, Arm=40 ==> force setting 40/40*/
 	if (pWlanParams->MacClock == HW_CLOCK_80_MHZ && pWlanParams->ArmClock == HW_CLOCK_40_MHZ) {
-		TRACE0(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "cmdBld_MacClockSet: Illegal combination Mac=80, Arm=40 ==> force setting 40/40\n");
 		pWlanParams->MacClock = HW_CLOCK_40_MHZ;
 	}
 
@@ -658,7 +651,6 @@ TI_STATUS cmdBld_CfgBeaconFilterTable (TI_HANDLE    hCmdBld,
 	TCmdBld   *pCmdBld = (TCmdBld *)hCmdBld;
 
 	if (uIETableSize > BEACON_FILTER_TABLE_MAX_SIZE) {
-		TRACE2(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "cmdBld_CfgBeaconFilterTable: Table size is too big %d (>%d)\n", uIETableSize, BEACON_FILTER_TABLE_MAX_SIZE);
 
 		return PARAM_VALUE_NOT_VALID;
 	}
@@ -722,9 +714,6 @@ TI_STATUS cmdBld_CfgRssiSnrTrigger (TI_HANDLE hCmdBld, RssiSnrTriggerCfg_t *pTri
  ****************************************************************************/
 TI_STATUS cmdBld_CfgRssiSnrWeights (TI_HANDLE hCmdBld, RssiSnrAverageWeights_t *pWeightsParam, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
-
-	TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "\n cmdBld_CfgRssiSnrWeights :\n                             uRssiBeaconAverageWeight = %d\n                             uRssiPacketAverageWeight = %d\n                             uSnrBeaconAverageWeight  = %d\n                             uSnrPacketAverageWeight = %d \n ", pWeightsParam->rssiBeaconAverageWeight, pWeightsParam->rssiPacketAverageWeight, pWeightsParam->snrBeaconAverageWeight , pWeightsParam->snrPacketAverageWeight  );
 
 	DB_WLAN(hCmdBld).tRssiSnrWeights.rssiBeaconAverageWeight = pWeightsParam->rssiBeaconAverageWeight;
 	DB_WLAN(hCmdBld).tRssiSnrWeights.rssiPacketAverageWeight = pWeightsParam->rssiPacketAverageWeight;
@@ -814,7 +803,6 @@ TI_STATUS cmdBld_CfgSg (TI_HANDLE hCmdBld, TSoftGeminiParams *pSgParam, void *fC
  ****************************************************************************/
 TI_STATUS cmdBld_CfgCoexActivity (TI_HANDLE hCmdBld, TCoexActivity *pCoexActivity, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 	TWlanParams *pWlanParams = &DB_WLAN(hCmdBld);
 	TCoexActivity *pSaveCoex = &pWlanParams->tWlanParamsCoexActivityTable.entry[0];
 	int numOfElements = pWlanParams->tWlanParamsCoexActivityTable.numOfElements;
@@ -827,7 +815,6 @@ TI_STATUS cmdBld_CfgCoexActivity (TI_HANDLE hCmdBld, TCoexActivity *pCoexActivit
 		}
 	}
 
-	TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "cmdBld_CfgCoexActivity: save Param %d in index %d, %d %d\n", 0, i, pCoexActivity->coexIp, pCoexActivity->activityId);
 	/* save in WlanParams for recovery */
 	pSaveCoex[i].coexIp          = pCoexActivity->coexIp;
 	pSaveCoex[i].activityId      = pCoexActivity->activityId;
@@ -881,18 +868,15 @@ TI_STATUS cmdBld_CfgFmCoex (TI_HANDLE hCmdBld, TFmCoexParams *pFmCoexParams, voi
  ****************************************************************************/
 TI_STATUS cmdBld_CfgTxRatePolicy (TI_HANDLE hCmdBld, TTxRatePolicy *pTxRatePolicy, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld       *pCmdBld      = (TCmdBld *)hCmdBld;
 	TTxRateClass  *pTxRateClass = pTxRatePolicy->rateClass;
 	TI_UINT8       index;
 
 	CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_TX_RATE_POLICY)
 
-	TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "_1, Num of classes = 0x%x\n", pTxRatePolicy->numOfRateClasses);
 
 	DB_BSS(hCmdBld).TxRateClassParams.numOfRateClasses = pTxRatePolicy->numOfRateClasses;
 
 	for (index = 0; index < pTxRatePolicy->numOfRateClasses; index++, pTxRateClass++) {
-		TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "_2loop, Index = %d, Short R = 0x%x, Long R = 0x%x, Rates = 0x%x\n", index, pTxRateClass->shortRetryLimit, pTxRateClass->longRetryLimit, pTxRateClass->txEnabledRates);
 
 		DB_BSS(hCmdBld).TxRateClassParams.rateClass[index] = *pTxRateClass;
 	}
@@ -903,14 +887,11 @@ TI_STATUS cmdBld_CfgTxRatePolicy (TI_HANDLE hCmdBld, TTxRatePolicy *pTxRatePolic
 
 TI_STATUS cmdBld_CfgSlotTime (TI_HANDLE hCmdBld, ESlotTime eSlotTime, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
-
 	CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_SLOT_TIME)
 	CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_SLOT_TIME_JOIN)
 
 	DB_WLAN(hCmdBld).SlotTime = eSlotTime;
 
-	TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CfgSlotTime: Slot time = %d\n", eSlotTime);
 
 	/* Configure the new Slot-Time value to the FW. */
 	return cmdBld_CfgIeSlotTime (hCmdBld, (TI_UINT8)eSlotTime, fCb, hCb);
@@ -988,7 +969,6 @@ TI_STATUS cmdBld_CfgSecureMode (TI_HANDLE hCmdBld, ECipherSuite eSecurMode, void
 	TI_UINT32     index;
 
 	if (eSecurMode < TWD_CIPHER_MAX) {
-		TRACE2(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "cmdBld_CfgSecureMode: change tSecurity mode from %d --> %d\n", pCmdBld->tSecurity.eSecurityMode, eSecurMode);
 		/* check if tSecurity mode is equal to previous one*/
 		if (pCmdBld->tSecurity.eSecurityMode == eSecurMode) {
 			return TI_OK;
@@ -1023,11 +1003,8 @@ TI_STATUS cmdBld_CfgConnMonitParams (TI_HANDLE  hCmdBld,
                                      void       *fCb,
                                      TI_HANDLE  hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
-
 	CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CFG_CONN_MONIT_PARAMS)
 
-	TRACE2(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "SetBssLossTsfThresholdParamsCmd :\n                             BssLossTimeout = %d\n                             TsfMissThreshold = %d \n ", pRoamingTriggerCmd->BssLossTimeout, pRoamingTriggerCmd->TsfMissThreshold);
 
 	DB_WLAN(hCmdBld).roamTriggers.BssLossTimeout = pRoamingTriggerCmd->BssLossTimeout;
 	DB_WLAN(hCmdBld).roamTriggers.TsfMissThreshold = pRoamingTriggerCmd->TsfMissThreshold;
@@ -1187,7 +1164,6 @@ TI_STATUS cmdBld_CfgKeepAlive (TI_HANDLE hCmdBld, TKeepAliveParams *pKeepAlivePa
 {
 	TCmdBld   *pCmdBld = (TCmdBld *)hCmdBld;
 
-	TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "CmdBld: Seeting keep-alive params, index=%d, interval=%d msec, trigType=%d, enaFlag=%d\n", pKeepAliveParams->index, pKeepAliveParams->interval, pKeepAliveParams->trigType, pKeepAliveParams->enaDisFlag);
 
 	os_memoryCopy (pCmdBld->hOs,
 	               (void *)&DB_KLV(hCmdBld).keepAliveParams[ pKeepAliveParams->index ],
@@ -1216,11 +1192,8 @@ TI_STATUS cmdBld_CfgKeepAlive (TI_HANDLE hCmdBld, TKeepAliveParams *pKeepAlivePa
  ****************************************************************************/
 TI_STATUS cmdBld_CfgKeepAliveEnaDis(TI_HANDLE hCmdBld, TI_UINT8 enaDisFlag, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld   *pCmdBld = (TCmdBld *)hCmdBld;
-
 	CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CMD_KEEP_ALIVE_PARAMS )
 
-	TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "CmdBld: Seeting keep-alive Global ena / dis flag to %d\n", (TI_UINT32)enaDisFlag);
 
 	DB_KLV(hCmdBld).enaDisFlag = enaDisFlag;
 

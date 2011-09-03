@@ -169,11 +169,9 @@ TI_STATUS scanSRVSM_SMEvent( TI_HANDLE hScanSrv, scan_SRVSMStates_e* currentStat
 	/* obtain the next state */
 	status = fsm_GetNextState( pScanSRV->SM, *(TI_UINT8*)currentState, (TI_UINT8)event, &nextState );
 	if ( status != TI_OK ) {
-		TRACE2(pScanSRV->hReport, REPORT_SEVERITY_ERROR, "Failed getting scan SRV next state. state = %d event = %d\n", (TI_UINT8)*currentState,(TI_UINT8)event);
 		return TI_NOK;
 	}
 
-	TRACE3(pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "scanSRVSM_SMEvent: <currentState = %d, event = %d> --> nextState = %d\n", *currentState, event, nextState);
 
 	/* move */
 	return fsm_Event( pScanSRV->SM, (TI_UINT8*)currentState, (TI_UINT8)event, hScanSrv );
@@ -193,7 +191,6 @@ TI_STATUS scanSRVSM_requestPS( TI_HANDLE hScanSrv )
 	scanSRV_t *pScanSRV = (scanSRV_t*)hScanSrv;
 	TI_STATUS psStatus;
 
-	TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Requesting Driver mode from PowerSave Srv.\n");
 
 	psStatus = powerSrv_ReservePS(  pScanSRV->hPowerSrv,
 	                                pScanSRV->psRequest,
@@ -205,14 +202,12 @@ TI_STATUS scanSRVSM_requestPS( TI_HANDLE hScanSrv )
 		/* if successful */
 	case POWER_SAVE_802_11_IS_CURRENT:
 		/* send a PS_SUCCESS event */
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Driver mode successful, continuing to scan.\n");
 		return scanSRVSM_SMEvent( hScanSrv, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_PS_SUCCESS );
 
 		/* if pending */
 	case POWER_SAVE_802_11_PENDING:
 	case TI_OK:
 		/* send a PS_PEND event */
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Driver mode pending, Waiting.\n");
 		return scanSRVSM_SMEvent( hScanSrv, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_PS_PEND );
 
 		/* if not successful */
@@ -224,7 +219,6 @@ TI_STATUS scanSRVSM_requestPS( TI_HANDLE hScanSrv )
 		/* if still wishing to scan */
 		if ( pScanSRV->bScanOnDriverModeFailure ) {
 			/* send a PS_SUCCESS event - scan will proceed regardless of the error */
-			TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Driver mode failed, continuing to scan.\n");
 			scanSRVSM_SMEvent( hScanSrv, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_PS_SUCCESS );
 		}
 		/* otherwise, return */
@@ -232,7 +226,6 @@ TI_STATUS scanSRVSM_requestPS( TI_HANDLE hScanSrv )
 			/* mark the return code */
 			pScanSRV->returnStatus = TI_NOK;
 			/* send a PS_FAIL event */
-			TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Driver mode failed, aborting scan.\n");
 			scanSRVSM_SMEvent( hScanSrv, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_PS_FAIL );
 		}
 		break;
@@ -265,7 +258,6 @@ TI_STATUS scanSRVSM_releasePS( TI_HANDLE hScanSrv )
 	/* if exit from driver mode requested, do so */
 	if ( TI_TRUE == pScanSRV->bExitFromDriverMode ) {
 		/* here we need to get an answer if we succeeded to exit driver mode */
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Releasing Driver mode from Power Srv.\n");
 
 		psStatus = powerSrv_ReleasePS(  pScanSRV->hPowerSrv,
 		                                pScanSRV->bSendNullData,
@@ -282,21 +274,18 @@ TI_STATUS scanSRVSM_releasePS( TI_HANDLE hScanSrv )
 		/* if successful */
 	case POWER_SAVE_802_11_IS_CURRENT:
 		/* send a PS_SUCCESS event */
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Driver mode exit successful, scan done.\n");
 		return scanSRVSM_SMEvent( hScanSrv, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_PS_SUCCESS );
 
 		/* if pending */
 	case POWER_SAVE_802_11_PENDING:
 	case TI_OK:
 		/* stay in the PS_EXIT state */
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Driver mode exit pending, Waiting.\n");
 		break;
 
 		/* if not successful */
 	default:
 
 		/* send a PS_FAIL event */
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Driver mode exit failed, scan done.");
 		return scanSRVSM_SMEvent( hScanSrv, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_PS_FAIL );
 
 	}
@@ -326,7 +315,6 @@ TI_STATUS scanSRVSM_startActualScan( TI_HANDLE hScanSrv )
 	                MacServices_scanSRVcalculateScanTimeout (hScanSrv, pScanSRV->scanParams, !pScanSRV->bDtimOverlapping),
 	                TI_FALSE);
 
-	TRACE1( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Sending scan , type: %x to HAL.\n",pScanSRV->scanParams->scanType);
 
 	/* start the scan */
 	/* we send the MacServices_scanSRVCommandMailBoxCB to be called when this command is recieved */
@@ -340,7 +328,6 @@ TI_STATUS scanSRVSM_startActualScan( TI_HANDLE hScanSrv )
 	}
 	/* if scan request failed */
 	if ( TI_OK != pScanSRV->returnStatus ) {
-		TRACE1( pScanSRV->hReport, REPORT_SEVERITY_ERROR, "HAL returned code %d for scan request, quitting scan.\n", pScanSRV->returnStatus);
 
 		/* send a scan complete event. This will do all necessary clean-up (timer, power manager, notifying scan complete) */
 		scanSRVSM_SMEvent( hScanSrv, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_SCAN_COMPLETE );
@@ -384,11 +371,6 @@ TI_STATUS scanSRVSM_notifyScanComplete( TI_HANDLE hScanSrv )
 		/* if function returns TI_TRUE than we are in PS mode , else - not */
 		PSMode = powerSrv_getPsStatus(pScanSRV->hPowerSrv) ? POWER_SAVE_802_11_SUCCESS : POWER_SAVE_802_11_FAIL;
 
-		TRACE2( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "scanSRVSM_notifyScanComplete status = 0x%x PSMode = 0x%x\n",pScanSRV->returnStatus,PSMode);
-
-
-		TRACE0(pScanSRV->hReport, REPORT_SEVERITY_INFORMATION , "scanSRVSM_notifyScanComplete: call TWD_OWN_EVENT_SCAN_CMPLT CB. In std MacServices_scanSRV_scanCompleteCB()\n");
-
 		pScanSRV->scanCompleteNotificationFunc( pScanSRV->scanCompleteNotificationObj,
 		                                        pScanSRV->eScanTag,
 		                                        pScanSRV->uResultCount,
@@ -423,7 +405,6 @@ TI_STATUS scanSRVSM_handleTimerExpiry( TI_HANDLE hScanSrv )
 
 	if ( pScanSRV->currentNumberOfConsecutiveNoScanCompleteEvents >=
 	        pScanSRV->numberOfNoScanCompleteToRecovery ) {
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_ERROR, ": Timer expired. Starting recovery process.\n");
 
 		pScanSRV->currentNumberOfConsecutiveNoScanCompleteEvents = 0;
 
@@ -436,7 +417,6 @@ TI_STATUS scanSRVSM_handleTimerExpiry( TI_HANDLE hScanSrv )
 		/* call the recovery module */
 		pScanSRV->failureEventFunc(pScanSRV->failureEventObj ,NO_SCAN_COMPLETE_FAILURE);
 	} else {
-		TRACE2( pScanSRV->hReport, REPORT_SEVERITY_ERROR, ": Timer expired. consecutive failures:%d, threshold:%d, still not calling recovery.\n", pScanSRV->currentNumberOfConsecutiveNoScanCompleteEvents, pScanSRV->numberOfNoScanCompleteToRecovery);
 
 		/* send a top scan command, which can help solving the FW bug described above */
 		if ( TI_FALSE == pScanSRV->bSPSScan ) {
@@ -469,7 +449,6 @@ static TI_STATUS scanSRVSM_PsFailWhileScanning( TI_HANDLE hScanSrv )
 {
 	scanSRV_t *pScanSRV = (scanSRV_t*)hScanSrv;
 
-	TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "scanSRVSM_PsFailWhileScanning. Indicate not to Enter PS.\n");
 
 	pScanSRV->bExitFromDriverMode = TI_FALSE;
 
@@ -490,7 +469,6 @@ TI_STATUS scanSRVSM_handleRecovery( TI_HANDLE hScanSrv )
 {
 	scanSRV_t *pScanSRV = (scanSRV_t*)hScanSrv;
 
-	TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "FW reset event from outside.\n");
 
 	/* The Power Manager is responsible to exit PS mode in recovery. Also, the scan CB is not called -
 	   The SCR is responsible to notify scan concentrator of the event (which actually notifies scan SRV */
@@ -499,9 +477,6 @@ TI_STATUS scanSRVSM_handleRecovery( TI_HANDLE hScanSrv )
 	if ( TI_TRUE == pScanSRV->bTimerRunning ) {
 		tmr_StopTimer (pScanSRV->hScanSrvTimer);
 		pScanSRV->bTimerRunning = TI_FALSE;
-	} else {
-		/* shouldn't happen - only called if timer is supposedly running */
-		TRACE1( pScanSRV->hReport, REPORT_SEVERITY_WARNING, "SM: External FW reset in state %d and timer is not running?", pScanSRV->SMState);
 	}
 
 	return TI_OK;
@@ -520,7 +495,6 @@ static TI_STATUS actionUnexpected( TI_HANDLE hScanSrv )
 {
 	scanSRV_t *pScanSRV = (scanSRV_t*)hScanSrv;
 
-	TRACE1( pScanSRV->hReport, REPORT_SEVERITY_ERROR, "Scan SRV state machine error, unexpected Event, state=%d\n\n", pScanSRV->SMState);
 
 	if ( pScanSRV->bTimerRunning ) {
 		tmr_StopTimer (pScanSRV->hScanSrvTimer);

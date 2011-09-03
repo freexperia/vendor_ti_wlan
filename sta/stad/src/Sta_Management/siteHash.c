@@ -96,9 +96,6 @@ TI_STATUS siteMgr_resetSiteTable(TI_HANDLE	hSiteMgr, siteTablesParams_t	*pSiteTa
 
 	/* It looks like it never happens. Anyway decided to check */
 	if ( pSiteTableParams->maxNumOfSites > MAX_SITES_BG_BAND ) {
-		TRACE2( pSiteMgr->hReport, REPORT_SEVERITY_ERROR,
-		        "siteMgr_resetSiteTable. pScanMngr->currentBSSBand=%d exceeds the limit %d\n",
-		        pSiteTableParams->maxNumOfSites, MAX_SITES_BG_BAND);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return TI_NOK;
 	}
@@ -145,9 +142,6 @@ siteEntry_t	*findSiteEntry(siteMgr_t		*pSiteMgr,
 
 	/* It looks like it never happens. Anyway decided to check */
 	if ( pCurrentSiteTable->maxNumOfSites > MAX_SITES_BG_BAND ) {
-		TRACE2( pSiteMgr->hReport, REPORT_SEVERITY_ERROR,
-		        "findSiteEntry. pCurrentSiteTable->maxNumOfSites=%d exceeds the limit %d\n",
-		        pCurrentSiteTable->maxNumOfSites, MAX_SITES_BG_BAND);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return NULL;
 	}
@@ -158,8 +152,6 @@ siteEntry_t	*findSiteEntry(siteMgr_t		*pSiteMgr,
 			pSiteEntry = &(pCurrentSiteTable->siteTable[i]);
 
 			if (MAC_EQUAL (pSiteEntry->bssid, *mac)) {
-				TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION,
-				       "FIND success, bssid: %X-%X-%X-%X-%X-%X\n\n", (*mac)[0], (*mac)[1], (*mac)[2], (*mac)[3], (*mac)[4], (*mac)[5]);
 				return pSiteEntry;
 			}
 
@@ -177,7 +169,6 @@ siteEntry_t	*findSiteEntry(siteMgr_t		*pSiteMgr,
 
 
 
-	TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "FIND failure, bssid: %X-%X-%X-%X-%X-%X\n\n", (*mac)[0], (*mac)[1], (*mac)[2], (*mac)[3], (*mac)[4], (*mac)[5]);
 
 
 	return NULL;
@@ -222,7 +213,6 @@ siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
 	} else if (RADIO_BAND_5_0_GHZ == band) {
 		pCurrentSiteTable = (siteTablesParams_t*) &(pSitesMgmtParams->dot11A_sitesTables);
 	} else {
-		TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "Bad band: %d\n\n", band);
 		pCurrentSiteTable = &(pSitesMgmtParams->dot11BG_sitesTables);
 	}
 
@@ -234,9 +224,6 @@ siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
 	}
 	/* It looks like it never happens. Anyway decided to check */
 	if ( pCurrentSiteTable->maxNumOfSites > MAX_SITES_BG_BAND ) {
-		TRACE2( pSiteMgr->hReport, REPORT_SEVERITY_ERROR,
-		        "findAndInsertSiteEntry. pCurrentSiteTable->maxNumOfSites=%d exceeds the limit %d\n",
-		        pCurrentSiteTable->maxNumOfSites, MAX_SITES_BG_BAND);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return NULL;
 	}
@@ -245,8 +232,6 @@ siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
 		pSiteEntry = &(pCurrentSiteTable->siteTable[i]);
 
 		if (MAC_EQUAL (pSiteEntry->bssid, *mac)) {
-
-			TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "FIND success, bssid: %X-%X-%X-%X-%X-%X\n\n", (*mac)[0], (*mac)[1], (*mac)[2], (*mac)[3], (*mac)[4], (*mac)[5]);
 
 			return pSiteEntry;
 		} else if (pSiteEntry->siteType == SITE_NULL) {   /* Save the first empty site, in case the
@@ -261,16 +246,9 @@ siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
 		}
 	}
 
-	TRACE4(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "INSERT failure, no free entry!, oldestTS=%d, nextSite2Remove=%d, "
-	       "[0].localTimeStamp=%d, [1]localTimeStamp%d \n",
-	       oldestTS, nextSite2Remove,
-	       pCurrentSiteTable->siteTable[0].localTimeStamp,
-	       pCurrentSiteTable->siteTable[1].localTimeStamp);
-
 	if ((!firstEmptySiteFound) || (pCurrentSiteTable->numOfSites>=pCurrentSiteTable->maxNumOfSites)) {
 		/* No NULL entry has been found. Remove the oldest site */
 		pSiteEntry =  &(pCurrentSiteTable->siteTable[nextSite2Remove]);
-		TRACE9(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "INSERT failure, no free entry!, numOfSites=%d, removing site index=%d,\n                                bssid: %X-%X-%X-%X-%X-%X, ts=%d \n", pCurrentSiteTable->numOfSites, nextSite2Remove, pSiteEntry->bssid[0], pSiteEntry->bssid[1], pSiteEntry->bssid[2], pSiteEntry->bssid[3], pSiteEntry->bssid[4], pSiteEntry->bssid[5], pSiteEntry->localTimeStamp);
 		removeSiteEntry(pSiteMgr, pCurrentSiteTable, pSiteEntry);
 		emptySiteIndex = nextSite2Remove;
 
@@ -289,7 +267,6 @@ siteEntry_t	*findAndInsertSiteEntry(siteMgr_t		*pSiteMgr,
 	if (pSiteMgr->siteMgrOperationalMode == DOT11_G_MODE)
 		pSiteEntry->currentSlotTime = pSiteMgr->pDesiredParams->siteMgrDesiredSlotTime;
 
-	TRACE8(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "INSERT success, bssid: %X-%X-%X-%X-%X-%X, band=%d, index=%d\n\n", (*mac)[0], (*mac)[1], (*mac)[2], (*mac)[3], (*mac)[4], (*mac)[5], band, emptySiteIndex);
 
 
 	return pSiteEntry;
@@ -317,23 +294,15 @@ void removeSiteEntry(siteMgr_t  *pSiteMgr,
 	TI_UINT8			index;
 
 	if (pSiteEntry == NULL) {
-		TRACE0(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "REMOVAL failure, site is NULL\n\n");
 		return;
 	}
 
 	if (pCurrSiteTblParams->numOfSites == 0) {
-		TRACE0(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "REMOVAL failure, site table is empty\n\n");
 		return;
 	}
 
-	TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "removeSiteEntry REMOVE ssid=, bssid= 0x%x-0x%x-0x%x-0x%x-0x%x-0x%x\n\n",			   pSiteEntry->bssid[0], pSiteEntry->bssid[1], pSiteEntry->bssid[2],			   pSiteEntry->bssid[3], pSiteEntry->bssid[4], pSiteEntry->bssid[5] );
 
 	pCurrSiteTblParams->numOfSites--;
-
-	/* Now remove (exclude) hashPtr entry from the linked list */
-
-	TRACE6(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "REMOVAL success, bssid: %X-%X-%X-%X-%X-%X\n\n", pSiteEntry->bssid[0], pSiteEntry->bssid[1], pSiteEntry->bssid[2], pSiteEntry->bssid[3], pSiteEntry->bssid[4], pSiteEntry->bssid[5]);
-	TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, " SITE TABLE remaining entries number  %d \n", pCurrSiteTblParams->numOfSites);
 
 	/* Clean the rest of the entry structure */
 	index = pSiteEntry->index;     /* keep the index of the siteTable entry */

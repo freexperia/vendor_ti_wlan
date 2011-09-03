@@ -290,9 +290,6 @@ static TI_STATUS sendProbeResponse(siteMgr_t *pSiteMgr, TMacAddr *pBssid)
 
 	ssid.hdr[1] = pSiteMgr->pDesiredParams->siteMgrDesiredSSID.len;
 	if (ssid.hdr[1] > MAX_SSID_LEN) {
-		TRACE2(pSiteMgr->hReport, REPORT_SEVERITY_ERROR,
-		       "sendProbeResponse. siteMgrDesiredSSID.len=%d exceeds the limit %d\n",
-		       pSiteMgr->pDesiredParams->siteMgrDesiredSSID.len, MAX_SSID_LEN);
 		ssid.hdr[1] = MAX_SSID_LEN;
 	}
 	os_memoryCopy(pSiteMgr->hOs, (void *)ssid.serviceSetId, (void *)pSiteMgr->pDesiredParams->siteMgrDesiredSSID.str, ssid.hdr[1]);
@@ -427,25 +424,21 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
 
 	pSiteMgr->prevRadioBand = pSiteMgr->radioBand;
 
-	TRACE2(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Capabilities, Slot Time Bit = %d (capabilities = %d)\n", (pPrimarySite->capabilities >> CAP_SLOT_TIME_SHIFT) & 1, pPrimarySite->capabilities);
 
 	if (pPrimarySite->channel <= MAX_GB_MODE_CHANEL) {
 		if (pSiteMgr->pDesiredParams->siteMgrDesiredDot11Mode == DOT11_B_MODE) {
 			pSiteMgr->siteMgrOperationalMode = DOT11_B_MODE;
 			slotTime = PHY_SLOT_TIME_LONG;
 
-			TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, ": 11b Mode, Slot Time = %d\n", (TI_UINT8)slotTime);
 		} else {
 			pSiteMgr->siteMgrOperationalMode = DOT11_G_MODE;
 
 			if (((pPrimarySite->capabilities >> CAP_SLOT_TIME_SHIFT) & CAP_SLOT_TIME_MASK) == PHY_SLOT_TIME_SHORT) {
 				slotTime = pSiteMgr->pDesiredParams->siteMgrDesiredSlotTime;
 
-				TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, ": 11g Mode, Slot Time = %d (desired)\n", (TI_UINT8)slotTime);
 			} else {
 				slotTime = PHY_SLOT_TIME_LONG;
 
-				TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, ": 11g Mode, Slot Time = %d\n", (TI_UINT8) slotTime);
 			}
 		}
 
@@ -456,7 +449,6 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
 		pSiteMgr->radioBand = RADIO_BAND_5_0_GHZ;
 		slotTime = PHY_SLOT_TIME_SHORT;
 
-		TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, ": 11a Mode, Slot Time = %d\n", (TI_UINT8)slotTime);
 
 		pSiteMgr->pSitesMgmtParams->pCurrentSiteTable = (siteTablesParams_t *)&pSiteMgr->pSitesMgmtParams->dot11A_sitesTables;
 	}
@@ -545,7 +537,6 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
 		pParam->content.qosSiteProtocol = QOS_NONE;
 	}
 
-	TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, " systemConfigt() : pParam->content.qosSiteProtoco %d\n", pParam->content.qosSiteProtocol);
 
 	pParam->paramType = QOS_MNGR_SET_SITE_PROTOCOL;
 	qosMngr_setParams(pSiteMgr->hQosMngr, pParam);
@@ -618,9 +609,6 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
 		pRsnIe += 1;
 		rsnIECount++;
 	}
-	if (length<pPrimarySite->rsnIeLen) {
-		TRACE2(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "siteMgr_selectSiteFromTable, RSN IE is too long: rsnIeLen=%d, MAX_RSN_IE=%d\n", pPrimarySite->rsnIeLen, MAX_RSN_IE);
-	}
 
 	rsnData.pIe = (pPrimarySite->rsnIeLen==0) ? NULL : curRsnData;
 	rsnData.ieLen = pPrimarySite->rsnIeLen;
@@ -633,7 +621,6 @@ TI_STATUS systemConfig(siteMgr_t *pSiteMgr)
 #ifdef XCC_MODULE_INCLUDED
 	/* set XCC TPC if present */
 	if (XCC_ParseClientTP(pSiteMgr->hOs,pPrimarySite,(TI_INT8 *)&ExternTxPower,pIeBuffer,PktLength) == TI_OK) {
-		TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "Select XCC_ParseClientTP == OK: Dbm = %d\n",ExternTxPower);
 		pParam->paramType = REGULATORY_DOMAIN_EXTERN_TX_POWER_PREFERRED;
 		pParam->content.ExternTxPowerPreferred = ExternTxPower;
 		regulatoryDomain_setParam(pSiteMgr->hRegulatoryDomain, pParam);

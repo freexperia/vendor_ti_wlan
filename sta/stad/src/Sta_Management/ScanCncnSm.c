@@ -235,7 +235,6 @@ void scanCncnSm_RequestScr (TI_HANDLE hScanCncnClient)
 {
 	TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
 
-	TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSm_RequestScr: SM  requesting SCR\n");
 
 	/*
 	 * just call the specific SCR request function, it will send an event if necessary
@@ -257,7 +256,6 @@ void scanCncnSm_StartScan (TI_HANDLE hScanCncnClient)
 {
 	TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
 
-	TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSm_StartScan: SM  attempting to start scan.\n");
 
 	/* set scan result counter and flag */
 	pScanCncnClient->uResultCounter = 0;
@@ -282,7 +280,6 @@ void scanCncnSm_StopScan (TI_HANDLE hScanCncnClient)
 {
 	TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
 
-	TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSm_StopScan: SM  is attempting to stop scan\n");
 
 	/* call the scan SRV stop scan */
 	pScanCncnClient->fStopScan (hScanCncnClient);
@@ -301,7 +298,6 @@ void scanCncnSm_ScanComplete (TI_HANDLE hScanCncnClient)
 {
 	TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
 
-	TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSm_ScanComplete: SM  received scan complete event\n");
 
 	/* release the SCR */
 	pScanCncnClient->fScrRelease (hScanCncnClient);
@@ -339,7 +335,6 @@ void scanCncnSm_ActionUnexpected (TI_HANDLE hScanCncnClient)
 {
 	TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
 
-	TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "ScanCncnSm_ActionUnexpected: Unexpected event for current state\n");
 
 	/* mark the scan status as failed */
 	pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
@@ -358,7 +353,6 @@ void scanCncnSm_RejectScan (TI_HANDLE hScanCncnClient)
 {
 	TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
 
-	TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSm_RejectScan: SM  received reject event\n");
 
 	pScanCncnClient->bScanRejectedOn2_4 = TI_TRUE;
 	/* release the SCR */
@@ -385,7 +379,6 @@ void scanCncnSm_Recovery (TI_HANDLE hScanCncnClient)
 {
 	TScanCncnClient *pScanCncnClient = (TScanCncnClient*)hScanCncnClient;
 
-	TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSm_Recovery: SM  received reject event\n");
 
 	/* Call the recovery specific function */
 	pScanCncnClient->fRecovery (hScanCncnClient);

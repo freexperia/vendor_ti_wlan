@@ -124,7 +124,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 
 	/* length of body (BUF without 802.11 header and FCS) */
 	if (RX_BUF_LEN(pBuffer) < WLAN_HDR_LEN) {
-		TRACE1(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: Body length is too short (%d)!\n", RX_BUF_LEN(pBuffer));
 		RxBufFree(pHandle->hOs, pBuffer);
 		return TI_NOK;
 	}
@@ -192,13 +191,10 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 
 	switch (msgType) {
 	case ASSOC_REQUEST:
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_SM, "MLME_PARSER: recieved ASSOC_REQ message \n");
 		break;
 	case RE_ASSOC_REQUEST:
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_SM, "MLME_PARSER: recieved RE_ASSOC_REQ message \n");
 		break;
 	case RE_ASSOC_RESPONSE:
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_SM, "MLME_PARSER: recieved RE_ASSOC_RSP message \n");
 		/*  break;*/
 	case ASSOC_RESPONSE:
 		/* if the assoc response is not directed to our STA or not from the current AP */
@@ -206,7 +202,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 			break;
 
 		if (bodyDataLen < ASSOC_RESP_FIXED_DATA_LEN) {
-			TRACE1(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: IE ASSOC_RESPONSE length is too short (%d)!\n", bodyDataLen);
 			status = TI_NOK;
 			goto mlme_recv_end;
 		}
@@ -237,7 +232,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 			pEleHdr = (dot11_eleHdr_t*)pData;
 
 			if ((*pEleHdr)[1] > (bodyDataLen - 2)) {
-				TRACE3(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: IE %d with length %d out of bounds %d\n", (*pEleHdr)[0], (*pEleHdr)[1], (bodyDataLen - 2));
 				status = TI_NOK;
 				goto mlme_recv_end;
 			}
@@ -248,7 +242,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 				pHandle->tempFrameInfo.frame.content.assocRsp.pRates = &(pHandle->tempFrameInfo.rates);
 				status = mlmeParser_readRates(pHandle, pData, bodyDataLen, &readLen, &(pHandle->tempFrameInfo.rates));
 				if (status != TI_OK) {
-					TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: error reading RATES\n");
 					goto mlme_recv_end;
 				}
 				break;
@@ -258,7 +251,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 				pHandle->tempFrameInfo.frame.content.assocRsp.pExtRates = &(pHandle->tempFrameInfo.extRates);
 				status = mlmeParser_readRates(pHandle, pData, bodyDataLen, &readLen, &(pHandle->tempFrameInfo.extRates));
 				if (status != TI_OK) {
-					TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: error reading RATES\n");
 					goto mlme_recv_end;
 				}
 				break;
@@ -284,7 +276,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 					                                  &(pHandle->tempFrameInfo.WMEParams),
 					                                  &(pHandle->tempFrameInfo.frame.content.assocRsp));
 					if (status != TI_OK) {
-						TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: error reading WME parameters\n");
 						goto mlme_recv_end;
 					}
 				}
@@ -307,7 +298,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 				status = mlmeParser_readRsnIe(pHandle, pData, bodyDataLen, &readLen,
 				                              &(pHandle->tempFrameInfo.rsnIe[rsnIeIdx]));
 				if (status != TI_OK) {
-					TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: error reading XCC EXT1 IE\n");
 					goto mlme_recv_end;
 				}
 
@@ -321,7 +311,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 				status = mlmeParser_readRsnIe(pHandle, pData, bodyDataLen, &readLen,
 				                              &(pHandle->tempFrameInfo.rsnIe[rsnIeIdx]));
 				if (status != TI_OK) {
-					TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: error reading RSN IP ADDR IE\n");
 					goto mlme_recv_end;
 				}
 
@@ -334,7 +323,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 				status = mlmeParser_readQosCapabilityIE(pHandle, pData, bodyDataLen, &readLen,
 				                                        &(pHandle->tempFrameInfo.QosCapParams));
 				if (status != TI_OK) {
-					TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: error reading QOS\n");
 					goto mlme_recv_end;
 				}
 				break;
@@ -345,7 +333,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 				         &(pHandle->tempFrameInfo.tHtCapabilities));
 
 				if (status != TI_OK) {
-					TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: error reading HT Capabilities IE\n");
 					goto mlme_recv_end;
 				}
 				break;
@@ -355,13 +342,11 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 				status = mlmeParser_readHtInformationIE (pHandle, pData, bodyDataLen, &readLen,
 				         &(pHandle->tempFrameInfo.tHtInformation));
 				if (status != TI_OK) {
-					TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: error reading HT Information IE\n");
 					goto mlme_recv_end;
 				}
 				break;
 
 			default:
-				TRACE1(pHandle->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: unsupported IE found (%d)\n", (*pEleHdr)[1]);
 				readLen = (*pEleHdr)[1] + 2;
 				status = TI_OK;
 				break;
@@ -378,22 +363,16 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		/* with is a Cisco AP. */
 		pHandle->tempFrameInfo.frame.content.assocRsp.ciscoIEPresent = ciscoIEPresent;
 
-		TRACE1(pHandle->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: ciscoIEPresent = %d\n", ciscoIEPresent);
-
 		status = assoc_recv(pHandle->hAssoc, &(pHandle->tempFrameInfo.frame));
 		break;
 
 	case PROBE_REQUEST:
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_SM, "MLME_PARSER: recieved PROBE_REQ message \n");
 		break;
 	case PROBE_RESPONSE: {
 		TI_UINT32 uProbRespDataLen;
 
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_SM, "MLME_PARSER: recieved PROBE_RESPONSE message \n");
-
 		/* If the frame length is too short (below headers size), notify and exit */
 		if (RX_BUF_LEN(pBuffer) < (WLAN_HDR_LEN + TIME_STAMP_LEN + 4)) {
-			TRACE3(pHandle->hReport, REPORT_SEVERITY_ERROR, "mlmeParser_recv: probe response total length too short. length=%d, band=%d, channel=%d\n", RX_BUF_LEN(pBuffer), pRxAttr->band, pRxAttr->channel);
 			if ((pRxAttr->eScanTag > SCAN_RESULT_TAG_CURENT_BSS) && (pRxAttr->eScanTag != SCAN_RESULT_TAG_MEASUREMENT)) {
 				/* Notify the result CB of an invalid frame (to update the result counter) */
 				scanCncn_MlmeResultCB( pHandle->hScanCncn, NULL, NULL, pRxAttr, NULL, 0);
@@ -405,7 +384,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		uProbRespDataLen = RX_BUF_LEN(pBuffer) - WLAN_HDR_LEN - TIME_STAMP_LEN - 4;
 
 		if (uProbRespDataLen > MAX_BEACON_BODY_LENGTH) {
-			TRACE3(pHandle->hReport, REPORT_SEVERITY_ERROR, "mlmeParser_recv: probe response data length out of range. length=%d, band=%d, channel=%d\n", uProbRespDataLen, pRxAttr->band, pRxAttr->channel);
 			if ((pRxAttr->eScanTag > SCAN_RESULT_TAG_CURENT_BSS) && (pRxAttr->eScanTag != SCAN_RESULT_TAG_MEASUREMENT)) {
 				/* Notify the result CB of an invalid frame (to update the result counter) */
 				scanCncn_MlmeResultCB( pHandle->hScanCncn, NULL, NULL, pRxAttr, NULL, 0);
@@ -437,7 +415,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		pHandle->tempFrameInfo.rxChannel = pRxAttr->channel;
 
 		if ((pRxAttr->band == RADIO_BAND_2_4_GHZ) && (pRxAttr->channel > NUM_OF_CHANNELS_24)) {
-			TRACE2(pHandle->hReport, REPORT_SEVERITY_ERROR, "mlmeParser_recv, band=%d, channel=%d\n", pRxAttr->band, pRxAttr->channel);
 			/* Error in parsing Probe response packet - exit */
 			if ((pRxAttr->eScanTag > SCAN_RESULT_TAG_CURENT_BSS) && (pRxAttr->eScanTag != SCAN_RESULT_TAG_MEASUREMENT)) {
 				/* Notify the result CB of an invalid frame (to update the result counter) */
@@ -446,7 +423,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 			status = TI_NOK;
 			goto mlme_recv_end;
 		} else if ((pRxAttr->band == RADIO_BAND_5_0_GHZ) && (pRxAttr->channel <= NUM_OF_CHANNELS_24)) {
-			TRACE2(pHandle->hReport, REPORT_SEVERITY_ERROR, "mlmeParser_recv, band=%d, channel=%d\n", pRxAttr->band, pRxAttr->channel);
 			/* Error in parsing Probe response packet - exit */
 			if ((pRxAttr->eScanTag > SCAN_RESULT_TAG_CURENT_BSS) && (pRxAttr->eScanTag != SCAN_RESULT_TAG_MEASUREMENT)) {
 				/* Notify the result CB of an invalid frame (to update the result counter) */
@@ -456,7 +432,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 			goto mlme_recv_end;
 		}
 		if (mlmeParser_parseIEs(hMlme, pData, bodyDataLen, &(pHandle->tempFrameInfo)) != TI_OK) {
-			TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "mlmeParser_recv: Error in parsing Probe response packet\n");
 
 			/* Error in parsing Probe response packet - exit */
 			if ((pRxAttr->eScanTag > SCAN_RESULT_TAG_CURENT_BSS) && (pRxAttr->eScanTag != SCAN_RESULT_TAG_MEASUREMENT)) {
@@ -518,12 +493,9 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 	case BEACON: {
 		TI_UINT32 uBeaconDataLen;
 
-		TRACE1(pHandle->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: recieved BEACON message, TS= %ld\n", os_timeStampMs(pHandle->hOs));
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_INFORMATION, "beacon BUF");
 
 		/* If the frame length is too short (below headers size), notify and exit */
 		if (RX_BUF_LEN(pBuffer) < (WLAN_HDR_LEN + TIME_STAMP_LEN + 4)) {
-			TRACE3(pHandle->hReport, REPORT_SEVERITY_ERROR, "mlmeParser_recv: BEACON total length too short. length=%d, band=%d, channel=%d\n", RX_BUF_LEN(pBuffer), pRxAttr->band, pRxAttr->channel);
 			if ((pRxAttr->eScanTag > SCAN_RESULT_TAG_CURENT_BSS) && (pRxAttr->eScanTag != SCAN_RESULT_TAG_MEASUREMENT)) {
 				/* Notify the result CB of an invalid frame (to update the result counter) */
 				scanCncn_MlmeResultCB( pHandle->hScanCncn, NULL, NULL, pRxAttr, NULL, 0);
@@ -535,7 +507,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		uBeaconDataLen = RX_BUF_LEN(pBuffer) - WLAN_HDR_LEN - TIME_STAMP_LEN - 4;
 
 		if (uBeaconDataLen > MAX_BEACON_BODY_LENGTH) {
-			TRACE3(pHandle->hReport, REPORT_SEVERITY_ERROR, "mlmeParser_recv: beacon length out of range. length=%d, band=%d, channel=%d\n", uBeaconDataLen, pRxAttr->band, pRxAttr->channel);
 			if ((pRxAttr->eScanTag > SCAN_RESULT_TAG_CURENT_BSS) && (pRxAttr->eScanTag != SCAN_RESULT_TAG_MEASUREMENT)) {
 				/* Notify the result CB of an invalid frame (to update the result counter) */
 				scanCncn_MlmeResultCB( pHandle->hScanCncn, NULL, NULL, pRxAttr, NULL, 0);
@@ -564,7 +535,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		pHandle->tempFrameInfo.frame.content.iePacket.rsnIeLen = 0;
 
 		if ((pRxAttr->band == RADIO_BAND_2_4_GHZ) && (pRxAttr->channel > NUM_OF_CHANNELS_24)) {
-			TRACE2(pHandle->hReport, REPORT_SEVERITY_ERROR, "mlmeParser_recv, band=%d, channel=%d\n", pRxAttr->band, pRxAttr->channel);
 			/* Error in parsing Probe response packet - exit */
 			if ((pRxAttr->eScanTag > SCAN_RESULT_TAG_CURENT_BSS) && (pRxAttr->eScanTag != SCAN_RESULT_TAG_MEASUREMENT)) {
 				/* Notify the result CB of an invalid frame (to update the result counter) */
@@ -573,7 +543,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 			status = TI_NOK;
 			goto mlme_recv_end;
 		} else if ((pRxAttr->band == RADIO_BAND_5_0_GHZ) && (pRxAttr->channel <= NUM_OF_CHANNELS_24)) {
-			TRACE2(pHandle->hReport, REPORT_SEVERITY_ERROR, "mlmeParser_recv, band=%d, channel=%d\n", pRxAttr->band, pRxAttr->channel);
 			/* Error in parsing Probe response packet - exit */
 			if ((pRxAttr->eScanTag > SCAN_RESULT_TAG_CURENT_BSS) && (pRxAttr->eScanTag != SCAN_RESULT_TAG_MEASUREMENT)) {
 				/* Notify the result CB of an invalid frame (to update the result counter) */
@@ -586,7 +555,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		pHandle->tempFrameInfo.rxChannel = pRxAttr->channel;
 
 		if (mlmeParser_parseIEs(hMlme, pData, bodyDataLen, &(pHandle->tempFrameInfo)) != TI_OK) {
-			TRACE0(pHandle->hReport, REPORT_SEVERITY_WARNING, "mlmeParser_parseIEs - Error in parsing Beacon \n");
 			/* Error in parsing Probe response packet - exit */
 			if ((pRxAttr->eScanTag > SCAN_RESULT_TAG_CURENT_BSS) && (pRxAttr->eScanTag != SCAN_RESULT_TAG_MEASUREMENT)) {
 				/* Notify the result CB of an invalid frame (to update the result counter) */
@@ -651,7 +619,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		if (!pHandle->tempFrameInfo.myBssid)
 			break;
 
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_SM, "MLME_PARSER: recieved ATIM message \n");
 		break;
 	case DIS_ASSOC:
 		if ((!pHandle->tempFrameInfo.myBssid) || (!pHandle->tempFrameInfo.mySa))
@@ -683,7 +650,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 		COPY_WLAN_WORD(&pHandle->tempFrameInfo.frame.content.auth.status , pData);
 		pData += 2;
 
-		TRACE3(pHandle->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: Read Auth: algo=%d, seq=%d, status=%d\n", pHandle->tempFrameInfo.frame.content.auth.authAlgo, pHandle->tempFrameInfo.frame.content.auth.seqNum, pHandle->tempFrameInfo.frame.content.auth.status);
 		bodyDataLen -= 6;
 		/* read Challenge */
 		pHandle->tempFrameInfo.frame.content.auth.pChallenge = &(pHandle->tempFrameInfo.challenge);
@@ -782,7 +748,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 				break;
 
 			default:
-				TRACE1(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: Error, category is invalid for action management frame %d \n",							pHandle->tempFrameInfo.frame.content.action.category );
 				break;
 			}
 
@@ -790,7 +755,6 @@ TI_STATUS mlmeParser_recv(TI_HANDLE hMlme, void *pBuffer, TRxAttr* pRxAttr)
 
 
 		default:
-			TRACE1(pHandle->hReport, REPORT_SEVERITY_WARNING, "MLME_PARSER: unexpected category for action management frame %d \n", pHandle->tempFrameInfo.frame.content.action.category );
 			status = TI_NOK;
 			break;
 
@@ -813,12 +777,10 @@ TI_STATUS mlmeParser_getFrameType(mlme_t *pMlme, TI_UINT16* pFrameCtrl, dot11Mgm
 	COPY_WLAN_WORD(&fc, pFrameCtrl); /* copy with endianess handling. */
 
 	if ((fc & DOT11_FC_PROT_VERSION_MASK) != DOT11_FC_PROT_VERSION) {
-		TRACE1(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: Error Wrong protocol version (not %d) \n", DOT11_FC_PROT_VERSION);
 		return TI_NOK;
 	}
 
 	if ((fc & DOT11_FC_TYPE_MASK) != DOT11_FC_TYPE_MGMT) {
-		TRACE0(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: Error not MANAGEMENT frame\n");
 		return TI_NOK;
 	}
 
@@ -1040,7 +1002,6 @@ TI_STATUS mlmeParser_readCountry(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT32 dataLe
 	}
 
 	if ((countryIE->hdr[1] > DOT11_COUNTRY_ELE_LEN_MAX) || (countryIE->hdr[1] < DOT11_COUNTRY_STRING_LEN)) {
-		TRACE3(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: country IE error: eleLen=%d, maxLen=%d, minLen=%d\n", countryIE->hdr[1], DOT11_COUNTRY_ELE_LEN_MAX, DOT11_COUNTRY_STRING_LEN);
 		return TI_NOK;
 	}
 
@@ -1072,13 +1033,11 @@ TI_STATUS mlmeParser_readWMEParams(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT32 data
 	*pReadLen = pWMEParamIE->hdr[1] + 2;
 
 	if (dataLen < *pReadLen) {
-		TRACE2(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: WME Parameter: eleLen=%d is too long (%d)\n", *pReadLen, dataLen);
 		*pReadLen = dataLen;
 		return TI_NOK;
 	}
 
 	if ((pWMEParamIE->hdr[1]> WME_TSPEC_IE_LEN) || (pWMEParamIE->hdr[1]< DOT11_WME_ELE_LEN)) {
-		TRACE1(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: WME Parameter IE error: eleLen=%d\n", pWMEParamIE->hdr[1]);
 		return TI_NOK;
 	}
 
@@ -1087,11 +1046,9 @@ TI_STATUS mlmeParser_readWMEParams(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT32 data
 	case dot11_WME_OUI_SUB_TYPE_IE:
 		/* Read WMM IE */
 		if (*((TI_UINT8*)(pData+7)) != dot11_WME_VERSION) {
-			TRACE1(pMlme->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: WME IE error: Version =%d is unsupported\n",								  *((TI_UINT8*)(pData+7)) );
 			return TI_NOK;
 		}
 		if (pWMEParamIE->hdr[1] != DOT11_WME_ELE_LEN) {
-			TRACE1(pMlme->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: WME IE error: Length = %d\n", pWMEParamIE->hdr[1]);
 			return TI_NOK;
 		}
 		os_memoryCopy (pMlme->hOs, &(pWMEParamIE->OUI), pData+2, DOT11_WME_ELE_LEN);
@@ -1100,11 +1057,9 @@ TI_STATUS mlmeParser_readWMEParams(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT32 data
 	case dot11_WME_OUI_SUB_TYPE_PARAMS_IE:
 		/* Read WMM Params IE */
 		if (*((TI_UINT8*)(pData+7)) != dot11_WME_VERSION) {
-			TRACE1(pMlme->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: WME PARAMS IE error: Version =%d is unsupported\n",								  *((TI_UINT8*)(pData+7)) );
 			return TI_NOK;
 		}
 		if (pWMEParamIE->hdr[1] != DOT11_WME_PARAM_ELE_LEN) {
-			TRACE1(pMlme->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: WME PARAMS IE error: Length = %d\n", pWMEParamIE->hdr[1]);
 			return TI_NOK;
 		}
 		os_memoryCopy (pMlme->hOs, &(pWMEParamIE->OUI), pData+2, DOT11_WME_PARAM_ELE_LEN);
@@ -1113,13 +1068,11 @@ TI_STATUS mlmeParser_readWMEParams(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT32 data
 	case WME_TSPEC_IE_OUI_SUB_TYPE:
 		/* Read renegotiated TSPEC parameters */
 		if (assocRsp == NULL) {
-			TRACE0(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: WME TSPEC IE error: TSPEC Sub Type in beacon or probe resp\n");
 			return TI_NOK;
 		}
 
 		/* Verify that the TSPEC IE length is correct before saving it */
 		if ((dataLen < WME_TSPEC_IE_LEN + 2) || (pWMEParamIE->hdr[1] != WME_TSPEC_IE_LEN)) {
-			TRACE2(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: WME TSPEC IE length error: dataLen = %d, IeLen = %d\n", dataLen, pWMEParamIE->hdr[1]);
 			return TI_NOK;
 		}
 
@@ -1134,7 +1087,6 @@ TI_STATUS mlmeParser_readWMEParams(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT32 data
 
 	default:
 		/* Checking OUI Sub Type validity */
-		TRACE1(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: WME Parameter IE error: Sub Type =%d is invalid\n",							  ieSubtype);
 		return TI_NOK;
 	}
 	return TI_OK;
@@ -1156,13 +1108,11 @@ static TI_STATUS mlmeParser_readWSCParams(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT
 
 	/* Length Sanity check of the WSC IE */
 	if ((dataLen < 8) || (dataLen < (TI_UINT32)(pWSC_IE->hdr[1] + 2))) {
-		TRACE2(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: WSC Parameter IE error: dataLen=%d, pWSC_IE->hdr[1]=%d\n", dataLen, pWSC_IE->hdr[1]);
 		return TI_NOK;
 	}
 
 	/* Length Sanity check of the WSC IE */
 	if (pWSC_IE->hdr[1] > ( sizeof(dot11_WSC_t) - sizeof(dot11_eleHdr_t) )) {
-		TRACE2(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: WSC Parameter IE error: eleLen=%d, maxLen=%d\n", pWSC_IE->hdr[1], ( sizeof(dot11_WSC_t) - sizeof(dot11_eleHdr_t) ));
 		return TI_NOK;
 	}
 
@@ -1185,7 +1135,6 @@ TI_STATUS mlmeParser_readQosCapabilityIE(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT3
 	}
 
 	if (QosCapParams->hdr[1] > DOT11_QOS_CAPABILITY_ELE_LEN) {
-		TRACE2(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: QOS Capability  IE error: eleLen=%d, maxLen=%d\n", QosCapParams->hdr[1], DOT11_QOS_CAPABILITY_ELE_LEN);
 		return TI_NOK;
 	}
 
@@ -1206,7 +1155,6 @@ TI_STATUS mlmeParser_readHtCapabilitiesIE(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT
 	}
 
 	if (pHtCapabilities->tHdr[1] != DOT11_HT_CAPABILITIES_ELE_LEN) {
-		TRACE2(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: HT Capability IE error: eleLen=%d, expectedLen=%d\n", pHtCapabilities->tHdr[1], DOT11_HT_CAPABILITIES_ELE_LEN);
 		return TI_NOK;
 	}
 
@@ -1228,13 +1176,11 @@ TI_STATUS mlmeParser_readHtInformationIE(mlme_t *pMlme,TI_UINT8 *pData, TI_UINT3
 	}
 
 	if (pHtInformation->tHdr[1] < DOT11_HT_INFORMATION_ELE_LEN) {
-		TRACE2(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: HT Information IE error: eleLen=%d, ExpectedLen=%d\n", pHtInformation->tHdr[1], DOT11_HT_INFORMATION_ELE_LEN);
 		return TI_NOK;
 	}
 
 	if (pHtInformation->tHdr[1] != DOT11_HT_INFORMATION_ELE_LEN) {
 		/*This IE can be extended more than 22 bytes. if so we are taking only first 22 bytes*/
-		TRACE2(pMlme->hReport, REPORT_SEVERITY_WARNING, "MLME_PARSER: HT Information IE error: eleLen=%d, ExpectedLen=%d\n", pHtInformation->tHdr[1], DOT11_HT_INFORMATION_ELE_LEN);
 	}
 
 	os_memoryCopy(pMlme->hOs, (void*)pHtInformation->aHtInformationIe, pData + 2, DOT11_HT_INFORMATION_ELE_LEN);
@@ -1410,9 +1356,7 @@ TI_STATUS mlmeParser_readCellTP(mlme_t *pMlme, TI_UINT8 *pData, TI_UINT32 dataLe
 #define CHECK_PARSING_ERROR_CONDITION(x, msg, bDump)	   \
 			if ((x)) \
 			{ \
-                TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, msg);    \
                 if (bDump) {\
-                    TRACE1(pHandle->hReport, REPORT_SEVERITY_ERROR, "Buff len = %d \n", packetLength);    \
                     report_PrintDump (pPacketBody, packetLength); }\
 				return TI_NOK; \
 			}
@@ -1449,9 +1393,6 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 #if CHECK_PARSING_ERROR_CONDITION_PRINT
 		/* CHECK_PARSING_ERROR_CONDITION(((*pEleHdr)[1] > (bodyDataLen - 2)), ("MLME_PARSER: IE %d with length %d out of bounds %d\n", (*pEleHdr)[0], (*pEleHdr)[1], (bodyDataLen - 2)), TI_TRUE); */
 		if ((*pEleHdr)[1] > (bodyDataLen - 2)) {
-			TRACE3(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: IE %d with length %d out of bounds %d\n", (*pEleHdr)[0], (*pEleHdr)[1], (bodyDataLen - 2));
-
-			TRACE1(pHandle->hReport, REPORT_SEVERITY_ERROR, "Buff len = %d \n", packetLength);
 			report_PrintDump (pPacketBody, packetLength);
 		}
 #endif
@@ -1494,9 +1435,6 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 			CHECK_PARSING_ERROR_CONDITION((status != TI_OK), ("MLME_PARSER: error reading DS parameters\n"),TI_TRUE);
 			if (RADIO_BAND_2_4_GHZ == params->band ) {
 				if (frame->pDSParamsSet->currChannel != params->rxChannel) {
-					TRACE2(pHandle->hReport, REPORT_SEVERITY_WARNING, "Channel ERROR - incompatible channel source information: Frame=%d Vs Radio=%d.\nparser ABORTED!!!\n",
-					       frame->pDSParamsSet->currChannel , params->rxChannel);
-
 					return TI_NOK;
 				}
 			}
@@ -1551,7 +1489,6 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 					 * PATCH for working with AP-DK 4.0.51 that use IE 37 (with length 20) for RSNE
 					 * Ignore the IE instead of rejecting the whole BUF (beacon or probe response)
 					 */
-					TRACE0(pHandle->hReport, REPORT_SEVERITY_WARNING, "MLME_PARSER: error reading Channel Switch announcement parameters - ignore IE\n");
 				}
 			} else {
 				/* Set the IE length to readLen in order to skip this IE for the next iteration */
@@ -1680,7 +1617,6 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 #endif
 
 		default:
-			TRACE1(pHandle->hReport, REPORT_SEVERITY_INFORMATION, "MLME_PARSER: unknown IE found (%d)\n", pData[0]);
 			readLen = pData[1] + 2;
 			status = TI_OK;
 			os_memoryCopy( pHandle->hOs,
@@ -1697,8 +1633,6 @@ TI_STATUS mlmeParser_parseIEs(TI_HANDLE hMlme,
 #if CHECK_PARSING_ERROR_CONDITION_PRINT
 		/* CHECK_PARSING_ERROR_CONDITION((bodyDataLen < 0), ("MLME_PARSER: negative bodyDataLen %d bytes\n", bodyDataLen),TI_TRUE); */
 		if (bodyDataLen < 0) {
-			TRACE1(pHandle->hReport, REPORT_SEVERITY_ERROR, "MLME_PARSER: negative bodyDataLen %d bytes\n", bodyDataLen);
-			TRACE1(pHandle->hReport, REPORT_SEVERITY_ERROR, "Buff len = %d \n", packetLength);
 			report_PrintDump (pPacketBody, packetLength);
 		}
 #endif

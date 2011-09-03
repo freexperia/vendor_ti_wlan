@@ -71,9 +71,6 @@
 #include "Ethernet.h"
 #include "SdioDrv.h"
 
-#ifdef TI_DBG
-#include "tracebuf_api.h"
-#endif
 
 #include "bmtrace_api.h"
 #ifdef STACK_PROFILE
@@ -188,7 +185,6 @@ static int wlanDrvIf_Xmit (struct sk_buff *skb, struct net_device *dev)
 	TTxCtrlBlk *  pPktCtrlBlk;
 	int status;
 
-	CL_TRACE_START_L1();
 
 	os_profile (drv, 0, 0);
 	drv->stats.tx_packets++;
@@ -217,7 +213,6 @@ static int wlanDrvIf_Xmit (struct sk_buff *skb, struct net_device *dev)
 	}
 	os_profile (drv, 1, 0);
 
-	CL_TRACE_END_L1("tiwlan_drv.ko", "OS", "TX", "");
 
 	return 0;
 }
@@ -475,9 +470,6 @@ int wlanDrvIf_LoadFiles (TWlanDrvIfObj *drv, TLoaderFilesData *pInitFiles)
 	if (pInitFiles->uIniFileLength) {
 		drv->tCommon.tIniFile.uSize = pInitFiles->uIniFileLength;
 		drv->tCommon.tIniFile.pImage = kmalloc (pInitFiles->uIniFileLength, GFP_KERNEL);
-#ifdef TI_MEM_ALLOC_TRACE
-		os_printf ("MTT:%s:%d ::kmalloc(%lu, %x) : %lu\n", __FUNCTION__, __LINE__, pInitFiles->uIniFileLength, GFP_KERNEL, pInitFiles->uIniFileLength);
-#endif
 		if (!drv->tCommon.tIniFile.pImage) {
 			ti_dprintf (TIWLAN_LOG_ERROR, "Cannot allocate buffer for Ini-File!\n");
 			return -ENOMEM;
@@ -490,10 +482,6 @@ int wlanDrvIf_LoadFiles (TWlanDrvIfObj *drv, TLoaderFilesData *pInitFiles)
 	if (pInitFiles->uNvsFileLength) {
 		drv->tCommon.tNvsImage.uSize = pInitFiles->uNvsFileLength;
 		drv->tCommon.tNvsImage.pImage = kmalloc (drv->tCommon.tNvsImage.uSize, GFP_KERNEL);
-#ifdef TI_MEM_ALLOC_TRACE
-		os_printf ("MTT:%s:%d ::kmalloc(%lu, %x) : %lu\n",
-		           __FUNCTION__, __LINE__, drv->tCommon.tNvsImage.uSize, GFP_KERNEL, drv->tCommon.tNvsImage.uSize);
-#endif
 		if (!drv->tCommon.tNvsImage.pImage) {
 			ti_dprintf (TIWLAN_LOG_ERROR, "Cannot allocate buffer for NVS image\n");
 			return -ENOMEM;
@@ -507,10 +495,6 @@ int wlanDrvIf_LoadFiles (TWlanDrvIfObj *drv, TLoaderFilesData *pInitFiles)
 		return -EINVAL;
 	}
 	drv->tCommon.tFwImage.pImage = os_memoryAlloc (drv, drv->tCommon.tFwImage.uSize);
-#ifdef TI_MEM_ALLOC_TRACE
-	os_printf ("MTT:%s:%d ::kmalloc(%lu, %x) : %lu\n",
-	           __FUNCTION__, __LINE__, drv->tCommon.tFwImage.uSize, GFP_KERNEL, drv->tCommon.tFwImage.uSize);
-#endif
 	if (!drv->tCommon.tFwImage.pImage) {
 		ti_dprintf(TIWLAN_LOG_ERROR, "Cannot allocate buffer for firmware image\n");
 		return -ENOMEM;
@@ -890,12 +874,9 @@ static int wlanDrvIf_Create (void)
 		return -ENOMEM;
 	}
 #ifdef TI_DBG
-	tb_init(TB_OPTION_NONE);
+//	tb_init(TB_OPTION_NONE);
 #endif
 	pDrvStaticHandle = drv;  /* save for module destroy */
-#ifdef TI_MEM_ALLOC_TRACE
-	os_printf ("MTT:%s:%d ::kmalloc(%lu, %x) : %lu\n", __FUNCTION__, __LINE__, sizeof(TWlanDrvIfObj), GFP_KERNEL, sizeof(TWlanDrvIfObj));
-#endif
 	memset (drv, 0, sizeof(TWlanDrvIfObj));
 
 	/* Dm:    drv->irq = TNETW_IRQ; */
@@ -1078,29 +1059,17 @@ static void wlanDrvIf_Destroy (TWlanDrvIfObj *drv)
 	 */
 	if (drv->tCommon.tFwImage.pImage) {
 		os_memoryFree (drv, drv->tCommon.tFwImage.pImage, drv->tCommon.tFwImage.uSize);
-#ifdef TI_MEM_ALLOC_TRACE
-		os_printf ("MTT:%s:%d ::kfree(0x%p) : %d\n",
-		           __FUNCTION__, __LINE__, drv->tCommon.tFwImage.uSize, -drv->tCommon.tFwImage.uSize);
-#endif
 	}
 	if (drv->tCommon.tNvsImage.pImage) {
 		kfree (drv->tCommon.tNvsImage.pImage);
-#ifdef TI_MEM_ALLOC_TRACE
-		os_printf ("MTT:%s:%d ::kfree(0x%p) : %d\n",
-		           __FUNCTION__, __LINE__, drv->tCommon.tNvsImage.uSize, -drv->tCommon.tNvsImage.uSize);
-#endif
 	}
 	if (drv->tCommon.tIniFile.pImage) {
 		kfree (drv->tCommon.tIniFile.pImage);
-#ifdef TI_MEM_ALLOC_TRACE
-		os_printf ("MTT:%s:%d ::kfree(0x%p) : %d\n",
-		           __FUNCTION__, __LINE__, drv->tCommon.tIniFile.uSize, -drv->tCommon.tIniFile.uSize);
-#endif
 	}
 
 	/* Free the driver object */
 #ifdef TI_DBG
-	tb_destroy();
+//	tb_destroy();
 #endif
 	kfree (drv);
 

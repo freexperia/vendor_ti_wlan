@@ -148,7 +148,6 @@ void txDataQ_Init (TStadHandlesList *pStadHandles)
 
 		/* If any Queues' allocation failed, print error, free TxDataQueue module and exit */
 		if (pTxDataQ->aQueues[uQueId] == NULL) {
-			TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_CONSOLE , "Failed to create queue\n");
 			WLAN_OS_REPORT(("Failed to create queue\n"));
 			os_memoryFree (pTxDataQ->hOs, pTxDataQ, sizeof(TTxDataQ));
 			return;
@@ -162,7 +161,6 @@ void txDataQ_Init (TStadHandlesList *pStadHandles)
 
 	pTxDataQ->hTxSendPaceTimer = tmr_CreateTimer (pStadHandles->hTimer);
 	if (pTxDataQ->hTxSendPaceTimer == NULL) {
-		TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_ERROR, "txDataQ_Init(): Failed to create hTxSendPaceTimer!\n");
 		return;
 	}
 
@@ -198,7 +196,6 @@ TI_STATUS txDataQ_SetDefaults (TI_HANDLE  hTxDataQ, txDataInitParams_t *pTxDataI
 	/* configure the classifier sub-module */
 	eStatus = txDataClsfr_Config (hTxDataQ, &pTxDataInitParams->ClsfrInitParam);
 	if (eStatus != TI_OK) {
-		TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_CONSOLE ,"FATAL ERROR: txDataQ_SetDefaults(): txDataClsfr_Config failed - Aborting\n");
 		WLAN_OS_REPORT(("FATAL ERROR: txDataQ_SetDefaults(): txDataClsfr_Config failed - Aborting\n"));
 		return eStatus;
 	}
@@ -209,8 +206,6 @@ TI_STATUS txDataQ_SetDefaults (TI_HANDLE  hTxDataQ, txDataInitParams_t *pTxDataI
 	pTxDataQ->aTxSendPaceThresh[QOS_AC_BK] = pTxDataInitParams->uTxSendPaceThresh;
 	pTxDataQ->aTxSendPaceThresh[QOS_AC_VI] = pTxDataInitParams->uTxSendPaceThresh;
 	pTxDataQ->aTxSendPaceThresh[QOS_AC_VO] = 1;     /* Don't delay voice packts! */
-
-	TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_INIT, ".....Tx Data Queue configured successfully\n");
 
 	return TI_OK;
 }
@@ -237,7 +232,6 @@ TI_STATUS txDataQ_Destroy (TI_HANDLE hTxDataQ)
 	/* Free Data queues */
 	for (uQueId = 0 ; uQueId < pTxDataQ->uNumQueues ; uQueId++) {
 		if (que_Destroy(pTxDataQ->aQueues[uQueId]) != TI_OK) {
-			TRACE1(pTxDataQ->hReport, REPORT_SEVERITY_ERROR, "txDataQueue_unLoad: fail to free Data Queue number: %d\n",uQueId);
 			status = TI_NOK;
 		}
 	}
@@ -313,7 +307,6 @@ TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_
 	txCtrl_t         *pTxCtrl = (txCtrl_t *)(pTxDataQ->hTxCtrl);
 	TI_BOOL          bRequestSchedule = TI_FALSE;
 	TI_BOOL          bStopNetStack = TI_FALSE;
-	CL_TRACE_START_L3();
 
 	/* If packet is EAPOL or from the generic Ethertype, forward it to the Mgmt-Queue and exit */
 	if ((HTOWLANS(pEthHead->type) == ETHERTYPE_EAPOL) ||
@@ -333,7 +326,6 @@ TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_
 	if (txDataClsfr_ClassifyTxPacket (hTxDataQ, pPktCtrlBlk, uPacketDtag) != TI_OK) {
 #ifdef TI_DBG
 		pTxDataQ->uClsfrMismatchCount++;
-		TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_WARNING, "txDataQueue_xmit: No matching classifier found \n");
 #endif /* TI_DBG */
 	}
 
@@ -396,7 +388,6 @@ TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_
 #endif /* TI_DBG */
 	}
 
-	CL_TRACE_END_L3 ("tiwlan_drv.ko", "INHERIT", "TX", "");
 
 	return eStatus;
 }

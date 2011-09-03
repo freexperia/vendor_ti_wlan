@@ -48,7 +48,6 @@
 #include "osApi.h"
 #include "report.h"
 #include "context.h"
-#include "bmtrace_api.h"
 
 #define MAX_CLIENTS     8   /* Maximum number of clients using context services */
 #define MAX_NAME_SIZE   16  /* Maximum client's name string size */
@@ -221,7 +220,6 @@ TI_UINT32 context_RegisterClient (TI_HANDLE       hContext,
 
 	/* If max number of clients is exceeded, report error and exit. */
 	if (uClientId == MAX_CLIENTS) {
-		TRACE0(pContext->hReport, REPORT_SEVERITY_ERROR , "context_RegisterClient() MAX_CLIENTS limit exceeded!!\n");
 		return 0;
 	}
 
@@ -238,15 +236,12 @@ TI_UINT32 context_RegisterClient (TI_HANDLE       hContext,
 		              (void *)sName,
 		              uNameSize);
 		pContext->aClientName[uClientId].uSize = uNameSize;
-	} else {
-		TRACE0(pContext->hReport, REPORT_SEVERITY_ERROR , "context_RegisterClient() MAX_NAME_SIZE limit exceeded!\n");
 	}
 #endif /* TI_DBG */
 
 	/* Increment clients number and return new client ID. */
 	pContext->uNumClients++;
 
-	TRACE2(pContext->hReport, REPORT_SEVERITY_INIT , "context_RegisterClient(): Client=, ID=%d, enabled=%d\n", uClientId, bEnable);
 
 	return uClientId;
 }
@@ -272,7 +267,6 @@ void context_RequestSchedule (TI_HANDLE hContext, TI_UINT32 uClientId)
 
 #ifdef TI_DBG
 	pContext->aRequestCount[uClientId]++;
-	TRACE3(pContext->hReport, REPORT_SEVERITY_INFORMATION , "context_RequestSchedule(): Client=, ID=%d, enabled=%d, pending=%d\n", uClientId, pContext->aClientEnabled[uClientId], pContext->aClientPending[uClientId]);
 #endif /* TI_DBG */
 
 	/* Set client's Pending flag */
@@ -314,9 +308,6 @@ void context_DriverTask (TI_HANDLE hContext)
 	TContextCbFunc  fCbFunc;
 	TI_HANDLE       hCbHndl;
 	TI_UINT32       i;
-	CL_TRACE_START_L1();
-
-	TRACE0(pContext->hReport, REPORT_SEVERITY_INFORMATION , "context_DriverTask():\n");
 
 	/* For all registered clients do: */
 	for (i = 0; i < pContext->uNumClients; i++) {
@@ -324,7 +315,6 @@ void context_DriverTask (TI_HANDLE hContext)
 		if (pContext->aClientPending[i]  &&  pContext->aClientEnabled[i]) {
 #ifdef TI_DBG
 			pContext->aInvokeCount[i]++;
-			TRACE1(pContext->hReport, REPORT_SEVERITY_INFORMATION , "Invoking - Client=, ID=%d\n", i);
 #endif /* TI_DBG */
 
 			/* Clear client's pending flag */
@@ -337,7 +327,6 @@ void context_DriverTask (TI_HANDLE hContext)
 		}
 	}
 
-	CL_TRACE_END_L1("tiwlan_drv.ko", "CONTEXT", "TASK", "");
 }
 
 
@@ -358,13 +347,10 @@ void context_EnableClient (TI_HANDLE hContext, TI_UINT32 uClientId)
 {
 	TContext *pContext = (TContext *)hContext;
 
-#ifdef TI_DBG
 	if (pContext->aClientEnabled[uClientId]) {
-		TRACE0(pContext->hReport, REPORT_SEVERITY_ERROR , "context_EnableClient() Client  already enabled!!\n");
 		return;
 	}
-	TRACE3(pContext->hReport, REPORT_SEVERITY_INFORMATION , "context_EnableClient(): Client=, ID=%d, enabled=%d, pending=%d\n", uClientId, pContext->aClientEnabled[uClientId], pContext->aClientPending[uClientId]);
-#endif /* TI_DBG */
+
 
 	/* Enable client */
 	pContext->aClientEnabled[uClientId] = TI_TRUE;
@@ -394,10 +380,8 @@ void context_DisableClient (TI_HANDLE hContext, TI_UINT32 uClientId)
 
 #ifdef TI_DBG
 	if (!pContext->aClientEnabled[uClientId]) {
-		TRACE0(pContext->hReport, REPORT_SEVERITY_ERROR , "context_DisableClient() Client  already disabled!!\n");
 		return;
 	}
-	TRACE3(pContext->hReport, REPORT_SEVERITY_INFORMATION , "context_DisableClient(): Client=, ID=%d, enabled=%d, pending=%d\n", uClientId, pContext->aClientEnabled[uClientId], pContext->aClientPending[uClientId]);
 #endif /* TI_DBG */
 
 	/* Disable client */
@@ -421,7 +405,6 @@ void context_EnterCriticalSection (TI_HANDLE hContext)
 {
 	TContext *pContext = (TContext *)hContext;
 
-	TRACE0(pContext->hReport, REPORT_SEVERITY_INFORMATION , "context_EnterCriticalSection():\n");
 
 	/* Start critical section protection */
 	os_protectLock (pContext->hOs, pContext->hProtectionLock);
@@ -431,7 +414,6 @@ void context_LeaveCriticalSection (TI_HANDLE hContext)
 {
 	TContext *pContext = (TContext *)hContext;
 
-	TRACE0(pContext->hReport, REPORT_SEVERITY_INFORMATION , "context_LeaveCriticalSection():\n");
 
 	/* Stop critical section protection */
 	os_protectUnlock (pContext->hOs, pContext->hProtectionLock);

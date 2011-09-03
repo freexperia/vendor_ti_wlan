@@ -120,7 +120,6 @@ TI_STATUS MacServices_measurementSRV_init (TI_HANDLE hMeasurementSRV,
 	/* allocate the module timers */
 	pMeasurementSRV->hStartStopTimer = tmr_CreateTimer (pMeasurementSRV->hTimer);
 	if (pMeasurementSRV->hStartStopTimer == NULL) {
-		TRACE0(pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, "MacServices_measurementSRV_init(): Failed to create hStartStopTimer!\n");
 		return TI_NOK;
 	}
 	pMeasurementSRV->bStartStopTimerRunning = TI_FALSE;
@@ -128,7 +127,6 @@ TI_STATUS MacServices_measurementSRV_init (TI_HANDLE hMeasurementSRV,
 	for (i = 0; i < MAX_NUM_OF_MSR_TYPES_IN_PARALLEL; i++) {
 		pMeasurementSRV->hRequestTimer[i] = tmr_CreateTimer (pMeasurementSRV->hTimer);
 		if (pMeasurementSRV->hRequestTimer[i] == NULL) {
-			TRACE0(pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, "MacServices_measurementSRV_init(): Failed to create hRequestTimer!\n");
 			return TI_NOK;
 		}
 		pMeasurementSRV->bRequestTimerRunning[i] = TI_FALSE;
@@ -161,7 +159,6 @@ TI_STATUS MacServices_measurementSRV_init (TI_HANDLE hMeasurementSRV,
 	                         hMeasurementSRV);
 	eventMbox_UnMaskEvent (pMeasurementSRV->hEventMbox, TWD_OWN_EVENT_AP_DISCOVERY_COMPLETE, NULL, NULL);
 
-	TRACE0(hReport, REPORT_SEVERITY_INIT , ".....Measurement SRV configured successfully.\n");
 
 	return TI_OK;
 }
@@ -266,10 +263,7 @@ TI_STATUS MacServices_measurementSRV_startMeasurement( TI_HANDLE hMacServices,
 	TI_INT32 i;
 
 #ifdef TI_DBG
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Received measurement request.\n");
 	measurementSRVPrintRequest( (TI_HANDLE)pMeasurementSRV, pMsrRequest );
-	TRACE3( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, "time to expiry: %d ms, cmd response CB: 0x%x, cmd response handle: 0x%x\n",							  timeToRequestExpiryMs,							  cmdResponseCBFunc,							  cmdResponseCBObj);
-	TRACE2( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, "cmd complete CB: 0x%x, cmd complete handle: 0x%x\n",							  cmdCompleteCBFunc,							  cmdCompleteCBObj);
 #endif
 
 	/* mark that request is in progress */
@@ -337,8 +331,6 @@ TI_STATUS MacServices_measurementSRV_stopMeasurement( TI_HANDLE hMacServices,
 {
 	measurementSRV_t* pMeasurementSRV = (measurementSRV_t*)((MacServices_t*)hMacServices)->hMeasurementSRV;
 
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Received measurement stop request.\n");
-	TRACE2( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, "Send null data:, cmd response CB: 0x%x, cmd response handle: 0x%x\n",							  cmdResponseCBFunc,							  cmdResponseCBObj);
 
 	/* store callbacks */
 	pMeasurementSRV->commandResponseCBFunc = cmdResponseCBFunc;
@@ -376,7 +368,6 @@ void MacServices_measurementSRV_FWReset( TI_HANDLE hMacServices )
 	measurementSRV_t* pMeasurementSRV = (measurementSRV_t*)((MacServices_t*)hMacServices)->hMeasurementSRV;
 	TI_INT32 i;
 
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Received FW reset indication.\n");
 
 	/* if a timer is running, stop it */
 	if (pMeasurementSRV->bStartStopTimerRunning) {
@@ -408,11 +399,9 @@ void MacServices_measurementSRV_powerSaveCB( TI_HANDLE hMeasurementSRV, TI_UINT8
 {
 	measurementSRV_t* pMeasurementSRV = (measurementSRV_t*)hMeasurementSRV;
 
-	TRACE2( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Power save SRV CB called. PS mode:%d status: %d\n", PSMode, psStatus);
 
 	/* if driver mode entry succeedded */
 	if ( ENTER_POWER_SAVE_SUCCESS == psStatus ) {
-		TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": PS successful.\n");
 
 		/* send a RIVER_MODE_SUCCESS event */
 		measurementSRVSM_SMEvent( (TI_HANDLE)pMeasurementSRV, &(pMeasurementSRV->SMState),
@@ -420,7 +409,6 @@ void MacServices_measurementSRV_powerSaveCB( TI_HANDLE hMeasurementSRV, TI_UINT8
 	}
 	/* driver mode entry failed */
 	else {
-		TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": PS failed, status %d.\n", psStatus);
 
 		/* Set the return status to TI_NOK */
 		pMeasurementSRV->returnStatus = (TI_STATUS)psStatus;
@@ -444,7 +432,6 @@ void MacServices_measurementSRV_measureStartCB( TI_HANDLE hMeasurementSRV )
 {
 	measurementSRV_t *pMeasurementSRV  = (measurementSRV_t*)hMeasurementSRV;
 
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": measure start CB called.\n");
 
 	/* stop the FW guard timer */
 	tmr_StopTimer (pMeasurementSRV->hStartStopTimer);
@@ -471,7 +458,6 @@ void MacServices_measurementSRV_measureCompleteCB( TI_HANDLE hMeasurementSRV )
 {
 	measurementSRV_t *pMeasurementSRV = (measurementSRV_t*)hMeasurementSRV;
 
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": measure complete CB called.\n");
 
 	/* stop the FW guard timer */
 	tmr_StopTimer (pMeasurementSRV->hStartStopTimer);
@@ -492,11 +478,6 @@ void MacServices_measurementSRV_measureCompleteCB( TI_HANDLE hMeasurementSRV )
  */
 void MacServices_measurementSRV_apDiscoveryCompleteCB( TI_HANDLE hMeasurementSRV )
 {
-#ifdef TI_DBG
-	measurementSRV_t *pMeasurementSRV = (measurementSRV_t*)hMeasurementSRV;
-
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": AP Discovery complete CB called.\n");
-#endif /* TI_DBG */
 }
 
 /**
@@ -513,7 +494,6 @@ void MacServices_measurementSRV_startStopTimerExpired (TI_HANDLE hMeasurementSRV
 	measurementSRV_t* pMeasurementSRV = (measurementSRV_t*)hMeasurementSRV;
 	TI_INT32 i;
 
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": FW guard timer expired.\n");
 
 	/* mark that the FW guard timer is not running */
 	pMeasurementSRV->bStartStopTimerRunning = TI_FALSE;
@@ -551,11 +531,9 @@ void MacServices_measurementSRV_requestTimerExpired (TI_HANDLE hMeasurementSRV, 
 	requestIndex = measurementSRVFindMinDuration( hMeasurementSRV );
 	if ( -1 == requestIndex ) {
 		/* indicates we can't find the request in the requets array. Shouldn't happen, but nothing to do */
-		TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": Request timer expired and request index from findMinDuration is -1?!?");
 		return;
 	}
 
-	TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": request timer expired, request index: %d.\n", requestIndex);
 
 	/* mark that the timer is not running and that this request has completed */
 	pMeasurementSRV->bRequestTimerRunning[ requestIndex ] = TI_FALSE;
@@ -579,7 +557,6 @@ void MacServices_measurementSRV_requestTimerExpired (TI_HANDLE hMeasurementSRV, 
 	case MSR_TYPE_FRAME_MEASUREMENT:
 	case MSR_TYPE_MAX_NUM_OF_MEASURE_TYPES:
 	default:
-		TRACE2( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": measure type %d not supported for request %d\n", 							pMeasurementSRV->msrRequest.msrTypes[ requestIndex ].msrType,							requestIndex);
 		break;
 	}
 
@@ -667,13 +644,9 @@ void measurementSRVHandleBeaconMsrComplete( TI_HANDLE hMeasurementSRV, TI_INT32 
 	TI_INT32 status;
 
 
-	TRACE0(pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Sending AP Discovery Stop to the HAL...");
 
 	/* send stop AP discovery command */
 	status = cmdBld_CmdApDiscoveryStop (pMeasurementSRV->hCmdBld, NULL, NULL);
-	if ( TI_OK != status ) {
-		TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": status %d received from cmdBld_CmdApDiscoveryStop\n", status);
-	}
 }
 
 /**
@@ -700,7 +673,6 @@ void measurementSRVHandleChannelLoadComplete( TI_HANDLE hMeasurementSRV, TI_INT3
 	status = cmdBld_GetParam (pMeasurementSRV->hCmdBld, &tTwdParam);
 
 	if ( status != TI_OK ) {
-		TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": whalCtrl_GetParam returned status %d\n", status);
 
 		/* mark that the specific measurment type has failed */
 		pMeasurementSRV->msrReply.msrTypes[ requestIndex ].status = TI_NOK;
@@ -738,7 +710,6 @@ void measurementSRVHandleNoiseHistogramComplete( TI_HANDLE hMeasurementSRV, TI_I
 	status = cmdBld_CmdNoiseHistogram (pMeasurementSRV->hCmdBld, &pNoiseHistParams, NULL, NULL);
 
 	if ( TI_OK != status ) {
-		TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": whalCtrl_NoiseHistogramCmd returned status %d\n", status);
 
 		/* mark that the specific measurment type has failed */
 		pMeasurementSRV->msrReply.msrTypes[ requestIndex ].status = TI_NOK;
@@ -757,9 +728,7 @@ void measurementSRVHandleNoiseHistogramComplete( TI_HANDLE hMeasurementSRV, TI_I
 		/* setting On the Waitng for Noise Histogram Results Bit */
 		pMeasurementSRV->pendingParamCBs |= MSR_SRV_WAITING_NOISE_HIST_RESULTS;
 
-		TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": sent noise histogram stop command.\n");
 	} else {
-		TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": whalCtrl_GetParam returned status %d\n", status);
 
 		/* mark that the specific measurment type has failed */
 		pMeasurementSRV->msrReply.msrTypes[ requestIndex ].status = TI_NOK;
@@ -791,10 +760,6 @@ void MacServices_measurementSRV_channelLoadParamCB( TI_HANDLE hMeasurementSRV, T
 		return;
 	}
 
-	TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Channel load CB called, status:%d\n", status);
-	TRACE2( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, "result address (reported): 0x%x, result address (assumed): 0x%x, results (reported):\n",							  CB_buf, &(pMeasurementSRV->mediumOccupancyResults));
-	TRACE_INFO_HEX( pMeasurementSRV->hReport, CB_buf, sizeof(TMediumOccupancy));
-
 	/* setting Off the Waitng for Channel Load Results Bit */
 	pMeasurementSRV->pendingParamCBs &= ~MSR_SRV_WAITING_CHANNEL_LOAD_RESULTS;
 
@@ -802,7 +767,6 @@ void MacServices_measurementSRV_channelLoadParamCB( TI_HANDLE hMeasurementSRV, T
 	requestIndex = measurementSRVFindIndexByType( hMeasurementSRV, MSR_TYPE_CCA_LOAD_MEASUREMENT );
 	if ( -1 == requestIndex ) {
 		/* indicates we can't find the request in the requets array. Shouldn't happen, but nothing to do */
-		TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": request index from measurementSRVFindIndexByType is -1?!?");
 		return;
 	}
 
@@ -811,7 +775,6 @@ void MacServices_measurementSRV_channelLoadParamCB( TI_HANDLE hMeasurementSRV, T
 		mediumUsageInMs = pMeasurementSRV->mediumOccupancyResults.MediumUsage / 1000;
 		periodInMs      = pMeasurementSRV->mediumOccupancyResults.Period / 1000;
 
-		TRACE2( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": MediumUsage = %d Period = %d\n",mediumUsageInMs, periodInMs);
 
 		if ( periodInMs <= pMeasurementSRV->msrRequest.msrTypes[ requestIndex ].duration ) {
 			pMeasurementSRV->msrReply.msrTypes[ requestIndex ].replyValue.CCABusyFraction =
@@ -823,7 +786,6 @@ void MacServices_measurementSRV_channelLoadParamCB( TI_HANDLE hMeasurementSRV, T
 			    (pMeasurementSRV->msrRequest.msrTypes[ requestIndex ].duration * 1000);
 		}
 	} else {
-		TRACE2( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": channel load failed. Status=%d, period=%d\n",							status,							pMeasurementSRV->mediumOccupancyResults.Period);
 
 		/* mark result status */
 		pMeasurementSRV->msrReply.msrTypes[ requestIndex ].status = TI_NOK;
@@ -850,11 +812,6 @@ void MacServices_measurementSRV_channelLoadParamCB( TI_HANDLE hMeasurementSRV, T
 void MacServices_measurementSRV_dummyChannelLoadParamCB( TI_HANDLE hMeasurementSRV, TI_STATUS status,
         TI_UINT8* CB_buf )
 {
-#ifdef TI_DBG
-	measurementSRV_t *pMeasurementSRV = (measurementSRV_t*) hMeasurementSRV;
-
-	TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Dummy Channel Load callback called (status = %d)\n", status);
-#endif /* TI_DBG */
 }
 
 /**
@@ -875,9 +832,6 @@ void MacServices_measurementSRV_noiseHistCallBack( TI_HANDLE hMeasurementSRV, TI
 	TI_UINT32                      sumOfSamples;
 	TI_INT32							requestIndex;
 
-	TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": noise histogram CB called, status: %d\n", status);
-	TRACE2( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, "result address (reported): 0x%x, result address (assumed): 0x%x, results (reported):\n",							  CB_buf, &(pMeasurementSRV->noiseHistogramResults));
-	TRACE_INFO_HEX( pMeasurementSRV->hReport, CB_buf, sizeof(TNoiseHistogramResults));
 
 	/* setting Off the Waitng for noise histogram Results Bit */
 	pMeasurementSRV->pendingParamCBs &= ~MSR_SRV_WAITING_NOISE_HIST_RESULTS;
@@ -886,7 +840,6 @@ void MacServices_measurementSRV_noiseHistCallBack( TI_HANDLE hMeasurementSRV, TI
 	requestIndex = measurementSRVFindIndexByType( hMeasurementSRV, MSR_TYPE_NOISE_HISTOGRAM_MEASUREMENT );
 	if ( -1 == requestIndex ) {
 		/* indicates we can't find the request in the requets array. Shouldn't happen, but nothing to do */
-		TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": request index from measurementSRVFindIndexByType is -1?!?");
 		return;
 	}
 
@@ -894,19 +847,16 @@ void MacServices_measurementSRV_noiseHistCallBack( TI_HANDLE hMeasurementSRV, TI
 		sumOfSamples = pMeasurementSRV->noiseHistogramResults.numOfLostCycles;
 
 		/* Print For Debug */
-		TRACE4( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": numOfLostCycles = %d numOfTxHwGenLostCycles = %d numOfRxLostCycles = %d numOfExceedLastThresholdLostCycles = %d\n",			pMeasurementSRV->noiseHistogramResults.numOfLostCycles, 			pMeasurementSRV->noiseHistogramResults.numOfTxHwGenLostCycles,			pMeasurementSRV->noiseHistogramResults.numOfRxLostCycles,			pMeasurementSRV->noiseHistogramResults.numOfLostCycles - 			 (pMeasurementSRV->noiseHistogramResults.numOfTxHwGenLostCycles + 			  pMeasurementSRV->noiseHistogramResults.numOfRxLostCycles));
 
 		for ( index = 0; index < NUM_OF_NOISE_HISTOGRAM_COUNTERS; index++ ) {
 			sumOfSamples += pMeasurementSRV->noiseHistogramResults.counters[ index ];
 
 			/* Print For Debug */
-			TRACE2( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Counter #%d = %x\n", index, pMeasurementSRV->noiseHistogramResults.counters[index]);
 		}
 
 		/* If there weren't enough samples --> Reject the Request */
 		if ( (sumOfSamples - pMeasurementSRV->noiseHistogramResults.numOfLostCycles) <
 		        NOISE_HISTOGRAM_THRESHOLD ) {
-			TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_WARNING, ": noise histogram CB, rejecting request because %d samples received.\n",								  sumOfSamples - pMeasurementSRV->noiseHistogramResults.numOfLostCycles);
 
 			/* set negative result status */
 			pMeasurementSRV->msrReply.msrTypes[ requestIndex ].status = TI_NOK;
@@ -916,10 +866,8 @@ void MacServices_measurementSRV_noiseHistCallBack( TI_HANDLE hMeasurementSRV, TI
 				    ( 255 * pMeasurementSRV->noiseHistogramResults.counters[ index ]) / sumOfSamples;
 			}
 
-			TRACE8( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Valid noise histogram reply. RPIDensity: %d %d %d %d %d %d %d %d\n",									  pMeasurementSRV->msrReply.msrTypes[ requestIndex ].replyValue.RPIDensity[ 0 ],									  pMeasurementSRV->msrReply.msrTypes[ requestIndex ].replyValue.RPIDensity[ 1 ],									  pMeasurementSRV->msrReply.msrTypes[ requestIndex ].replyValue.RPIDensity[ 2 ],									  pMeasurementSRV->msrReply.msrTypes[ requestIndex ].replyValue.RPIDensity[ 3 ],									  pMeasurementSRV->msrReply.msrTypes[ requestIndex ].replyValue.RPIDensity[ 4 ],									  pMeasurementSRV->msrReply.msrTypes[ requestIndex ].replyValue.RPIDensity[ 5 ],									  pMeasurementSRV->msrReply.msrTypes[ requestIndex ].replyValue.RPIDensity[ 6 ],									  pMeasurementSRV->msrReply.msrTypes[ requestIndex ].replyValue.RPIDensity[ 7 ]);
 		}
 	} else {
-		TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_WARNING, ": noise histogram CB with status: %d, rejecting request.\n", status);
 		/* set negative result status */
 		pMeasurementSRV->msrReply.msrTypes[ requestIndex ].status = TI_NOK;
 	}

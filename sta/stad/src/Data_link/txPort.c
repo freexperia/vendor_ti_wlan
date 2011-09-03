@@ -260,12 +260,6 @@ static void updateQueuesStates (TTxPortObj *pTxPort)
 	}
 
 
-#ifdef TI_DBG
-	TRACE1(pTxPort->hReport, REPORT_SEVERITY_INFORMATION, ":  queuesMuxState = , TxSuspend = %d\n", pTxPort->txSuspended);
-
-	TRACE2(pTxPort->hReport, REPORT_SEVERITY_INFORMATION, ":  PrevMgmtEnabled = %d,  PrevDataEnabled = %d, MgmtAction = , DataAction = \n", pTxPort->mgmtQueueEnabled, pTxPort->dataQueueEnabled);
-#endif /* TI_DBG */
-
 	/*
 	 * Execute the required actions.
 	 * Note: This is done at the end of this function because it may start a sequence that will call it again!!

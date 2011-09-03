@@ -536,7 +536,6 @@ void currBSS_SGconfigureBSSLoss(TI_HANDLE hCurrBSS,
 	pCurrBSS->bUseSGParams = bUseSGParams;
 	pCurrBSS->SGcompensationPercent = SGcompensationPercent;
 
-	TRACE1(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION, "CurrBSS_SGConf: SG =%d\n", pCurrBSS->bUseSGParams);
 
 	/* update the change of BSSLoss in the FW */
 	currBSS_updateBSSLoss(pCurrBSS);
@@ -579,8 +578,6 @@ void currBSS_updateBSSLoss(currBSS_t   *pCurrBSS)
 		connSelfTimeout = pParam->content.connSelfTimeout;
 
 		os_memoryFree(pCurrBSS->hOs, pParam, sizeof(paramInfo_t));
-	} else {
-		TRACE0(pCurrBSS->hReport, REPORT_SEVERITY_ERROR, "currBSS_updateBSSLoss: Error allocating paramInfo_t\n");
 	}
 
 	if (pCurrBSS->type == BSS_INDEPENDENT) {
@@ -597,14 +594,12 @@ void currBSS_updateBSSLoss(currBSS_t   *pCurrBSS)
 
 	roamingTriggersParams.BssLossTimeout = NO_BEACON_DEFAULT_TIMEOUT;
 
-	TRACE2(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION, ": SG=%d, Band=%d\n", pCurrBSS->bUseSGParams, pCurrBSS->currAPInfo.band);
 
 	/* if Soft Gemini is enabled - increase the BSSLoss value (because BT activity might over-run beacons) */
 	if ((pCurrBSS->bUseSGParams) && (pCurrBSS->currAPInfo.band == RADIO_BAND_2_4_GHZ)) {
 		roamingTriggersParams.TsfMissThreshold = (roamingTriggersParams.TsfMissThreshold *
 		        (100 + pCurrBSS->SGcompensationPercent)) / 100;
 
-		TRACE2(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION, ": old value = %d, new value (for SG compensation) = %d\n", pCurrBSS->numExpectedTbttForBSSLoss,roamingTriggersParams.TsfMissThreshold);
 	}
 
 	TWD_CfgConnMonitParams (pCurrBSS->hTWD, &roamingTriggersParams);
@@ -759,15 +754,6 @@ TI_STATUS currBSS_beaconReceivedCallb(TI_HANDLE hCurrBSS,
 	/* Get current BSSID */
 	pParam->paramType = SITE_MGR_CURRENT_BSSID_PARAM;
 	siteMgr_getParam(pCurrBSS->hSiteMgr, pParam);
-	TRACE12(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION,
-	        "currBSS_beaconReceivedCallb: bssid = %02x.%02x.%02x.%02x.%02x.%02x, siteMgrDesiredBSSID = %02x.%02x.%02x.%02x.%02x.%02x\n",
-	        (*bssid)[0], (*bssid)[1], (*bssid)[2], (*bssid)[3], (*bssid)[4], (*bssid)[5],
-	        pParam->content.siteMgrDesiredBSSID[0],
-	        pParam->content.siteMgrDesiredBSSID[1],
-	        pParam->content.siteMgrDesiredBSSID[2],
-	        pParam->content.siteMgrDesiredBSSID[3],
-	        pParam->content.siteMgrDesiredBSSID[4],
-	        pParam->content.siteMgrDesiredBSSID[5]);
 	MAC_COPY(desiredBSSID, pParam->content.siteMgrDesiredBSSID);
 
 	if (pCurrBSS->isConnected && (eCurrentBSSType == eFrameBssType)) {
@@ -904,13 +890,11 @@ void currBSS_updateConnectedState(TI_HANDLE hCurrBSS, TI_BOOL isConnected, ScanB
 			 * (either the default interval or the one from teh XCC IE)
 			 */
 			if (0 != uKeepAlivePreiod) {
-				TRACE0(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION , "currBSS_updateConnectedState: Configuring null-data keep-alive");
 
 				/* build null-data template */
 				tKeepAliveTemplate.ptr = &(pCurrBSS->keepAliveBuffer[ 0 ]);
 				if ( TI_OK != txCtrlServ_buildNullFrame (pCurrBSS->hTxCtrl,
 				        tKeepAliveTemplate.ptr, &(tKeepAliveTemplate.len))) {
-					TRACE0(pCurrBSS->hReport, REPORT_SEVERITY_ERROR , "currBSS_updateConnectedState: error building null data frame\n");
 
 				}
 
@@ -1072,7 +1056,6 @@ static void currBSS_reportRoamingEvent(currBSS_t *pCurrBSS,
                                        apConn_roamingTrigger_e roamingEventType,
                                        roamingEventData_u *pRoamingEventData)
 {
-	TRACE1(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION, "currBSS_reportRoamingEvent: trigger %d\n", roamingEventType);
 
 	if (pCurrBSS->isConnected) {
 		if (pCurrBSS->type == BSS_INFRASTRUCTURE) {
@@ -1142,7 +1125,6 @@ static void currBSS_BackgroundScanQuality(TI_HANDLE hCurrBSS,
 	TI_INT8 averageRssi = *data;
 	paramInfo_t *pParam;
 
-	TRACE1(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION, "BackgroundScanQuality Event: RSSI = %d\n", averageRssi );
 
 	/* Report to AP Connection about reaching RSSI low or normal (high) threshold */
 	if (averageRssi < pCurrBSS->lowQualityForBkgrdScan) {
@@ -1224,11 +1206,9 @@ TI_INT8 currBSS_RegisterTriggerEvent (TI_HANDLE hCurrBSS, TI_UINT8 triggerID,TI_
 	TI_UINT8        emptyTriggerIdx = 0;
 
 	if (triggerID >= MAX_NUM_OF_RSSI_SNR_TRIGGERS) {
-		TRACE1(pCurrBSS->hReport, REPORT_SEVERITY_ERROR , "currBSS_RegisterTriggerEvent: triggerID=%d is not in legal range \n", triggerID);
 		return -1;
 	}
 
-	TRACE3(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION, "currBSS_RegisterTriggerEvent: triggerID=%d, clientID=%d , fCB=%d. \n",triggerID, clientID ,fCB);
 
 	if (clientID > 0) { /* this event is registered by application */
 		pEmptyTrigger = currBss_findEmptyUserTrigger(hCurrBSS, clientID, &emptyTriggerIdx);
@@ -1238,7 +1218,6 @@ TI_INT8 currBSS_RegisterTriggerEvent (TI_HANDLE hCurrBSS, TI_UINT8 triggerID,TI_
 			pEmptyTrigger->hCB = NULL;
 			pEmptyTrigger->WasRegisteredByApp = TI_TRUE;
 		} else {
-			TRACE0(pCurrBSS->hReport, REPORT_SEVERITY_ERROR , "currBSS_RegisterTriggerEvent: Table is full!. no Empty trigger is available! \n");
 			return -1;
 		}
 	} else {
@@ -1273,7 +1252,6 @@ static TI_STATUS currBss_HandleTriggerEvent(TI_HANDLE hCurrBSS, TI_UINT8 *data, 
 	triggerDataEx_t triggerInfo;
 	currBSS_t *pCurrBSS = (currBSS_t *)hCurrBSS;
 
-	TRACE1(pCurrBSS->hReport ,REPORT_SEVERITY_INFORMATION,  "currBss_HandleTriggerEvent(). eventID =%d \n",eventID);
 
 
 	if (eventID < MAX_NUM_OF_RSSI_SNR_TRIGGERS) {
@@ -1376,7 +1354,6 @@ TI_STATUS currBss_registerBssLossEvent(TI_HANDLE hCurrBSS,TI_UINT32  uNumOfBeaco
 	TRroamingTriggerParams params;
 	currBSS_t *pCurrBSS = (currBSS_t *)hCurrBSS;
 
-	TRACE2(pCurrBSS->hReport,REPORT_SEVERITY_INFORMATION , "currBss_registerBssLossEvent() uNumOfBeacons=%d,uClientID =%d \n", uNumOfBeacons,uClientID );
 
 	/* Register for 'BSS-Loss' event */
 	TWD_RegisterEvent (pCurrBSS->hTWD, TWD_OWN_EVENT_BSS_LOSE, (void *)currBSS_BssLossThresholdCrossed, pCurrBSS);
@@ -1395,7 +1372,6 @@ TI_STATUS currBss_registerTxRetryEvent(TI_HANDLE hCurrBSS,TI_UINT8 uMaxTxRetryTh
 	TRroamingTriggerParams params;
 	currBSS_t *pCurrBSS = (currBSS_t *)hCurrBSS;
 
-	TRACE2(pCurrBSS->hReport,REPORT_SEVERITY_INFORMATION , "currBss_registerTxRetryEvent() uMaxTxRetryThreshold=%d,uClientID =%d \n", uMaxTxRetryThreshold,uClientID );
 	/* Register for 'Consec. Tx error' */
 	TWD_RegisterEvent (pCurrBSS->hTWD, TWD_OWN_EVENT_MAX_TX_RETRY, (void *)currBSS_MaxTxRetryThresholdCrossed, pCurrBSS);
 	TWD_EnableEvent (pCurrBSS->hTWD, TWD_OWN_EVENT_MAX_TX_RETRY);
@@ -1417,11 +1393,9 @@ TI_STATUS currBSS_setParam(TI_HANDLE hCurrBSS, paramInfo_t *pParam)
 	TI_STATUS status = TI_OK;
 
 	if (pParam == NULL) {
-		TRACE0(pCurrBSS->hReport, REPORT_SEVERITY_ERROR , " currBSS_setParam(): pParam is NULL!\n");
 		return TI_NOK;
 	}
 
-	TRACE1(pCurrBSS->hReport,REPORT_SEVERITY_INFORMATION , "currBSS_setParam() %X \n", pParam->paramType);
 
 	switch (pParam->paramType) {
 	case CURR_BSS_REGISTER_LINK_QUALITY_EVENT_PARAM: {
@@ -1429,7 +1403,6 @@ TI_STATUS currBSS_setParam(TI_HANDLE hCurrBSS, paramInfo_t *pParam)
 		RssiSnrTriggerCfg_t         tTriggerCfg;
 		TI_INT8                     triggerID = 0;
 
-		TRACE8(pCurrBSS->hReport, REPORT_SEVERITY_INFORMATION , "currBSS_setParam - USER_DEFINED_TRIGGER: \n index = %d, \n	 threshold = %d, \n pacing = %d, \n metric = %d, \n type = %d, \n direction = %d, \n hystersis = %d, \n enable = %d \n",pUserTrigger->uIndex,pUserTrigger->iThreshold,pUserTrigger->uPacing,pUserTrigger->uMetric,pUserTrigger->uType,pUserTrigger->uDirection,pUserTrigger->uHystersis,pUserTrigger->uEnable);
 		/* Copy from user structure to driver structure */
 		tTriggerCfg.index     = pUserTrigger->uIndex;
 		tTriggerCfg.threshold = pUserTrigger->iThreshold;
@@ -1451,7 +1424,6 @@ TI_STATUS currBSS_setParam(TI_HANDLE hCurrBSS, paramInfo_t *pParam)
 
 
 		if (triggerID < 0) {
-			TRACE0(pCurrBSS->hReport, REPORT_SEVERITY_ERROR , "currBSS_setParam: RSSI/SNR user trigger registration FAILED!! \n");
 			return TI_NOK;
 		} else {
 			tTriggerCfg.index = (uint8)triggerID; /* the index is used for the eventMBox triggerID mapping*/
@@ -1465,7 +1437,6 @@ TI_STATUS currBSS_setParam(TI_HANDLE hCurrBSS, paramInfo_t *pParam)
 	break;
 
 	default:
-		TRACE1(pCurrBSS->hReport, REPORT_SEVERITY_ERROR, "currBSS_setParam bad param=  %X\n", pParam->paramType);
 		break;
 	}
 

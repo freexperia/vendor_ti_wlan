@@ -41,7 +41,7 @@
 #include "TWDriver.h"
 #include "osApi.h"
 #include "tidef.h"
-#include "report.h"
+//#include "report.h"
 #include "public_infoele.h"
 #include "CmdBld.h"
 #include "txResult_api.h"
@@ -945,7 +945,6 @@ static TI_STATUS __cfg_coex_activity_table (TI_HANDLE hCmdBld)
 	TI_STATUS   status = TI_NOK;
 	TI_UINT32   index;
 
-	TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , " CoexActivity, uNumberOfIEs=%d\n", uNumberOfIEs);
 	if (uNumberOfIEs == 0) {
 		return status;
 	}
@@ -955,7 +954,6 @@ static TI_STATUS __cfg_coex_activity_table (TI_HANDLE hCmdBld)
 	 * with a CB to continue configuration.
 	 */
 	for (index = 0; index < uNumberOfIEs-1; index++) {
-		TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , " CoexActivity, send %d\n", index);
 		status =  cmdBld_CfgIeCoexActivity (hCmdBld, &CoexActivityTable[index],
 		                                    NULL, NULL);
 		if (TI_OK != status) {
@@ -964,7 +962,6 @@ static TI_STATUS __cfg_coex_activity_table (TI_HANDLE hCmdBld)
 	}
 
 	/* Send last activity with a callback to continue config sequence */
-	TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , " CoexActivity, send last %d\n", index);
 	status =  cmdBld_CfgIeCoexActivity (hCmdBld, &CoexActivityTable[index],
 	                                    (void *)cmdBld_ConfigSeq, hCmdBld);
 
@@ -1882,7 +1879,6 @@ static TI_STATUS __cfg_keys (TI_HANDLE hCmdBld)
 		        index++) {
 			if ((DB_KEYS(pCmdBld).pReconfKeys + index)->keyType != KEY_NULL) {
 				if (cmdBld_CmdAddKey (hCmdBld, DB_KEYS(pCmdBld).pReconfKeys + index, TI_TRUE, NULL, NULL) != TI_OK) {
-					TRACE1(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "__cfg_keys: ERROR cmdBld_CmdAddKey failure index=%d\n", index);
 					return TI_NOK;
 				}
 			}
@@ -1891,7 +1887,6 @@ static TI_STATUS __cfg_keys (TI_HANDLE hCmdBld)
 		if (DB_KEYS(pCmdBld).bDefaultKeyIdValid) {
 			/* Set the deafult key ID to the HW*/
 			if (cmdBld_CmdSetWepDefaultKeyId (hCmdBld, DB_KEYS(pCmdBld).uReconfDefaultKeyId, NULL, NULL) != TI_OK) {
-				TRACE0(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "__cfg_keys: ERROR cmdBld_CmdSetWepDefaultKeyId failure\n");
 				return TI_NOK;
 			}
 		}
@@ -1902,7 +1897,6 @@ static TI_STATUS __cfg_keys (TI_HANDLE hCmdBld)
 	                              DB_KEYS(pCmdBld).bReconfHwEncEnable,
 	                              (void *)cmdBld_ConfigSeq,
 	                              hCmdBld) != TI_OK) {
-		TRACE0(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "__cfg_keys: ERROR cmdBld_CfgHwEncDecEnable failure \n");
 		return TI_NOK;
 	}
 
@@ -2217,7 +2211,6 @@ TI_STATUS cmdBld_GetParam (TI_HANDLE hCmdBld, TTwdParamInfo *pParamInfo)
 		if (cmdBld_GetCurrentAssociationId (hCmdBld, &pParamInfo->content.halCtrlAid) != TI_OK)
 			return TI_NOK;
 
-		TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , " AID 2 %d\n", pParamInfo->content.halCtrlAid);
 		break;
 
 	case TWD_NOISE_HISTOGRAM_PARAM_ID:
@@ -2266,7 +2259,6 @@ TI_STATUS cmdBld_GetParam (TI_HANDLE hCmdBld, TTwdParamInfo *pParamInfo)
 		break;
 
 	case TWD_RADIO_TEST_PARAM_ID:
-		TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Radio Test\n");
 		return cmdBld_CmdTest (hCmdBld,
 		                       pParamInfo->content.interogateCmdCBParams.fCb,
 		                       pParamInfo->content.interogateCmdCBParams.hCb,
@@ -2278,7 +2270,6 @@ TI_STATUS cmdBld_GetParam (TI_HANDLE hCmdBld, TTwdParamInfo *pParamInfo)
 		break;
 
 	default:
-		TRACE1(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "cmdBld_GetParam - ERROR - Param is not supported, %d\n\n", pParamInfo->paramType);
 		return (PARAM_NOT_SUPPORTED);
 	}
 
@@ -2346,14 +2337,10 @@ static TI_STATUS cmdBld_ReadMibTxRatePolicy (TI_HANDLE hCmdBld, TI_HANDLE hCb, v
 
 TI_STATUS cmdBld_ReadMib (TI_HANDLE hCmdBld, TI_HANDLE hCb, void* fCb, void* pCb)
 {
-	TCmdBld     *pCmdBld = (TCmdBld *)hCmdBld;
 	TMib    *pMibBuf = (TMib*)pCb;
 	TCmdQueueInterrogateCb RetFunc = (TCmdQueueInterrogateCb)fCb;
 	TI_STATUS Status = TI_OK;
 
-	TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_ReadMib :pMibBuf %p:\n",pMibBuf);
-
-	TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_ReadMib :aMib %x:\n", pMibBuf->aMib);
 
 	switch (pMibBuf->aMib) {
 	case MIB_dot11MaxReceiveLifetime: {
@@ -2440,7 +2427,6 @@ TI_STATUS cmdBld_ReadMib (TI_HANDLE hCmdBld, TI_HANDLE hCb, void* fCb, void* pCb
 		return cmdBld_ItrRoamimgStatisitics (hCmdBld, fCb, hCb, pCb);
 
 	default:
-		TRACE1(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "TWD_ReadMib:MIB aMib 0x%x Not supported\n",pMibBuf->aMib);
 		return TI_NOK;
 	}
 
@@ -2457,7 +2443,6 @@ TI_STATUS cmdBld_GetGroupAddressTable (TI_HANDLE hCmdBld, TI_UINT8* pEnabled, TI
 	TI_UINT32     i;
 
 	if (NULL == pEnabled || NULL == pNumGroupAddrs || NULL == pGroupAddr) {
-		TRACE3(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "cmdBld_GetGroupAddressTable: pisEnabled=0x%p pnumGroupAddrs=0x%p  Group_addr=0x%p !!!\n", pEnabled, pNumGroupAddrs, pGroupAddr);
 		return PARAM_VALUE_NOT_VALID;
 	}
 

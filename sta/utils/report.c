@@ -416,7 +416,6 @@ TI_STATUS report_SetParam (TI_HANDLE hReport, TReportParamInfo *pParam)
 		break;
 
 	default:
-		TRACE1(hReport, REPORT_SEVERITY_ERROR, "Set param, Params is not supported, %d\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 	}
 
@@ -442,7 +441,6 @@ TI_STATUS report_GetParam (TI_HANDLE hReport, TReportParamInfo *pParam)
 		break;
 
 	default:
-		TRACE1(hReport, REPORT_SEVERITY_ERROR, "Get param, Params is not supported, %d\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 	}
 
@@ -490,37 +488,7 @@ TI_STATUS report_Dump (TI_UINT8 *pBuffer, char *pString, TI_UINT32 size)
 /* HEX DUMP for BDs !!! Debug code only !!! */
 TI_STATUS report_PrintDump (TI_UINT8 *pData, TI_UINT32 datalen)
 {
-#ifdef TI_DBG
-	TI_INT32  dbuflen=0;
-	TI_UINT32 j;
-	TI_CHAR   dbuf[50];
-	static const TI_CHAR hexdigits[16] = "0123456789ABCDEF";
 
-
-	if ((NULL == pData)||(datalen <= 0)
-	   ) {
-		return TI_NOK;
-	}
-
-
-	for (j=0; j < datalen;) {
-		/* Add a byte to the line*/
-		dbuf[dbuflen] =  hexdigits[(pData[j] >> 4)&0x0f];
-		dbuf[dbuflen+1] = hexdigits[pData[j] & 0x0f];
-		dbuf[dbuflen+2] = ' ';
-		dbuf[dbuflen+3] = '\0';
-		dbuflen += 3;
-		j++;
-		if ((j % 16) == 0) {
-			/* Dump a line every 16 hex digits*/
-			WLAN_OS_REPORT(("%04.4x  %s\n", j-16, dbuf));
-			dbuflen = 0;
-		}
-	}
-	/* Flush if something has left in the line*/
-	if (dbuflen)
-		WLAN_OS_REPORT(("%04.4x  %s\n", j & 0xfff0, dbuf));
-#endif
 	return TI_OK;
 }
 

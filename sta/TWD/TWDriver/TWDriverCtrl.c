@@ -58,18 +58,15 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 	TTwd           *pTWD = (TTwd *)hTWD;
 	TWlanParams    *pWlanParams = &DB_WLAN(pTWD->hCmdBld);
 
-	TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_SetParam: paramType=0x%X\n", pParamInfo->paramType);
 
 	switch (pParamInfo->paramType) {
 	case TWD_RTS_THRESHOLD_PARAM_ID:
 
 		if  (pParamInfo->content.halCtrlRtsThreshold > TWD_RTS_THRESHOLD_MAX) {
-			TRACE1(pTWD->hReport, REPORT_SEVERITY_ERROR, "TWD########TWD_RTS_THRESHOLD_PARAM: Value out of permitted range 0x%x\n", pParamInfo->content.halCtrlRtsThreshold);
 			return (PARAM_VALUE_NOT_VALID);
 		}
 
 		if (cmdBld_CfgRtsThreshold (pTWD->hCmdBld, pParamInfo->content.halCtrlRtsThreshold, NULL, NULL) == TI_OK) {
-			TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD########TWD_RTS_THRESHOLD_PARAM 0x%x\n", pParamInfo->content.halCtrlRtsThreshold);
 			pWlanParams->RtsThreshold = pParamInfo->content.halCtrlRtsThreshold;
 		}
 		break;
@@ -118,7 +115,6 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 		break;
 
 	case TWD_RSN_HW_ENC_DEC_ENABLE_PARAM_ID:
-		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD########HW_ENC_DEC_ENABLE %d\n", pParamInfo->content.rsnHwEncDecrEnable);
 
 		/* Set the Encryption/Decryption on the HW*/
 		if (cmdBld_CfgHwEncDecEnable (pTWD->hCmdBld, pParamInfo->content.rsnHwEncDecrEnable, NULL, NULL) != TI_OK)
@@ -126,7 +122,6 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 		break;
 
 	case TWD_RSN_KEY_ADD_PARAM_ID:
-		TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD########KEY_ADD\n");
 
 		if (cmdBld_CmdAddKey (pTWD->hCmdBld,
 		                      (TSecurityKeys *) pParamInfo->content.configureCmdCBParams.pCb,
@@ -137,7 +132,6 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 		break;
 
 	case TWD_RSN_KEY_REMOVE_PARAM_ID:
-		TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD########KEY_REMOVE\n");
 
 		if (cmdBld_CmdRemoveKey (pTWD->hCmdBld,
 		                         (TSecurityKeys *) pParamInfo->content.configureCmdCBParams.pCb,
@@ -150,7 +144,6 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 		if (*((TI_UINT8 *)pParamInfo->content.configureCmdCBParams.pCb) > MAX_DEFAULT_KEY_ID)
 			return PARAM_VALUE_NOT_VALID;
 
-		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD########DEFAULT_KEY_ID %d\n", (TI_UINT8)pParamInfo->content.rsnDefaultKeyID);
 
 		if (cmdBld_CmdSetWepDefaultKeyId (pTWD->hCmdBld,
 		                                  *((TI_UINT8 *)pParamInfo->content.interogateCmdCBParams.pCb),
@@ -161,7 +154,6 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 		break;
 
 	case TWD_RSN_SECURITY_MODE_PARAM_ID:
-		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD########SECURITY_MODE_SET %d\n", pParamInfo->content.rsnEncryptionStatus);
 		if (cmdBld_CfgSecureMode (pTWD->hCmdBld, (ECipherSuite)pParamInfo->content.rsnEncryptionStatus, NULL, NULL) != TI_OK)
 			return TI_NOK;
 		break;
@@ -169,11 +161,9 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 #ifdef XCC_MODULE_INCLUDED
 	case TWD_RSN_XCC_SW_ENC_ENABLE_PARAM_ID:
 
-		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD: XCC_SW_ENC_ENABLE %d\n", pParamInfo->content.rsnXCCSwEncFlag);
 
 		/* when SW encryption is ON, HW encryption should be turned OFF and vice versa */
 
-		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD: Set HwEncDecrEnable to %d\n", !pParamInfo->content.rsnXCCSwEncFlag);
 
 		/* Set the Encryption/Decryption on the HW*/
 		if (cmdBld_CfgHwEncDecEnable (pTWD->hCmdBld, !pParamInfo->content.rsnXCCSwEncFlag, NULL, NULL) != TI_OK)
@@ -186,7 +176,6 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 
 	case TWD_TX_POWER_PARAM_ID:
 
-		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD_TX_POWER_PARAM_ID %d\n", pParamInfo->content.halCtrlTxPowerDbm);
 
 		pWlanParams->TxPowerDbm = pParamInfo->content.halCtrlTxPowerDbm;
 
@@ -218,7 +207,6 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 		return cmdBld_CfgTid (pTWD->hCmdBld, pParamInfo->content.pQueueTrafficParams, NULL, NULL);
 
 	case TWD_CLK_RUN_ENABLE_PARAM_ID:
-		TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION, "TWD_SetParam: CLK_RUN_ENABLE %d\n", pParamInfo->content.halCtrlClkRunEnable);
 
 		/* Set the Encryption/Decryption on the HW*/
 		if (cmdBld_CfgClkRun (pTWD->hCmdBld, pParamInfo->content.halCtrlClkRunEnable, NULL, NULL) != TI_OK)
@@ -243,7 +231,6 @@ TI_STATUS TWD_SetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 
 
 	default:
-		TRACE1(pTWD->hReport, REPORT_SEVERITY_ERROR, "TWD_SetParam - ERROR - Param is not supported, 0x%x\n", pParamInfo->paramType);
 		return PARAM_NOT_SUPPORTED;
 	}
 
@@ -254,7 +241,6 @@ TI_STATUS TWD_GetParam (TI_HANDLE hTWD, TTwdParamInfo *pParamInfo)
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_GetParam: called\n");
 
 	return cmdBld_GetParam (pTWD->hCmdBld, pParamInfo);
 }
@@ -263,7 +249,6 @@ TI_STATUS TWD_CfgRx (TI_HANDLE hTWD, TI_UINT32 uRxConfigOption, TI_UINT32 uRxFil
 {
 	TTwd     *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgRx: called\n");
 
 	return cmdBld_CfgRx (pTWD->hCmdBld, uRxConfigOption, uRxFilterOption, NULL, NULL);
 }
@@ -272,7 +257,6 @@ TI_STATUS TWD_CfgArpIpAddrTable (TI_HANDLE hTWD, TIpAddr tIpAddr, EArpFilterType
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgArpIpAddrTable: called\n");
 
 	return cmdBld_CfgArpIpAddrTable (pTWD->hCmdBld, tIpAddr, (TI_UINT8)filterType, eIpVer, NULL, NULL);
 }
@@ -292,7 +276,6 @@ TI_STATUS TWD_CfgArpIpFilter (TI_HANDLE hTWD, TIpAddr staIp)
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgArpIpFilter: called\n");
 
 	return cmdBld_CfgArpIpFilter (pTWD->hCmdBld, staIp, NULL, NULL);
 }
@@ -301,7 +284,6 @@ TI_STATUS TWD_CmdSetSplitScanTimeOut  ( TI_HANDLE hTWD, TI_UINT32 uTimeOut )
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdSetSplitScanTimeOut: called\n");
 
 	return cmdBld_CmdSetSplitScanTimeOut (pTWD->hCmdBld, uTimeOut);
 }
@@ -310,7 +292,6 @@ TI_STATUS TWD_CmdJoinBss (TI_HANDLE hTWD, TJoinBss *pJoinBssParams)
 {
 	TTwd      *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdJoinBss: called\n");
 
 	return cmdBld_CmdJoinBss (pTWD->hCmdBld, pJoinBssParams, NULL, NULL);
 }
@@ -319,7 +300,6 @@ TI_STATUS TWD_CfgKeepAlive (TI_HANDLE hTWD, TKeepAliveParams *pKeepAliveParams)
 {
 	TTwd      *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgKeepAlive: called\n");
 
 	return cmdBld_CfgKeepAlive (pTWD->hCmdBld, pKeepAliveParams, NULL, NULL);
 }
@@ -328,7 +308,6 @@ TI_STATUS TWD_CfgKeepAliveEnaDis(TI_HANDLE hTWD, TI_UINT8 enaDisFlag)
 {
 	TTwd      *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgKeepAliveEnaDis: called\n");
 
 	return cmdBld_CfgKeepAliveEnaDis (pTWD->hCmdBld, enaDisFlag, NULL, NULL);
 }
@@ -337,7 +316,7 @@ TI_STATUS TWD_CmdTemplate (TI_HANDLE hTWD, TSetTemplate *pTemplateParams, void *
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdTemplate: called\n");
+
 
 	return cmdBld_CmdTemplate (pTWD->hCmdBld, pTemplateParams, fCb, hCb);
 }
@@ -346,7 +325,6 @@ TI_STATUS TWD_CfgSlotTime (TI_HANDLE hTWD, ESlotTime eSlotTimeVal)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgSlotTime: called\n");
 
 	return cmdBld_CfgSlotTime (pTWD->hCmdBld, eSlotTimeVal, NULL, NULL);
 }
@@ -355,7 +333,6 @@ TI_STATUS TWD_CfgPreamble (TI_HANDLE hTWD, EPreamble ePreamble)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgPreamble: called\n");
 
 	return cmdBld_CfgPreamble (pTWD->hCmdBld, (Preamble_e)ePreamble, NULL, NULL);
 }
@@ -364,7 +341,6 @@ TI_STATUS TWD_CfgPacketDetectionThreshold (TI_HANDLE hTWD, TI_UINT32 threshold)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgPacketDetectionThreshold: called\n");
 
 	return cmdBld_CfgPacketDetectionThreshold (pTWD->hCmdBld, threshold, NULL, NULL);
 }
@@ -373,7 +349,6 @@ TI_STATUS TWD_CmdDisableTx (TI_HANDLE hTWD)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdDisableTx: called\n");
 
 	return cmdBld_CmdDisableTx (pTWD->hCmdBld, NULL, NULL);
 }
@@ -382,7 +357,6 @@ TI_STATUS TWD_CmdEnableTx (TI_HANDLE hTWD, TI_UINT8 channel)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdEnableTx: called\n");
 
 	return cmdBld_CmdEnableTx (pTWD->hCmdBld, channel, NULL, NULL);
 }
@@ -391,7 +365,6 @@ TI_STATUS TWD_CmdSetStaState (TI_HANDLE hTWD, TI_UINT8 staState, void *fCb, TI_H
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE1(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_SetStaState: %d\n", staState);
 
 	return cmdBld_CmdSetStaState (pTWD->hCmdBld, staState, fCb, hCb);
 }
@@ -400,7 +373,6 @@ TI_STATUS TWD_ItrRoammingStatisitics (TI_HANDLE hTWD, void *fCb, TI_HANDLE hCb, 
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_ItrRoammingStatisitics: called\n");
 
 	return cmdBld_ItrRoamimgStatisitics (pTWD->hCmdBld, fCb, hCb, pCb);
 }
@@ -423,7 +395,6 @@ TI_STATUS TWD_ItrErrorCnt (TI_HANDLE hTWD, void *fCb, TI_HANDLE hCb, void *pCb)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_ItrErrorCnt: called\n");
 
 	return cmdBld_ItrErrorCnt (pTWD->hCmdBld, fCb, hCb, pCb);
 }
@@ -432,7 +403,6 @@ TI_STATUS TWD_CmdNoiseHistogram (TI_HANDLE hTWD, TNoiseHistogram *pNoiseHistPara
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdNoiseHistogram: called\n");
 
 	return cmdBld_CmdNoiseHistogram (pTWD->hCmdBld, pNoiseHistParams, NULL, NULL);
 }
@@ -441,7 +411,6 @@ TI_STATUS TWD_CfgBeaconFilterOpt (TI_HANDLE hTWD, TI_UINT8 uBeaconFilteringStatu
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgBeaconFilterOpt: called\n");
 
 	return cmdBld_CfgBeaconFilterOpt (pTWD->hCmdBld, uBeaconFilteringStatus, uNumOfBeaconsToBuffer, NULL, NULL);
 }
@@ -450,7 +419,6 @@ TI_STATUS TWD_SetRateMngDebug(TI_HANDLE hTWD, RateMangeParams_t *pRateMngParams)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_SetRateMngDebug: called\n");
 
 	return cmdBld_CfgRateMngDbg (pTWD->hCmdBld, pRateMngParams, NULL, NULL);
 }
@@ -459,7 +427,6 @@ TI_STATUS TWD_CfgBeaconFilterTable (TI_HANDLE hTWD, TI_UINT8 uNumOfIe, TI_UINT8 
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgBeaconFilterTable: called\n");
 
 	return cmdBld_CfgBeaconFilterTable (pTWD->hCmdBld, uNumOfIe, pIeTable, uIeTableSize, NULL, NULL);
 }
@@ -468,7 +435,6 @@ TI_STATUS TWD_CfgWakeUpCondition (TI_HANDLE hTWD, TPowerMgmtConfig *pPowerMgmtCo
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgWakeUpCondition: called\n");
 
 	return cmdBld_CfgWakeUpCondition (pTWD->hCmdBld, pPowerMgmtConfig, NULL, NULL);
 }
@@ -477,7 +443,6 @@ TI_STATUS TWD_CfgBcnBrcOptions (TI_HANDLE hTWD, TPowerMgmtConfig *pPowerMgmtConf
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgBcnBrcOptions: called\n");
 
 	return cmdBld_CfgBcnBrcOptions (pTWD->hCmdBld, pPowerMgmtConfig, NULL, NULL);
 }
@@ -485,7 +450,6 @@ TI_STATUS TWD_CfgEnableMulticastMACFixup (TI_HANDLE hTWD, TI_UINT8 enableFixup)
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgEnableBroadcasts: called\n");
 
 	return cmdBld_CfgMulticastMACFixup (pTWD->hCmdBld, enableFixup, NULL, NULL);
 }
@@ -494,7 +458,6 @@ TFwInfo * TWD_GetFWInfo (TI_HANDLE hTWD)
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_GetFWInfo: called\n");
 
 	return cmdBld_GetFWInfo (pTWD->hCmdBld);
 }
@@ -503,7 +466,6 @@ TI_STATUS TWD_CmdSwitchChannel (TI_HANDLE hTWD, TSwitchChannelParams *pSwitchCha
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdSwitchChannel: called\n");
 
 	return cmdBld_CmdSwitchChannel (pTWD->hCmdBld, pSwitchChannelCmd, NULL, NULL);
 }
@@ -512,7 +474,6 @@ TI_STATUS TWD_CmdSwitchChannelCancel (TI_HANDLE hTWD, TI_UINT8 channel)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdSwitchChannelCancel: called\n");
 
 	return cmdBld_CmdSwitchChannelCancel (pTWD->hCmdBld, channel, NULL, NULL);
 }
@@ -521,7 +482,6 @@ TI_STATUS TWD_CfgMaxTxRetry (TI_HANDLE hTWD, TRroamingTriggerParams *pRoamingTri
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgMaxTxRetry: called\n");
 
 	return cmdBld_CfgMaxTxRetry (pTWD->hCmdBld, pRoamingTriggerCmd, NULL, NULL);
 }
@@ -530,7 +490,6 @@ TI_STATUS TWD_CfgConnMonitParams (TI_HANDLE hTWD, TRroamingTriggerParams *pRoami
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgConnMonitParams: called\n");
 
 	return cmdBld_CfgConnMonitParams (pTWD->hCmdBld, pRoamingTriggerCmd, NULL, NULL);
 }
@@ -539,7 +498,6 @@ TI_STATUS TWD_ItrRSSI (TI_HANDLE hTWD, void *fCb, TI_HANDLE hCb, void *pCb)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_ItrRSSI: called\n");
 
 	return cmdBld_ItrRSSI (pTWD->hCmdBld, fCb, hCb, pCb);
 }
@@ -564,7 +522,6 @@ TI_STATUS TWD_CmdMeasurement (TI_HANDLE           hTWD,
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdMeasurement: called\n");
 
 	return cmdBld_CmdMeasurement (pTWD->hCmdBld, pMeasurementParams, fCommandResponseCb, hCb);
 }
@@ -573,7 +530,6 @@ TI_STATUS TWD_CmdMeasurementStop (TI_HANDLE hTWD, void* fCb, TI_HANDLE hCb)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdMeasurementStop: called\n");
 
 	return cmdBld_CmdMeasurementStop (pTWD->hCmdBld, fCb, hCb);
 }
@@ -582,7 +538,6 @@ TI_STATUS TWD_CmdApDiscovery (TI_HANDLE hTWD, TApDiscoveryParams *pApDiscoveryPa
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdApDiscovery: called\n");
 
 	return cmdBld_CmdApDiscovery (pTWD->hCmdBld, pApDiscoveryParams, NULL, NULL);
 }
@@ -591,7 +546,6 @@ TI_STATUS TWD_CmdApDiscoveryStop (TI_HANDLE hTWD)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdApDiscoveryStop: called\n");
 
 	return cmdBld_CmdApDiscoveryStop (pTWD->hCmdBld, NULL, NULL);
 }
@@ -603,7 +557,6 @@ TI_STATUS TWD_CfgGroupAddressTable (TI_HANDLE     hTWD,
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgGroupAddressTable: called\n");
 
 	return cmdBld_CfgGroupAddressTable (pTWD->hCmdBld, uNumGroupAddrs, pGroupAddr, bEnabled, NULL, NULL);
 }
@@ -612,7 +565,6 @@ TI_STATUS TWD_GetGroupAddressTable (TI_HANDLE hTWD, TI_UINT8* pEnabled, TI_UINT8
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_GetGroupAddressTable: called\n");
 
 	return cmdBld_GetGroupAddressTable (pTWD->hCmdBld, pEnabled, pNumGroupAddrs, pGroupAddr);
 }
@@ -621,7 +573,6 @@ TI_STATUS TWD_SetRadioBand (TI_HANDLE hTWD, ERadioBand eRadioBand)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_SetRadioBand: called\n");
 
 	return cmdBld_SetRadioBand (pTWD->hCmdBld, eRadioBand);
 }
@@ -630,7 +581,6 @@ TI_STATUS TWD_CfgSleepAuth (TI_HANDLE hTWD, EPowerPolicy eMinPowerPolicy)
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgSleepAuth: called\n");
 
 	/* Configure the new power policy to the FW */
 	cmdBld_CfgSleepAuth (pTWD->hCmdBld, eMinPowerPolicy, NULL, NULL);
@@ -642,7 +592,6 @@ TI_STATUS TWD_CfgBurstMode (TI_HANDLE hTWD, TI_BOOL bEnabled)
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "cmdBld_CfgBurstMode: called\n");
 
 	/* Configure the burst mode to the FW */
 	cmdBld_CfgBurstMode (pTWD->hCmdBld, bEnabled, NULL, NULL);
@@ -656,7 +605,6 @@ TI_STATUS TWD_CmdHealthCheck (TI_HANDLE hTWD)
 {
 	TTwd   *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CmdHealthCheck: called\n");
 
 	return cmdBld_CmdHealthCheck (pTWD->hCmdBld, NULL, NULL);
 }
@@ -665,7 +613,6 @@ TI_STATUS TWD_CfgMacClock (TI_HANDLE hTWD, TI_UINT32 uMacClock)
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgMacClock: called\n");
 
 	return cmdBld_CfgMacClock (pTWD->hCmdBld, uMacClock, NULL, NULL);
 }
@@ -674,7 +621,6 @@ TI_STATUS TWD_CfgArmClock (TI_HANDLE hTWD, TI_UINT32 uArmClock)
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgArmClock: called\n");
 
 	return cmdBld_CfgArmClock (pTWD->hCmdBld, uArmClock, NULL, NULL);
 }
@@ -683,7 +629,6 @@ TI_STATUS TWD_ItrMemoryMap (TI_HANDLE hTWD, MemoryMap_t *pMap, void *fCb, TI_HAN
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_ItrMemoryMap: called\n");
 
 	return cmdBld_ItrMemoryMap (pTWD->hCmdBld, pMap, fCb, hCb);
 }
@@ -692,7 +637,6 @@ TI_STATUS TWD_ItrStatistics (TI_HANDLE hTWD, void *fCb, TI_HANDLE hCb, void *pCb
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_ItrStatistics: called\n");
 
 	return cmdBld_ItrStatistics (pTWD->hCmdBld, fCb, hCb, pCb);
 }
@@ -701,7 +645,6 @@ TI_STATUS TWD_ItrDataFilterStatistics (TI_HANDLE hTWD, void *fCb, TI_HANDLE hCb,
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_ItrDataFilterStatistics: called\n");
 
 	return cmdBld_ItrDataFilterStatistics (pTWD->hCmdBld, fCb, hCb, pCb);
 }
@@ -710,7 +653,6 @@ TI_STATUS TWD_CfgEnableRxDataFilter (TI_HANDLE hTWD, TI_BOOL bEnabled, filter_e 
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgEnableRxDataFilter: called\n");
 
 	return cmdBld_CfgEnableRxDataFilter (pTWD->hCmdBld, bEnabled, eDefaultAction, NULL, NULL);
 }
@@ -725,7 +667,6 @@ TI_STATUS TWD_CfgRxDataFilter (TI_HANDLE    hTWD,
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgRxDataFilter: called\n");
 
 	return cmdBld_CfgRxDataFilter (pTWD->hCmdBld,
 	                               index,
@@ -742,7 +683,6 @@ TI_STATUS TWD_CfgRssiSnrTrigger (TI_HANDLE hTWD, RssiSnrTriggerCfg_t* pRssiSnrTr
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgRssiSnrTrigger: called\n");
 
 	return cmdBld_CfgRssiSnrTrigger (pTWD->hCmdBld, pRssiSnrTrigger, NULL, NULL);
 }
@@ -751,7 +691,6 @@ TI_STATUS TWD_CfgAcParams (TI_HANDLE hTWD, TAcQosParams *pAcQosParams, void *fCb
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgAcParams: called\n");
 
 	return cmdBld_CfgAcParams (pTWD->hCmdBld, pAcQosParams, fCb, hCb);
 }
@@ -760,7 +699,7 @@ TI_STATUS TWD_CfgPsRxStreaming (TI_HANDLE hTWD, TPsRxStreaming *pPsRxStreaming, 
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgPsRxStreaming: called\n");
+
 
 	return cmdBld_CfgPsRxStreaming (pTWD->hCmdBld, pPsRxStreaming, fCb, hCb);
 }
@@ -769,7 +708,7 @@ TI_STATUS TWD_CfgBet (TI_HANDLE hTWD, TI_UINT8 Enable, TI_UINT8 MaximumConsecuti
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgBet: called\n");
+
 
 	return cmdBld_CfgBet (pTWD->hCmdBld, Enable, MaximumConsecutiveET, NULL, NULL);
 }
@@ -778,7 +717,6 @@ TI_STATUS TWD_SetSecuritySeqNum (TI_HANDLE hTWD, TI_UINT8 securitySeqNumLsByte)
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_SetSecuritySeqNum: called\n");
 
 	return cmdBld_SetSecuritySeqNum (pTWD->hCmdBld, securitySeqNumLsByte);
 }
@@ -797,7 +735,6 @@ TI_STATUS TWD_CfgSetFwHtCapabilities (TI_HANDLE hTWD,
 	   since we only support HT in infrastructure mode. Later on this field will be relevant to IBSS/DLS operation */
 	TMacAddr    tMacAddress = {0xff,0xff,0xff,0xff,0xff,0xff};
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgSetFwHtCapabilities: called\n");
 
 	/* Allow HT Operation ? */
 	if (bAllowHtOperation == TI_TRUE) {
@@ -840,7 +777,6 @@ TI_STATUS TWD_CfgSetFwHtInformation (TI_HANDLE hTWD, Tdot11HtInformationUnparse 
 	TI_UINT8    uHtTxBurstLimit;
 	TI_UINT8    uDualCtsProtection;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgSetFwHtInformation: called\n");
 
 	uRifsMode = (pHtInformationIe->aHtInformationIe[1] & HT_INF_RIFS_MOD_BITMASK) >> 3;
 
@@ -872,7 +808,6 @@ TI_STATUS TWD_CfgSetBaInitiator (TI_HANDLE hTWD,
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgSetBaInitiator: called\n");
 
 	return cmdBld_CfgSetBaSession (pTWD->hCmdBld,
 	                               ACX_BA_SESSION_INITIATOR_POLICY,
@@ -893,7 +828,6 @@ TI_STATUS TWD_CfgSetBaReceiver (TI_HANDLE hTWD,
 {
 	TTwd *pTWD = (TTwd *)hTWD;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CfgSetBaReceiver: called\n");
 
 	return cmdBld_CfgSetBaSession (pTWD->hCmdBld,
 	                               ACX_BA_SESSION_RESPONDER_POLICY,
@@ -911,7 +845,6 @@ void TWD_CloseAllBaSessions(TI_HANDLE hTWD)
 	TTwd        *pTWD = (TTwd *)hTWD;
 	TI_UINT32    i;
 
-	TRACE0(pTWD->hReport, REPORT_SEVERITY_INFORMATION , "TWD_CloseAllBaSessions: called\n");
 
 	/* close all BA sessions */
 	for (i=0; i <MAX_NUM_OF_802_1d_TAGS; ++i) {

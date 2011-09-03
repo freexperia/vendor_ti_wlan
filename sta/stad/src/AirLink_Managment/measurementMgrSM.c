@@ -246,8 +246,6 @@ TI_STATUS measurementMgrSM_config(TI_HANDLE hMeasurementMgr)
 
 	};
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Configured MeasurementMgr state machine\n");
-
 	status = fsm_Config(pMeasurementMgr->pMeasurementMgrSm,
 	                    &measurementMgr_matrix[0][0],
 	                    MEASUREMENTMGR_NUM_STATES,
@@ -278,12 +276,10 @@ TI_STATUS measurementMgrSM_event(TI_UINT8 * currentState, TI_UINT8 event, TI_HAN
 	                          *currentState, event, &nextState);
 
 	if (status != TI_OK) {
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": State machine error, failed getting next state\n");
 
 		return(TI_NOK);
 	}
 
-	TRACE3(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, "measurementMgrSM_event: <currentState = %d, event = %d> --> nextState = %d\n", currentState, event, nextState);
 
 	status = fsm_Event(pMeasurementMgr->pMeasurementMgrSm, currentState, event, (void *) pMeasurementMgr);
 
@@ -322,14 +318,12 @@ static TI_STATUS measurementMgrSM_acConnected(void * pData)
 
 	/* do nothing if we're already in connected mode */
 	if (pMeasurementMgr->Connected) {
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Connected flag already set\n");
 
 		return TI_OK;
 	}
 
 	pMeasurementMgr->Connected = TI_TRUE;
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Connected flag has been set\n");
 
 	/* upon connection to a new AP set the measurment scan flag to FALSE */
 	pMeasurementMgr->bMeasurementScanExecuted = TI_FALSE;
@@ -341,7 +335,6 @@ static TI_STATUS measurementMgrSM_acConnected(void * pData)
 
 #ifdef XCC_MODULE_INCLUDED
 	if (pMeasurementMgr->Mode == MSR_MODE_XCC) {
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": MeasurementMgr set to XCC mode\n");
 
 		if (pMeasurementMgr->isModuleRegistered == TI_FALSE) {
 			/* Registering to the XCCMngr */
@@ -350,7 +343,6 @@ static TI_STATUS measurementMgrSM_acConnected(void * pData)
 
 			if (XCCMngr_registerForRecvIappPacket(pMeasurementMgr->hXCCMngr,
 			                                      iappParsingRegistration, IAPP_RADIO_MEASUREMENT) != TI_OK) {
-				TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_WARNING, ": Could not register to receive IAPP packets\n");
 
 				return TI_NOK;
 			}
@@ -369,7 +361,6 @@ static TI_STATUS measurementMgrSM_acConnected(void * pData)
 #endif
 	{
 		if (pMeasurementMgr->Mode == MSR_MODE_SPECTRUM_MANAGEMENT) {
-			TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": MeasurementMgr set to Spectrum Management mode\n");
 
 			/* NOTE: These 5 functions need to be corrected to fit the 802.11h standered */
 			pMeasurementMgr->parserFrameReq = measurementMgr_dot11hParseFrameReq;
@@ -398,7 +389,6 @@ static TI_STATUS measurementMgrSM_acDisconnected_fromIdle(void * pData)
 {
 	measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) pData;
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Connected flag unset\n");
 
 	pMeasurementMgr->Connected = TI_FALSE;
 
@@ -416,7 +406,6 @@ static TI_STATUS measurementMgrSM_acEnable(void * pData)
 {
 	measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) pData;
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Measurement Manager has been enabled\n");
 
 	pMeasurementMgr->Enabled = TI_TRUE;
 
@@ -434,7 +423,6 @@ static TI_STATUS measurementMgrSM_acDisable_fromIdle(void * pData)
 {
 	measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) pData;
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Measurement Manager has been disabled\n");
 
 	pMeasurementMgr->Enabled = TI_FALSE;
 
@@ -459,7 +447,6 @@ static TI_STATUS measurementMgrSM_acFrameReceived_fromIdle(void * pData)
 	/* handle frame request only if we're connected and measurement is enabled */
 	if (pMeasurementMgr->Connected == TI_FALSE ||
 	        pMeasurementMgr->Enabled == TI_FALSE) {
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, ": Frame received while SM is in disconnected/disabled state\n");
 
 		return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
 		                              MEASUREMENTMGR_EVENT_ABORT, pMeasurementMgr);
@@ -468,13 +455,11 @@ static TI_STATUS measurementMgrSM_acFrameReceived_fromIdle(void * pData)
 	/* Setting the frame Type */
 	pMeasurementMgr->currentFrameType = pMeasurementMgr->newFrameRequest.frameType;
 
-	TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Frame Type = %d\n", pMeasurementMgr->currentFrameType);
 
 	/* Getting the Beacon Interval from the Site Mgr */
 	param.paramType = SITE_MGR_BEACON_INTERVAL_PARAM;
 	status = siteMgr_getParam(pMeasurementMgr->hSiteMgr, &param);
 	if (status != TI_OK) {
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, ": Failed to retrieve beacon interval - not connected?\n");
 
 		return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
 		                              MEASUREMENTMGR_EVENT_ABORT, pMeasurementMgr);
@@ -501,13 +486,11 @@ static TI_STATUS measurementMgrSM_acFrameReceived_fromIdle(void * pData)
 	if (status != TI_OK) {
 		pMeasurementMgr->currentFrameType = MSR_FRAME_TYPE_NO_ACTIVE;
 
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, ": Could not insert request into the queue\n");
 
 		return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
 		                              MEASUREMENTMGR_EVENT_ABORT, pMeasurementMgr);
 	}
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": New frame has been inserted into the queue\n");
 
 	/* If frame type isn't Unicast add to Activation Delay a random delay */
 	if ((pMeasurementMgr->currentFrameType != MSR_FRAME_TYPE_UNICAST) && (activationDelay > 0)) {
@@ -515,10 +498,8 @@ static TI_STATUS measurementMgrSM_acFrameReceived_fromIdle(void * pData)
 		                    + MSR_ACTIVATION_DELAY_OFFSET);
 	}
 
-	TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Activation Delay in ms = %d\n", activationDelay);
 
 	if (activationDelay > 0) {
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Going to wait for activation delay timer callback\n");
 
 		/* Starting the Activation Delay Timer */
 		tmr_StartTimer (pMeasurementMgr->hActivationDelayTimer,
@@ -529,7 +510,6 @@ static TI_STATUS measurementMgrSM_acFrameReceived_fromIdle(void * pData)
 
 		return TI_OK;
 	} else {
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Activating the next request immediately without waiting for callback\n");
 
 		/* Calling to schedule the first waiting request */
 		return measurementMgr_activateNextRequest(pData);
@@ -621,7 +601,6 @@ static TI_STATUS measurementMgrSM_acSendReportAndCleanObj(void * pData)
 {
 	measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) pData;
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Sending pending reports and cleaning up...\n");
 
 	return pMeasurementMgr->sendReportAndCleanObj(pData);
 }
@@ -637,7 +616,6 @@ static TI_STATUS measurementMgrSM_acAbort_fromProcessingRequest(void * pData)
 {
 	measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) pData;
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Entered\n");
 
 	/* Stopping the activationDelay Timer */
 	tmr_StopTimer (pMeasurementMgr->hActivationDelayTimer);
@@ -666,20 +644,17 @@ static TI_STATUS measurementMgrSM_acRequestSCR(void * pData)
 	                              SCR_RESOURCE_SERVING_CHANNEL, &scrPendReason);
 
 	if (scrStatus == SCR_CRS_RUN) {
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Received RUN response from SCR\n");
 
 		/* The channel is allocated for the measurement */
 		return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
 		                              MEASUREMENTMGR_EVENT_SCR_RUN, pMeasurementMgr);
 	} else if ((scrStatus == SCR_CRS_PEND) && (scrPendReason == SCR_PR_DIFFERENT_GROUP_RUNNING)) {
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Received PEND/DIFFGROUP response from SCR\n");
 
 		/* No need to wait for the channel allocation */
 		return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
 		                              MEASUREMENTMGR_EVENT_ABORT, pMeasurementMgr);
 	}
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Going to wait for SCR callback...\n");
 
 	/* In all other cases wait for the callback function to be called */
 	return TI_OK;
@@ -815,7 +790,6 @@ static TI_STATUS measurementMgrSM_acStartMeasurement(void * pData)
 	TI_BOOL requestedBeaconMeasurement= TI_FALSE;
 	TI_STATUS status;
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Starting Measurement operation\n");
 
 	pParam = (paramInfo_t *)os_memoryAlloc(pMeasurementMgr->hOs, sizeof(paramInfo_t));
 	if (!pParam) {
@@ -826,7 +800,6 @@ static TI_STATUS measurementMgrSM_acStartMeasurement(void * pData)
 	request.startTime = 0;	/* ignored by MeasurementSRV for now - for .11k */
 	request.numberOfTypes = 0;
 
-	TRACE1(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Measured Channel = %d\n", pMeasurementMgr->measuredChannelID);
 
 	pParam->paramType = REGULATORY_DOMAIN_GET_SCAN_CAPABILITIES;
 	pParam->content.channelCapabilityReq.channelNum = pMeasurementMgr->measuredChannelID;
@@ -847,14 +820,12 @@ static TI_STATUS measurementMgrSM_acStartMeasurement(void * pData)
 	request.eTag = SCAN_RESULT_TAG_MEASUREMENT;
 	os_memoryFree(pMeasurementMgr->hOs, pParam, sizeof(paramInfo_t));
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Querying Request Handler for the next request in the queue\n");
 
 	/* Getting the next request/requests from the request handler */
 	status = requestHandler_getNextReq(pMeasurementMgr->hRequestH, TI_TRUE, pRequestArr,
 	                                   &numOfRequestsInParallel);
 
 	if (status != TI_OK) {
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_ERROR, ": Failed getting next request from Request Handler\n");
 
 		return measurementMgrSM_event((TI_UINT8 *) &(pMeasurementMgr->currentState),
 		                              MEASUREMENTMGR_EVENT_COMPLETE, pMeasurementMgr);
@@ -870,7 +841,6 @@ static TI_STATUS measurementMgrSM_acStartMeasurement(void * pData)
 			requestedBeaconMeasurement = TI_TRUE;
 
 			if (pRequestArr[requestIndex]->ScanMode == MSR_SCAN_MODE_BEACON_TABLE) {
-				TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Beacon Table request encountered, building report now\n");
 
 				/* building Report for beacon table request */
 				pMeasurementMgr->buildReport(pMeasurementMgr, *pRequestArr[requestIndex], NULL);
@@ -887,7 +857,6 @@ static TI_STATUS measurementMgrSM_acStartMeasurement(void * pData)
 		request.msrTypes[request.numberOfTypes].scanMode = pRequestArr[requestIndex]->ScanMode;
 		request.msrTypes[request.numberOfTypes].msrType = pRequestArr[requestIndex]->Type;
 
-		TRACE3(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ":\n\nMeasurement Request #%d Details: Type = %d, Duration = %d\n\n",						request.numberOfTypes+1,						request.msrTypes[request.numberOfTypes].msrType,						request.msrTypes[request.numberOfTypes].duration);
 
 		request.numberOfTypes++;
 	}
@@ -904,7 +873,6 @@ static TI_STATUS measurementMgrSM_acStartMeasurement(void * pData)
 		templateStruct.uRateMask = RATE_MASK_UNSPECIFIED;
 		broadcastSSID.len = 0;
 
-		TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Sending probe request template...\n");
 
 		buildProbeReqTemplate( pMeasurementMgr->hSiteMgr, &templateStruct, &broadcastSSID, request.band );
 #ifdef XCC_MODULE_INCLUDED
@@ -924,7 +892,6 @@ static TI_STATUS measurementMgrSM_acStartMeasurement(void * pData)
 	/* finish has already passed */
 	timePassed = os_timeStampMs(pMeasurementMgr->hOs) - pMeasurementMgr->currentRequestStartTime;
 	if (timePassed > MSR_START_MAX_DELAY) {
-		TRACE2(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Maximum delay to perform measurement operation has passed (%d / %d)\n",						MSR_START_MAX_DELAY, (os_timeStampMs(pMeasurementMgr->hOs) - pMeasurementMgr->currentRequestStartTime));
 
 		pMeasurementMgr->buildRejectReport(pMeasurementMgr, pRequestArr, numOfRequestsInParallel, MSR_REJECT_MAX_DELAY_PASSED);
 
@@ -936,7 +903,6 @@ static TI_STATUS measurementMgrSM_acStartMeasurement(void * pData)
 	pMeasurementMgr->bMeasurementScanExecuted = TI_TRUE;
 
 	/* Yalla, start measuring */
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Finished preparing request. Handing over to MeasurementSRV...\n");
 
 	TWD_StartMeasurement (pMeasurementMgr->hTWD,
 	                      &request,
@@ -1043,11 +1009,9 @@ static TI_STATUS measurementMgrSM_acMeasurementComplete(void * pData)
 	measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) pData;
 	requestHandler_t * pRequestH = (requestHandler_t *) pMeasurementMgr->hRequestH;
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Completing measurement operation and resuming normal behavior\n");
 
 	/* advance the activeRequestID variable to get rid of the */
 	/* measurement requests we've already executed */
-	TRACE2(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Increasing activeRequestID from %d to %d.\n", pRequestH->activeRequestID, pRequestH->activeRequestID + pMeasurementMgr->currentNumOfRequestsInParallel);
 
 	pRequestH->activeRequestID += pMeasurementMgr->currentNumOfRequestsInParallel;
 
@@ -1074,7 +1038,6 @@ static TI_STATUS measurementMgrSM_acFirmwareReset(void * pData)
 {
 	measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) pData;
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Firmware Reset!!\n");
 
 	setDefaultProbeReqTemplate (pMeasurementMgr->hSiteMgr);
 
@@ -1104,10 +1067,6 @@ static TI_STATUS measurementMgrSM_acFirmwareReset(void * pData)
  */
 static TI_STATUS measurementMgrSM_acUnexpected(void * pData)
 {
-	measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) pData;
-
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Entered when state is \n");
-
 	return TI_OK;
 }
 
@@ -1118,10 +1077,6 @@ static TI_STATUS measurementMgrSM_acUnexpected(void * pData)
  */
 static TI_STATUS measurementMgrSM_acNop(void * pData)
 {
-	measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) pData;
-
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Entered when state is \n");
-
 	return TI_OK;
 }
 
@@ -1170,7 +1125,6 @@ static void	measurementMgrSM_uponActivationDelayTimeout (TI_HANDLE hMeasurementM
 {
 	measurementMgr_t * pMeasurementMgr = (measurementMgr_t *)hMeasurementMgr;
 
-	TRACE0(pMeasurementMgr->hReport, REPORT_SEVERITY_INFORMATION, ": Activation delay timeout callback entered\n");
 
 	measurementMgr_activateNextRequest (pMeasurementMgr);
 }

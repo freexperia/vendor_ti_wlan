@@ -267,9 +267,6 @@ TI_STATUS buildProbeReqTemplate(siteMgr_t *pSiteMgr, TSetTemplate *pTemplate, TS
 	/* SSID */
 	/* It looks like it never happens. Anyway decided to check */
 	if ( pSsid->len > MAX_SSID_LEN ) {
-		TRACE2( pSiteMgr->hReport, REPORT_SEVERITY_ERROR,
-		        "buildProbeReqTemplate. pSsid->len=%d exceeds the limit %d\n",
-		        pSsid->len, MAX_SSID_LEN);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return TI_NOK;
 	}
@@ -296,7 +293,6 @@ TI_STATUS buildProbeReqTemplate(siteMgr_t *pSiteMgr, TSetTemplate *pTemplate, TS
 		/* Extended: 9,18,24,36,48,54 */
 		supportedRateMask = rate_SupportedToDrvBitmap((ESupportedRateSet)(pSiteMgr->pDesiredParams->siteMgrRegstrySuppRate[DOT11_A_MODE]), TI_TRUE);
 	} else {
-		TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_ERROR, "buildProbeReqTemplate, radioBand =%d ???\n",radioBand);
 		/* Use default and pray for the best */
 		/* Basic rates: 1,2,5.5,11 */
 		basicRateMask = rate_BasicToDrvBitmap(BASIC_RATE_SET_1_2_5_5_11, TI_FALSE);
@@ -306,13 +302,9 @@ TI_STATUS buildProbeReqTemplate(siteMgr_t *pSiteMgr, TSetTemplate *pTemplate, TS
 
 	rate_DrvBitmapToNetStr (supportedRateMask, basicRateMask, ratesBuf, &len, &ofdmIndex);
 
-	TRACE5(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "buildProbeReqTemplate, supportedRateMask=0x%x, basicRateMask=0x%x, len=%d, ofdmIndex=%d, radioBand =%d\n",							 supportedRateMask,basicRateMask,len, ofdmIndex, radioBand);
 
 	/* It looks like it never happens. Anyway decided to check */
 	if ( len > DOT11_MAX_SUPPORTED_RATES ) {
-		TRACE2( pSiteMgr->hReport, REPORT_SEVERITY_ERROR,
-		        "buildProbeReqTemplate. len=%d exceeds the limit %d\n",
-		        len, DOT11_MAX_SUPPORTED_RATES);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return TI_NOK;
 	}
@@ -454,9 +446,6 @@ TI_STATUS buildProbeRspTemplate(siteMgr_t *pSiteMgr, TSetTemplate *pTemplate)
 	/* SSID IE */
 	/* It looks like it never happens. Anyway decided to check */
 	if ( pPrimarySite->ssid.len > MAX_SSID_LEN ) {
-		TRACE2( pSiteMgr->hReport, REPORT_SEVERITY_ERROR,
-		        "buildProbeRspTemplate. pPrimarySite->ssid.len=%d exceeds the limit %d\n",
-		        pPrimarySite->ssid.len, MAX_SSID_LEN);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return TI_NOK;
 	}
@@ -582,7 +571,6 @@ TI_STATUS buildProbeRspTemplate(siteMgr_t *pSiteMgr, TSetTemplate *pTemplate)
 	/* no need to insert RSN information elements */
 
 	pTemplate->len = size;
-	TRACE1(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "Probe response template len = %d\n",size);
 
 	return TI_OK;
 }
@@ -692,8 +680,6 @@ TI_STATUS buildQosNullDataTemplate(siteMgr_t *pSiteMgr, TSetTemplate *pTemplate,
 
 		/* Set BSSID address */
 		MAC_COPY (pBuffer->hdr.address3, pPrimarySite->bssid);
-	} else {
-		TRACE0(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "No Primary site so cannot fill QosNullData template\n");
 	}
 
 	/* Build Source address */
@@ -769,8 +755,6 @@ TI_STATUS buildArpRspTemplate(siteMgr_t *pSiteMgr, TSetTemplate *pTemplate, TIpA
 	/* - Set BSSID */
 	if (pPrimarySite) {
 		MAC_COPY (pBuffer->hdr.address1, pPrimarySite->bssid);
-	} else {
-		TRACE0(pSiteMgr->hReport, REPORT_SEVERITY_INFORMATION, "No Primary site so cannot fill QosNullData template.\n");
 	}
 	/* - Set Source Address */
 	param.paramType = CTRL_DATA_MAC_ADDRESS;

@@ -170,7 +170,6 @@ TI_STATUS keyParserNone_config(keyParser_t *pKeyParser)
 
 TI_STATUS keyParser_nop(keyParser_t *pKeyParser)
 {
-	TRACE0(pKeyParser->hReport, REPORT_SEVERITY_INFORMATION, "KEY_PARSER: nop \n");
 
 	return TI_OK;
 }

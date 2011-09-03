@@ -188,11 +188,9 @@ TI_STATUS conn_ibssSMEvent(TI_UINT8 *currentState, TI_UINT8 event, TI_HANDLE hCo
 
 	status = fsm_GetNextState(pConn->ibss_pFsm, *currentState, event, &nextState);
 	if (status != TI_OK) {
-		TRACE0(pConn->hReport, REPORT_SEVERITY_SM, "IBSS State machine error, failed getting next state\n");
 		return(TI_NOK);
 	}
 
-	TRACE3( pConn->hReport, REPORT_SEVERITY_INFORMATION, "conn_ibssSMEvent: <currentState = %d, event = %d> --> nextState = %d\n", *currentState, event, nextState);
 	status = fsm_Event(pConn->ibss_pFsm, currentState, event, (void *)pConn);
 
 	return status;
@@ -352,11 +350,6 @@ RETURN:     TI_OK on success, TI_NOK otherwise
 ************************************************************************/
 static TI_STATUS actionUnexpected(void *pData)
 {
-#ifdef TI_DBG
-	conn_t *pConn = (conn_t *)pData;
-
-	TRACE0(pConn->hReport, REPORT_SEVERITY_SM, "State machine error, unexpected Event\n\n");
-#endif /*TI_DBG*/
 
 	return TI_OK;
 }

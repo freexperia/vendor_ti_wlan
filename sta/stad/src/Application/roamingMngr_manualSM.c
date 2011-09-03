@@ -245,7 +245,6 @@ static void roamingMngr_SendReassocEvent(TI_HANDLE hRoamingMngr, reassociationRe
 {
 	roamingMngr_t  *pRoamingMngr = (roamingMngr_t*) hRoamingMngr;
 
-	TRACE1(pRoamingMngr->hReport, REPORT_SEVERITY_INFORMATION, "roamingMngr_SendReassocEvent(): %d \n", ReassResp);
 	EvHandlerSendEvent(pRoamingMngr->hEvHandler,
 	                   IPC_EVENT_REASSOCIATION_RESP,
 	                   (TI_UINT8*)(&ReassResp),

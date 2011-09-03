@@ -176,7 +176,6 @@ TI_STATUS StaCap_GetHtCapabilitiesIe (TI_HANDLE hStaCap, TI_UINT8 *pRequest, TI_
 	/* verify that WME flag enable */
 	qosMngr_GetWmeEnableFlag (pStaCap->hQosMngr, &bWmeEnable);
 	if (bWmeEnable == TI_FALSE) {
-		TRACE0(pStaCap->hReport, REPORT_SEVERITY_INFORMATION, "StaCap_GetHtCapabilitiesIe: 802.11n disable due to WME init flag.\n");
 		*pLen = 0;
 		return TI_OK;
 	}
@@ -184,7 +183,6 @@ TI_STATUS StaCap_GetHtCapabilitiesIe (TI_HANDLE hStaCap, TI_UINT8 *pRequest, TI_
 	TWD_GetTwdHtCapabilities (pStaCap->hTWD, &pTwdHtCapabilities);
 	/* verify that 802.11n flag enable */
 	if (pTwdHtCapabilities->b11nEnable == TI_FALSE) {
-		TRACE0(pStaCap->hReport, REPORT_SEVERITY_INFORMATION, "StaCap_GetHtCapabilitiesIe: 802.11n disable due to 11n_Enable init flag.\n");
 		*pLen = 0;
 		return TI_OK;
 	}

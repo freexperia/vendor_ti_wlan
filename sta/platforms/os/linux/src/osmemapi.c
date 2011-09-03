@@ -108,9 +108,6 @@ _os_memoryAlloc(
 	__u32 total_size = Size + sizeof(struct os_mem_block) + sizeof(__u32);
 	gfp_t flags = (in_atomic()) ? GFP_ATOMIC : GFP_KERNEL;
 
-#ifdef TI_MEM_ALLOC_TRACE
-	os_printf("MTT:%s:%d ::os_memoryAlloc(0x%p, %lu) : %lu\n",FileNbr, LineNbr ,OsContext,Size,total_size);
-#endif
 	/*
 	Memory optimization issue. Allocate up to 2 pages (8k) from the SLAB
 	    allocator (2^n), otherwise allocate from virtual pool.
@@ -182,9 +179,6 @@ _os_memoryCAlloc(
 	void* pAllocatedMem;
 	TI_UINT32 MemSize;
 
-#ifdef TI_MEM_ALLOC_TRACE
-	os_printf("MTT:%s:%d ::os_memoryCAlloc(0x%p, %lu, %lu) : %lu\n",__FUNCTION__,__LINE__,OsContext,Number,Size,Number*Size);
-#endif
 	MemSize = Number * Size;
 
 	pAllocatedMem = _os_memoryAlloc(OsContext, MemSize, FileNbr, LineNbr);
@@ -235,9 +229,6 @@ _os_memoryFree(
 	}
 	blk = (struct os_mem_block *)((char *)pMemPtr - sizeof(struct os_mem_block));
 
-#ifdef TI_MEM_ALLOC_TRACE
-	os_printf("MTT:%s:%d ::os_memoryFree(0x%p, 0x%p, %lu) : %d\n",__FUNCTION__,__LINE__,OsContext,pMemPtr,Size,-Size);
-#endif
 	if (blk->signature != MEM_BLOCK_START) {
 		printk(KERN_ERR "\n\n%s: memory block signature is incorrect - 0x%x %d %d %d %d \n\n\n",
 		       __FUNCTION__, blk->signature, blk->allocFile, blk->allocLine, blk->deallocFile, blk->deallocLine);

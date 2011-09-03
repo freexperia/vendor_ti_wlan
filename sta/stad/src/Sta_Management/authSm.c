@@ -156,10 +156,6 @@ TI_STATUS auth_unload(TI_HANDLE hAuth)
 	pHandle = (auth_t*)hAuth;
 
 	status = fsm_Unload(pHandle->hOs, pHandle->pAuthSm);
-	if (status != TI_OK) {
-		/* report failure but don't stop... */
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "AUTH_SM: Error releasing FSM memory \n");
-	}
 
 	if (pHandle->hAuthSmTimer) {
 		tmr_DestroyTimer (pHandle->hAuthSmTimer);
@@ -216,7 +212,6 @@ TI_STATUS auth_SetDefaults (TI_HANDLE hAuth, authInitParams_t *pAuthInitParams)
 	/* allocate OS timer memory */
 	pHandle->hAuthSmTimer = tmr_CreateTimer (pHandle->hTimer);
 	if (pHandle->hAuthSmTimer == NULL) {
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "auth_SetDefaults(): Failed to create hAuthSmTimer!\n");
 		return TI_NOK;
 	}
 
@@ -251,7 +246,6 @@ TI_STATUS auth_start(TI_HANDLE hAuth)
 	}
 
 	if (pHandle->authType == AUTH_LEGACY_NONE) {
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "auth_start: pHandle->authType == AUTH_LEGACY_NONE\n");
 		return TI_NOK;
 	}
 
@@ -264,7 +258,6 @@ TI_STATUS auth_start(TI_HANDLE hAuth)
 		return auth_skSMEvent(&pHandle->currentState, SHARED_KEY_AUTH_SM_EVENT_START, pHandle);
 
 	default:
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "auth_start: pHandle->authType unknown.\n");
 		return TI_NOK;
 	}
 }

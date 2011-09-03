@@ -118,8 +118,6 @@ static void scanMngr_reportContinuousScanResults (TI_HANDLE hScanMngr,	EScanCncn
 		BssListEx.pListOfAPs = scanMngr_getBSSList(hScanMngr);
 		BssListEx.scanIsRunning = pScanMngr->bContinuousScanStarted; /* false = stopped */
 		EvHandlerSendEvent(pScanMngr->hEvHandler, IPC_EVENT_CONTINUOUS_SCAN_REPORT, (TI_UINT8*)&BssListEx, sizeof(BssListEx_t));
-	} else {
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_ERROR, "scanMngr_reportContinuousScanResults failed. scan status %d\n", resultStatus);
 	}
 }
 
@@ -172,8 +170,6 @@ void scanMngr_immedScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStat
 	TScanBandPolicy* aPolicy;
 	EScanCncnResultStatus nextResultStatus;
 
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_immedScanCB called, hScanMngr=0x%x, resultStatus=%d", hScanMngr, resultStatus);
-
 	switch (resultStatus) {
 		/* if this function is called because a frame was received, update the BSS list accordingly */
 	case SCAN_CRS_RECEIVED_FRAME:
@@ -206,7 +202,6 @@ void scanMngr_immedScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStat
 					    scanCncn_Start1ShotScan( pScanMngr->hScanCncn, SCAN_SCC_ROAMING_IMMED, &(pScanMngr->scanParams));
 					if ( SCAN_CRS_SCAN_RUNNING != nextResultStatus ) {
 						pScanMngr->immedScanState = SCAN_ISS_IDLE;
-						TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Failed to start immediate scan on band A, return code %d.\n", resultStatus);
 #ifdef TI_DBG
 						pScanMngr->stats.ImmediateAByStatus[ nextResultStatus ]++;
 #endif
@@ -249,8 +244,6 @@ void scanMngr_immedScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStat
 			break;
 
 		default:
-			/* should not be at any other stage when CB is invoked */
-			TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Immediate scan CB called with scan complete TI_OK reason in state:%d", pScanMngr->immedScanState);
 
 			/* reset continuous scan to idle */
 			pScanMngr->immedScanState = SCAN_ISS_IDLE;
@@ -299,13 +292,8 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
 	TScanBandPolicy *aPolicy;
 	EScanCncnResultStatus nextResultStatus;
 
-	TRACE3( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_contScanCB called, hScanMngr=0x%x, resultStatus=%d, SPSStatus=%d\n", hScanMngr, resultStatus, SPSStatus);
-
 	/* It looks like it never happens. Anyway decided to check */
 	if ( pScanMngr->scanParams.numOfChannels > SCAN_MAX_NUM_OF_SPS_CHANNELS_PER_COMMAND ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngr_contScanCB. pScanMngr->scanParams.numOfChannels=%d exceeds the limit %d\n",
-		        pScanMngr->scanParams.numOfChannels, SCAN_MAX_NUM_OF_SPS_CHANNELS_PER_COMMAND);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
@@ -317,10 +305,6 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
 
 		/* scan was completed successfully - either continue to next stage or simply finish this cycle */
 	case SCAN_CRS_SCAN_COMPLETE_OK:
-#ifdef SCAN_MNGR_DBG
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Continuous scan completes successfuly.\n");
-		scanMngrDebugPrintBSSList( hScanMngr );
-#endif
 #ifdef TI_DBG
 		if ( SCAN_TYPE_SPS == pScanMngr->scanParams.scanType ) {
 			int i;
@@ -362,7 +346,6 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
 #ifdef TI_DBG
 			pScanMngr->stats.TrackingGByStatus[ resultStatus ]++;
 #endif
-			TRACE0(pScanMngr->hReport , REPORT_SEVERITY_INFORMATION, "\n Starting SCAN_CSS_TRACKING_G_BAND \n");
 			/* if necessary, attempt tracking on A */
 			aPolicy = scanMngrGetPolicyByBand( hScanMngr, RADIO_BAND_5_0_GHZ );
 			/* if a policy is defined for A band tracking, attempt to perform it */
@@ -385,15 +368,11 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
 					nextResultStatus =
 					    scanCncn_Start1ShotScan( pScanMngr->hScanCncn, SCAN_SCC_ROAMING_CONT, &(pScanMngr->scanParams));
 					if ( SCAN_CRS_SCAN_RUNNING != nextResultStatus ) {
-						TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Failed to start tracking continuous scan on band A, return code %d.\n", resultStatus);
 #ifdef TI_DBG
 						pScanMngr->stats.TrackingAByStatus[ nextResultStatus ]++;
 #endif
 						pScanMngr->contScanState = SCAN_CSS_IDLE;
 					}
-#ifdef SCAN_MNGR_DBG
-					TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Tracking on A started.\n");
-#endif
 					return;
 				}
 			}
@@ -410,7 +389,6 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
 				pScanMngr->stats.TrackingAByStatus[ resultStatus ]++;
 			}
 #endif
-			TRACE0(pScanMngr->hReport , REPORT_SEVERITY_INFORMATION, "\n SCAN_CSS_TRACKING_A_BAND \n");
 			/* if necessary and possible, attempt discovery */
 			if ( (SCAN_SDP_NO_DISCOVERY != pScanMngr->currentDiscoveryPart) &&
 			        (pScanMngr->BSSList.numOfEntries <= pScanMngr->scanPolicy.BSSNumberToStartDiscovery)) {
@@ -429,12 +407,8 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
 					nextResultStatus =
 					    scanCncn_Start1ShotScan( pScanMngr->hScanCncn, SCAN_SCC_ROAMING_CONT, &(pScanMngr->scanParams));
 					if ( SCAN_CRS_SCAN_RUNNING != nextResultStatus ) {
-						TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Failed to start discovery continuous scan, nextResultStatus %d.\n", nextResultStatus);
 						pScanMngr->contScanState = SCAN_CSS_IDLE;
 					}
-#ifdef SCAN_MNGR_DBG
-					TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Disocvery started.\n");
-#endif
 					return;
 				}
 			}
@@ -464,7 +438,6 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
 
 		default:
 			/* should not be at any other stage when CB is invoked */
-			TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Continuous scan CB called with scan complete TI_OK reason in state:%d\n", pScanMngr->contScanState);
 
 			/* reset continuous scan to idle */
 			pScanMngr->contScanState = SCAN_CSS_IDLE;
@@ -476,7 +449,6 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
 		/* SPS scan was completed with TSF error */
 	case SCAN_CRS_TSF_ERROR:
 		/* report the recovery event */
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Continuous scan callback called with TSF error indication\n");
 		/* mark that the TSF values are no longer valid */
 		pScanMngr->bSynchronized = TI_FALSE;
 #ifdef TI_DBG
@@ -500,7 +472,6 @@ void scanMngr_contScanCB( TI_HANDLE hScanMngr, EScanCncnResultStatus resultStatu
 
 	default:
 		/* report the status received */
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Continuous scan CB called with status %d\n", resultStatus);
 
 		/* also perform aging (since it does not increase counter, no harm done if this was not tracking */
 		scanMngrPerformAging( hScanMngr );
@@ -543,10 +514,6 @@ void scanMngr_setScanPolicy( TI_HANDLE hScanMngr, TScanPolicy* scanPolicy )
 {
 	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_setScanPolicy called, hScanMngr=0x%x.\n", hScanMngr);
-#ifdef SCAN_MNGR_DBG
-	scanMngrTracePrintScanPolicy( scanPolicy );
-#endif
 
 	/* if continuous or immediate scan are running, indicate that they shouldn't proceed to next scan (if any),
 	   and stop the scan operation (in case a triggered scan was in progress and the voice was stopped, the scan
@@ -614,7 +581,6 @@ void scanMngrGetCurrentTsfDtimMibCB(TI_HANDLE hScanMngr, TI_STATUS status, TI_UI
 
 	pScanMngr->lastLocalBcnDTIMCount = pScanMngr->currTsfDtimMib.LastDTIMCount;
 
-	TRACE5( pScanMngr->hReport , REPORT_SEVERITY_INFORMATION, "\n currentTSF = %u-%u lastLocalBcnTSF = %u-%u lastDTIMCount = %d \n", INT64_HIGHER( pScanMngr->currentTSF ), INT64_LOWER( pScanMngr->currentTSF ), INT64_HIGHER( pScanMngr->lastLocalBcnTSF ), INT64_LOWER( pScanMngr->lastLocalBcnTSF ), pScanMngr->lastLocalBcnDTIMCount );
 
 	/* get the current host time stamp */
 	pScanMngr->currentHostTimeStamp = os_timeStampMs( pScanMngr->hOS );
@@ -639,7 +605,6 @@ void scanMngr_GetUpdatedTsfDtimMibForScan (TI_HANDLE hScanMngr, TI_BOOL bTwdInit
 	TTwdParamInfo param;
 	TI_STATUS reqStatus = TI_OK;
 
-	TRACE0( pScanMngr->hReport , REPORT_SEVERITY_INFORMATION, "\nscanMngr_GetUpdatedTsfDtimMibForScan called\n");
 
 	if (pScanMngr->bQualityChangeNeeded == TI_TRUE) {
 		scanMngr_qualityChangeTrigger(hScanMngr);
@@ -651,9 +616,6 @@ void scanMngr_GetUpdatedTsfDtimMibForScan (TI_HANDLE hScanMngr, TI_BOOL bTwdInit
 	param.content.interogateCmdCBParams.hCb = hScanMngr;
 	param.content.interogateCmdCBParams.pCb = (TI_UINT8*)&pScanMngr->currTsfDtimMib;
 	reqStatus = TWD_GetParam (pScanMngr->hTWD, &param);
-	if ( TI_OK != reqStatus ) {
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_ERROR, ": getParam from HAL CTRL failed wih status: %d\n", reqStatus);
-	}
 
 }
 
@@ -673,15 +635,10 @@ void scanMngrPerformContinuousScan( TI_HANDLE hScanMngr )
 	EScanCncnResultStatus resultStatus;
 	paramInfo_t param;
 
-#ifdef SCAN_MNGR_DBG
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngrPerformContinuousScan called, hScanMngr=0x%x.\n", hScanMngr);
-	scanMngrDebugPrintBSSList( hScanMngr );
-#endif
 
 	/* this function is called due to continuous scan timer expiry, to start a new continuous scan cycle.
 	   If the continuous scan is anything but idle, a new cycle is not started. */
 	if ( SCAN_CSS_IDLE != pScanMngr->contScanState ) {
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Continuous scan timer expired and continuous scan state is:%d\n", pScanMngr->contScanState);
 		return;
 	}
 
@@ -700,7 +657,6 @@ void scanMngrPerformContinuousScan( TI_HANDLE hScanMngr )
 
 	/* now check that none of the above is zero */
 	if ( (0 == pScanMngr->currentBSSBeaconInterval) || (0 == pScanMngr->currentBSSDtimPeriod)) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR, "Trying to start continuous scan cycle but DTIM period=%d and beacon interval=%d\n", pScanMngr->currentBSSDtimPeriod, pScanMngr->currentBSSBeaconInterval);
 		return;
 	}
 
@@ -723,15 +679,11 @@ void scanMngrPerformContinuousScan( TI_HANDLE hScanMngr )
 			/* send scan command to scan concentrator with the required scan params according to scannig operational  mode */
 			resultStatus = scanMngr_Start1ShotScan(hScanMngr, SCAN_SCC_ROAMING_CONT);
 			if ( SCAN_CRS_SCAN_RUNNING != resultStatus ) {
-				TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Failed to start tracking continuous scan on G, return code %d.\n", resultStatus);
 #ifdef TI_DBG
 				pScanMngr->stats.TrackingGByStatus[ resultStatus ]++;
 #endif
 				pScanMngr->contScanState = SCAN_CSS_IDLE;
 			}
-#ifdef SCAN_MNGR_DBG
-			TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Tracking on G started.\n");
-#endif
 			return;
 		}
 	}
@@ -752,15 +704,11 @@ void scanMngrPerformContinuousScan( TI_HANDLE hScanMngr )
 			/* send scan command to scan concentrator with the required scan params according to scanning operational mode */
 			resultStatus = scanMngr_Start1ShotScan(hScanMngr, SCAN_SCC_ROAMING_CONT);
 			if ( SCAN_CRS_SCAN_RUNNING != resultStatus ) {
-				TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Failed to start tracking continuous scan on A, return code %d.\n", resultStatus);
 #ifdef TI_DBG
 				pScanMngr->stats.TrackingAByStatus[ resultStatus ]++;
 #endif
 				pScanMngr->contScanState = SCAN_CSS_IDLE;
 			}
-#ifdef SCAN_MNGR_DBG
-			TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Tracking on A started.\n");
-#endif
 			return;
 		}
 	}
@@ -787,7 +735,6 @@ void scanMngrPerformContinuousScan( TI_HANDLE hScanMngr )
 			/* send scan command to scan concentrator with the required scan params according to scanning operational mode */
 			resultStatus = scanMngr_Start1ShotScan(hScanMngr, SCAN_SCC_ROAMING_CONT);
 			if ( SCAN_CRS_SCAN_RUNNING != resultStatus ) {
-				TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Failed to start discovery continuous scan, resultStatus %d.\n", resultStatus);
 #ifdef TI_DBG
 				if ( RADIO_BAND_2_4_GHZ == pScanMngr->statsLastDiscoveryBand ) {
 					pScanMngr->stats.DiscoveryGByStatus[ resultStatus ]++;
@@ -797,15 +744,11 @@ void scanMngrPerformContinuousScan( TI_HANDLE hScanMngr )
 #endif
 				pScanMngr->contScanState = SCAN_CSS_IDLE;
 			}
-#ifdef SCAN_MNGR_DBG
-			TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Discovery started.\n");
-#endif
 			return;
 		}
 	}
 
 	/* if we got here, no scan had executed successfully - print a warning */
-	TRACE0( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Unable to perform continuous scan.\n");
 }
 
 /**
@@ -821,14 +764,8 @@ void scanMngrPerformAging( TI_HANDLE hScanMngr )
 	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 	TI_UINT8 BSSEntryIndex;
 
-#ifdef SCAN_MNGR_DBG
-	TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Performing Aging.\n");
-#endif
 	/* It looks like it never happens. Anyway decided to check */
 	if (pScanMngr->BSSList.numOfEntries > MAX_SIZE_OF_BSS_TRACK_LIST) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrPerformAging problem. BSSList.numOfEntries=%d exceeds the limit %d\n",
-		        pScanMngr->BSSList.numOfEntries, MAX_SIZE_OF_BSS_TRACK_LIST);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
@@ -840,9 +777,6 @@ void scanMngrPerformAging( TI_HANDLE hScanMngr )
 			/* will replace this entry with one further down the array, if any. Therefore, index is not increased
 			   (because a new entry will be placed in the same index). If this is the last entry - the number of
 			   BSSes will be decreased, and thus the loop will exit */
-#ifdef SCAN_MNGR_DBG
-			TRACE7( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Aging: removing BSSID %2x:%2x:%2x:%2x:%2x:%2x from index: %d.\n", pScanMngr->BSSList.BSSList[ BSSEntryIndex ].BSSID[ 0 ], pScanMngr->BSSList.BSSList[ BSSEntryIndex ].BSSID[ 1 ], pScanMngr->BSSList.BSSList[ BSSEntryIndex ].BSSID[ 2 ], pScanMngr->BSSList.BSSList[ BSSEntryIndex ].BSSID[ 3 ], pScanMngr->BSSList.BSSList[ BSSEntryIndex ].BSSID[ 4 ], pScanMngr->BSSList.BSSList[ BSSEntryIndex ].BSSID[ 5 ], pScanMngr->BSSList.numOfEntries);
-#endif
 			scanMngrRemoveBSSListEntry( hScanMngr, BSSEntryIndex );
 		} else {
 			BSSEntryIndex++;
@@ -867,30 +801,20 @@ void scanMngrUpdateReceivedFrame( TI_HANDLE hScanMngr, TScanFrameInfo* frameInfo
 
 	/* It looks like it never happens. Anyway decided to check */
 	if ( frameInfo->band >= RADIO_BAND_NUM_OF_BANDS ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrUpdateReceivedFrame. frameInfo->band=%d exceeds the limit %d\n",
-		        frameInfo->band, RADIO_BAND_NUM_OF_BANDS-1);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
 	if ( pScanMngr->neighborAPsDiscoveryList[ frameInfo->band ].numOfEntries > MAX_NUM_OF_NEIGHBOR_APS ) {
-		TRACE3( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrUpdateReceivedFrame. pScanMngr->neighborAPsDiscoveryList[ %d ].numOfEntries=%d exceeds the limit %d\n",
-		        frameInfo->band, pScanMngr->neighborAPsDiscoveryList[ frameInfo->band ].numOfEntries, MAX_NUM_OF_NEIGHBOR_APS);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
 
-#ifdef SCAN_MNGR_DBG
-	scanMngrDebugPrintReceivedFrame( hScanMngr, frameInfo );
-#endif
 #ifdef TI_DBG
 	pScanMngr->stats.receivedFrames++;
 #endif
 	/* first check if the frame pass RSSI threshold. If not discard it and continue */
 	pBandPolicy = scanMngrGetPolicyByBand( hScanMngr, frameInfo->band );
 	if ( NULL == pBandPolicy ) { /* sanity checking */
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_ERROR, "Recieved framed on band %d, for which policy is not defined!\n", frameInfo->band);
 #ifdef TI_DBG
 		pScanMngr->stats.discardedFramesOther++;
 #endif
@@ -898,7 +822,6 @@ void scanMngrUpdateReceivedFrame( TI_HANDLE hScanMngr, TScanFrameInfo* frameInfo
 	}
 
 	if ( frameInfo->rssi < pBandPolicy->rxRSSIThreshold ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Discarding frame beacuse RSSI %d is lower than threshold %d\n", frameInfo->rssi, pBandPolicy->rxRSSIThreshold);
 #ifdef TI_DBG
 		pScanMngr->stats.discardedFramesLowRSSI++;
 #endif
@@ -974,9 +897,6 @@ void scanMngrInsertNewBSSToTrackingList( TI_HANDLE hScanMngr, TScanFrameInfo* fr
 
 	/* It looks like it never happens. Anyway decided to check */
 	if ( pScanMngr->BSSList.numOfEntries > MAX_SIZE_OF_BSS_TRACK_LIST ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrInsertNewBSSToTrackingList. pScanMngr->BSSList.numOfEntries =%d can not exceed the limit %d\n",
-		        pScanMngr->BSSList.numOfEntries, MAX_SIZE_OF_BSS_TRACK_LIST);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
@@ -1095,7 +1015,6 @@ void scanMngrUpdateBSSInfo( TI_HANDLE hScanMngr, TI_UINT8 BSSListIndex, TScanFra
 		} else {
 			pScanMngr->BSSList.BSSList[ BSSListIndex ].RSSI = frameInfo->rssi;
 		}
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "given RSSI=%d, AVRG RSSI=%d\n", frameInfo->rssi, pScanMngr->BSSList.BSSList[ BSSListIndex ].RSSI);
 
 	}
 
@@ -1266,7 +1185,6 @@ TI_BOOL scanMngrIsDiscoveryValid( TI_HANDLE hScanMngr, scan_discoveryPart_e disc
 			return TI_FALSE;
 		}
 	default:
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Checking whather discovery is valid for discovery part %d", discoveryPart);
 		return TI_FALSE;
 	}
 }
@@ -1318,16 +1236,10 @@ void scanMngrBuildImmediateScanCommand( TI_HANDLE hScanMngr, TScanBandPolicy* ba
 
 	/* It looks like it never happens. Anyway decided to check */
 	if ( bandPolicy->band >= RADIO_BAND_NUM_OF_BANDS ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrBuildImmediateScanCommand. bandPolicy->band=%d exceeds the limit %d\n",
-		        bandPolicy->band, RADIO_BAND_NUM_OF_BANDS-1);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
 	if ( pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].numOfEntries > MAX_NUM_OF_NEIGHBOR_APS ) {
-		TRACE3( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrBuildImmediateScanCommand. pScanMngr->neighborAPsDiscoveryList[%d].numOfEntries=%d exceeds the limit %d\n",
-		        bandPolicy->band, pScanMngr->neighborAPsDiscoveryList[ bandPolicy->band ].numOfEntries, MAX_NUM_OF_NEIGHBOR_APS);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
@@ -1417,13 +1329,9 @@ void scanMngrBuildTrackScanCommand( TI_HANDLE hScanMngr, TScanBandPolicy* bandPo
 	paramInfo_t param;
 	TScanMethod* scanMethod;
 
-	TRACE0(pScanMngr->hReport , REPORT_SEVERITY_INFORMATION, "\n scanMngrBuildTrackScanCommand \n");
-
-
 	/* SPS is performed differently from all other scan types, and only if TSF error has not occured */
 	if ( (SCAN_TYPE_SPS == bandPolicy->trackingMethod.scanType) && (TI_TRUE == pScanMngr->bSynchronized)) {
 		/* build the command header */
-		TRACE0(pScanMngr->hReport , REPORT_SEVERITY_INFORMATION, "\nSPS invoked\n");
 		scanMngrBuildScanCommandHeader( hScanMngr, &(bandPolicy->trackingMethod), band );
 
 		/* build the channel list */
@@ -1446,16 +1354,10 @@ void scanMngrBuildTrackScanCommand( TI_HANDLE hScanMngr, TScanBandPolicy* bandPo
 
 	/* It looks like it never happens. Anyway decided to check */
 	if ( pScanMngr->BSSList.numOfEntries > MAX_SIZE_OF_BSS_TRACK_LIST ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrBuildTrackScanCommand. pScanMngr->BSSList.numOfEntries=%d exceeds the limit %d\n",
-		        pScanMngr->BSSList.numOfEntries, MAX_SIZE_OF_BSS_TRACK_LIST);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
 	if ( bandPolicy->numOfChannles > MAX_BAND_POLICY_CHANNLES ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrBuildTrackScanCommand. bandPolicy->numOfChannles=%d exceeds the limit %d\n",
-		        bandPolicy->numOfChannles, MAX_BAND_POLICY_CHANNLES);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
@@ -1540,7 +1442,6 @@ void scanMngrBuildDiscoveryScanCommand( TI_HANDLE hScanMngr )
 	}
 
 	if ( NULL == bandPolicy) {
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "scanMngrGetPolicyByBand() returned NULL.\n");
 		return;
 	}
 
@@ -1630,7 +1531,6 @@ void scanMngrBuildDiscoveryScanCommand( TI_HANDLE hScanMngr )
 
 	case SCAN_SDP_NO_DISCOVERY:
 	default:
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_ERROR, "scanMngrBuildDiscoveryScanCommand called and current discovery part is %d", pScanMngr->currentDiscoveryPart);
 		break;
 	}
 }
@@ -1693,7 +1593,6 @@ void scanMngrBuildScanCommandHeader( TI_HANDLE hScanMngr, TScanMethod* scanMetho
 		break;
 
 	default:
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Unrecognized scan type %d when building scan command", scanMethod->scanType);
 		break;
 	}
 
@@ -1718,9 +1617,6 @@ void scanMngrAddNeighborAPsForDiscovery( TI_HANDLE hScanMngr, TScanBandPolicy* b
 
 	/* It looks like it never happens. Anyway decided to check */
 	if ( bandPolicy->band >= RADIO_BAND_NUM_OF_BANDS ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrAddNeighborAPsForDiscovery. bandPolicy->band=%d exceeds the limit %d\n",
-		        bandPolicy->band, RADIO_BAND_NUM_OF_BANDS-1);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
@@ -1785,16 +1681,10 @@ void scanMngrAddChannelListForDiscovery( TI_HANDLE hScanMngr, TScanBandPolicy* b
 
 	/* It looks like it never happens. Anyway decided to check */
 	if ( bandPolicy->band >= RADIO_BAND_NUM_OF_BANDS ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrAddChannelListForDiscovery. bandPolicy->band=%d exceeds the limit %d\n",
-		        bandPolicy->band, RADIO_BAND_NUM_OF_BANDS-1);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
 	if ( bandPolicy->numOfChannles > MAX_BAND_POLICY_CHANNLES ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrAddChannelListForDiscovery. bandPolicy->numOfChannles=%d exceeds the limit %d\n",
-		        bandPolicy->numOfChannles, MAX_BAND_POLICY_CHANNLES);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
@@ -1862,11 +1752,7 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
 	scan_SPSHelper_t nextEventArray[ MAX_SIZE_OF_BSS_TRACK_LIST ];
 	int BSSListIndex, i, j, nextEventArrayHead, nextEventArraySize;
 	paramInfo_t param;
-#ifdef SCAN_MNGR_SPS_DBG
-	TI_UINT32 highValue, lowValue, maxNextEventArraySize;
-#endif
 
-	TRACE1(pScanMngr->hReport , REPORT_SEVERITY_INFORMATION, "\nscanMngrAddSPSChannels invoked for band %d\n",band);
 	/* initialize latest TSF value */
 	pScanMngr->scanParams.latestTSFValue = 0;
 
@@ -1874,16 +1760,8 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
 	nextEventArrayHead = -1;
 	nextEventArraySize = 0;
 
-#ifdef SCAN_MNGR_SPS_DBG
-	highValue = INT64_HIGHER( pScanMngr->currentTSF );
-	lowValue = INT64_LOWER( pScanMngr->currentTSF );
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "current TSF: %u-%u\n", highValue, lowValue);
-#endif
 	/* It looks like it never happens. Anyway decided to check */
 	if ( pScanMngr->BSSList.numOfEntries > MAX_SIZE_OF_BSS_TRACK_LIST ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrAddSPSChannels. pScanMngr->BSSList.numOfEntries=%d exceeds the limit %d\n",
-		        pScanMngr->BSSList.numOfEntries, MAX_SIZE_OF_BSS_TRACK_LIST);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
@@ -1914,11 +1792,6 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
 				    scanMngrCalculateNextEventTSF( hScanMngr, &(pScanMngr->BSSList), BSSListIndex,
 				                                   pScanMngr->currentTSF + SCAN_SPS_GUARD_FROM_CURRENT_TSF +
 				                                   timeToStartInAdvance ) - timeToStartInAdvance;
-#ifdef SCAN_MNGR_SPS_DBG
-				highValue = INT64_HIGHER( nextEventArray[ nextEventArraySize ].nextEventTSF );
-				lowValue = INT64_LOWER( nextEventArray[ nextEventArraySize ].nextEventTSF );
-				TRACE8( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "BSSID:%02x:%02x:%02x:%02x:%02x:%02x will send frame at TSF:%x-%x\n", pScanMngr->BSSList.BSSList[ BSSListIndex ].BSSID[ 0 ], pScanMngr->BSSList.BSSList[ BSSListIndex ].BSSID[ 1 ], pScanMngr->BSSList.BSSList[ BSSListIndex ].BSSID[ 2 ], pScanMngr->BSSList.BSSList[ BSSListIndex ].BSSID[ 3 ], pScanMngr->BSSList.BSSList[ BSSListIndex ].BSSID[ 4 ], pScanMngr->BSSList.BSSList[ BSSListIndex ].BSSID[ 5 ], highValue, lowValue);
-#endif
 				nextEventArray[ nextEventArraySize ].trackListIndex = BSSListIndex;
 
 				/* insert it, sorted, to the next event array */
@@ -1961,12 +1834,6 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
 			}
 		}
 	}
-
-#ifdef SCAN_MNGR_SPS_DBG
-	TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "SPS list after first stage:\n");
-	scanMngrDebugPrintSPSHelperList( hScanMngr, nextEventArray, nextEventArrayHead, nextEventArraySize );
-	maxNextEventArraySize = nextEventArraySize;
-#endif
 
 	/* insert channels from next event array to scan command */
 	EarliestTSFToInsert = pScanMngr->currentTSF + SCAN_SPS_GUARD_FROM_CURRENT_TSF;
@@ -2030,12 +1897,6 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
 					                                   nextEventArray[ nextEventArrayHead ].nextEventTSF + timeToStartInAdvance + 1)
 					    - timeToStartInAdvance;
 
-#ifdef SCAN_MNGR_SPS_DBG
-					highValue = INT64_HIGHER( nextEventArray[ nextEventArrayHead ].nextEventTSF );
-					lowValue = INT64_LOWER( nextEventArray[ nextEventArrayHead ].nextEventTSF );
-					TRACE8( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "reacalculating next frame for BSSID:%02x:%02x:%02x:%02x:%02x:%02x at TSF:%x-%x, bacause of DTIM collision\n", pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 0 ], pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 1 ], pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 2 ], pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 3 ], pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 4 ], pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 5 ], highValue, lowValue);
-#endif
-
 					/* reinsert to the next event array, sorted */
 					/* if still needs to be head, do nothing (because it's still head). otherwise: */
 					if ( (1 < nextEventArraySize) && /* list has more than one entry */
@@ -2057,9 +1918,6 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
 						nextEventArray[ i ].nextAPIndex = j;
 					}
 
-#ifdef SCAN_MNGR_SPS_DBG
-					scanMngrDebugPrintSPSHelperList( hScanMngr, nextEventArray, nextEventArrayHead, maxNextEventArraySize );
-#endif
 #ifdef TI_DBG
 					/* update statistics */
 					pScanMngr->stats.SPSSavedByDTIMCheck++;
@@ -2072,12 +1930,6 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
 			    scanMngrCalculateNextEventTSF( hScanMngr, &(pScanMngr->BSSList),
 			                                   nextEventArray[ nextEventArrayHead ].trackListIndex,
 			                                   EarliestTSFToInsert + timeToStartInAdvance ) - timeToStartInAdvance;
-
-#ifdef SCAN_MNGR_SPS_DBG
-			highValue = INT64_HIGHER( nextEventArray[ nextEventArrayHead ].nextEventTSF );
-			lowValue = INT64_LOWER( nextEventArray[ nextEventArrayHead ].nextEventTSF );
-			TRACE8( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "reacalculating next frame for BSSID:%02x:%02x:%02x:%02x:%02x:%02x at TSF:%x-%x\n", pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 0 ], pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 1 ], pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 2 ], pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 3 ], pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 4 ], pScanMngr->BSSList.BSSList[ nextEventArray[ nextEventArrayHead ].trackListIndex ].BSSID[ 5 ], highValue, lowValue);
-#endif
 
 			/* reinsert to the next event array, sorted */
 			/* if still needs to be head, do nothing (because it's still head). otherwise: */
@@ -2100,9 +1952,6 @@ void scanMngrAddSPSChannels( TI_HANDLE hScanMngr, TScanMethod* scanMethod, ERadi
 				nextEventArray[ i ].nextAPIndex = j;
 			}
 
-#ifdef SCAN_MNGR_SPS_DBG
-			scanMngrDebugPrintSPSHelperList( hScanMngr, nextEventArray, nextEventArrayHead, maxNextEventArraySize );
-#endif
 		}
 	}
 	/* For SPS scan, the scan duration is added to the command, since later on current TSF cannot be
@@ -2131,9 +1980,6 @@ TI_UINT64 scanMngrCalculateNextEventTSF( TI_HANDLE hScanMngr, scan_BSSList_t* BS
 	TI_UINT32 reminder;
 	TI_INT32 averageDeltaChange = 0;
 	int i;
-#ifdef SCAN_MNGR_SPS_DBG
-	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
-#endif /* SCAN_MNGR_SPS_DBG */
 
 	/* graphical representation:
 	                               E      E      E      E      E      E      E      E      E
@@ -2173,43 +2019,25 @@ TI_UINT64 scanMngrCalculateNextEventTSF( TI_HANDLE hScanMngr, scan_BSSList_t* BS
 	 * taken into account.
 	 */
 
-#ifdef SCAN_MNGR_SPS_DBG
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "initial TSF value:%x-%x\n", INT64_HIGHER( initialTSFValue ), INT64_LOWER( initialTSFValue ));
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "local time stamp:%x-%x\n", INT64_HIGHER( BSSList->scanBSSList[ entryIndex ].localTSF ), INT64_LOWER( BSSList->scanBSSList[ entryIndex ].localTSF ));
-#endif
 	/* calculate the delta between local and remote TSF */
 	localRemoteTSFDelta = BSSList->scanBSSList[ entryIndex ].localTSF -
 	                      BSSList->BSSList[ entryIndex ].lastRxTSF;
 	/* convert initial TSF to remote timeline */
 	remoteBeaconTSF = initialTSFValue - localRemoteTSFDelta;
-#ifdef SCAN_MNGR_SPS_DBG
-	TRACE4( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Local TSF:%u-%u, Remote TSF: %u-%u\n", INT64_HIGHER(BSSList->scanBSSList[ entryIndex ].localTSF), INT64_LOWER(BSSList->scanBSSList[ entryIndex ].localTSF), INT64_HIGHER(BSSList->BSSList[ entryIndex ].lastRxTSF), INT64_LOWER(BSSList->BSSList[ entryIndex ].lastRxTSF)));
-	TRACE4( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "TSF delta:%u-%u, current remote TSF:%u-%u\n", INT64_HIGHER(localRemoteTSFDelta), INT64_LOWER(localRemoteTSFDelta), INT64_HIGHER(remoteBeaconTSF ), INT64_LOWER(remoteBeaconTSF ));
-#endif
 	/* find last remote beacon transmission by subtracting the reminder of current remote TSF divided
 	   by the beacon interval (indicating how much time passed since last beacon) from current remote
 	   TSF */
 	reminder = reminder64( remoteBeaconTSF, BSSList->BSSList[ entryIndex ].beaconInterval * 1024 );
 	remoteBeaconTSF -= reminder;
 
-#ifdef SCAN_MNGR_SPS_DBG
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "reminder=%d\n",reminder);
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Last remote beacon TSF:%x-%x\n", INT64_HIGHER(remoteBeaconTSF), INT64_LOWER(remoteBeaconTSF));
-#endif
 	/* advance from last beacon to next beacon */
 	remoteBeaconTSF += BSSList->BSSList[ entryIndex ].beaconInterval * 1024;
-#ifdef SCAN_MNGR_SPS_DBG
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Next remote beacon TSF:%x-%x\n", INT64_HIGHER(remoteBeaconTSF), INT64_LOWER(remoteBeaconTSF));
-#endif
 
 #ifdef SCAN_SPS_USE_DRIFT_COMPENSATION
 	/* update delta change array with the change between current and last delta (if last delta is valid) */
 	if ( 0 != BSSList->scanBSSList[ entryIndex ].prevTSFDelta ) {
 		BSSList->scanBSSList[ entryIndex ].deltaChangeArray[ BSSList->scanBSSList[ entryIndex ].deltaChangeArrayIndex ] =
 		    (TI_INT32)(localRemoteTSFDelta - BSSList->scanBSSList[ entryIndex ].prevTSFDelta);
-#ifdef SCAN_MNGR_SPS_DBG
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "current delta^2:%d\n", localRemoteTSFDelta - BSSList->scanBSSList[ entryIndex ].prevTSFDelta);
-#endif
 		if ( SCAN_SPS_NUM_OF_TSF_DELTA_ENTRIES == ++BSSList->scanBSSList[ entryIndex ].deltaChangeArrayIndex ) {
 			BSSList->scanBSSList[ entryIndex ].deltaChangeArrayIndex = 0;
 		}
@@ -2223,9 +2051,6 @@ i++ ) {
 	averageDeltaChange += BSSList->scanBSSList[ entryIndex ].deltaChangeArray[ i ];
 	}
 	averageDeltaChange /= SCAN_SPS_NUM_OF_TSF_DELTA_ENTRIES;
-#ifdef SCAN_MNGR_SPS_DBG
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "average delta change: %d\n", averageDeltaChange);
-#endif /* SCAN_MNGR_SPS_DBG */
 	remoteBeaconTSF += averageDeltaChange;
 #endif
 
@@ -2260,16 +2085,9 @@ TI_BOOL scanMngrDTIMInRange( TI_HANDLE hScanMngr, TI_UINT64 rangeStart, TI_UINT6
 	TI_UINT64 DTIMEventStart, DTIMEventEnd;
 	TI_UINT32 DTIMPeriodInUsec; /* DTIM period in micro seconds */
 
-#ifdef SCAN_MNGR_DTIM_DBG
-	TRACE4( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "DTIM check: SPS raneg start:%x-%x, end:%x-%x\n", INT64_HIGHER(rangeStart), INT64_LOWER(rangeStart), INT64_HIGHER(rangeEnd), INT64_LOWER(rangeEnd));
-#endif
 
 	/* calculate DTIM period */
 	DTIMPeriodInUsec = pScanMngr->currentBSSBeaconInterval * 1024 * pScanMngr->currentBSSDtimPeriod;
-
-#ifdef SCAN_MNGR_DTIM_DBG
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "DTIM period in usec: %d\n", DTIMPeriodInUsec);
-#endif
 
 	/* calculate (from DTIM count) the first DTIM after the last seen beacon. The last seen beacon will always
 	   occur before the SPS - because it already happened, and the SPS is a future event. However, the next DTIM
@@ -2279,11 +2097,7 @@ TI_BOOL scanMngrDTIMInRange( TI_HANDLE hScanMngr, TI_UINT64 rangeStart, TI_UINT6
 	} else {  /* The last beacon was not a DTIM - calculate the next beacon that will be a DTIM */
 		DTIMEventStart = pScanMngr->lastLocalBcnTSF +
 		                 ((pScanMngr->currentBSSDtimPeriod - pScanMngr->lastLocalBcnDTIMCount) * pScanMngr->currentBSSBeaconInterval);
-		TRACE6(pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "\n Next DTIM TSF:%u-%u , last beacon TSF:%u-%u, last DTIM count: %d, beacon interval: %d\n", INT64_HIGHER(DTIMEventStart), INT64_LOWER(DTIMEventStart), INT64_HIGHER(pScanMngr->lastLocalBcnTSF), INT64_LOWER(pScanMngr->lastLocalBcnTSF), pScanMngr->lastLocalBcnDTIMCount, pScanMngr->currentBSSBeaconInterval);
 	}
-#ifdef SCAN_MNGR_DTIM_DBG
-	TRACE6( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Next DTIM TSF:%u-%u, last beacon TSF:%u-%u, last DTIM count: %d, beacon interval: %d\n", INT64_HIGHER(DTIMEventStart), INT64_LOWER(DTIMEventStart), INT64_HIGHER(pScanMngr->lastLocalBcnTSF), INT64_LOWER(pScanMngr->lastLocalBcnTSF), pScanMngr->lastLocalBcnDTIMCount, pScanMngr->currentBSSBeaconInterval);
-#endif
 
 	/* calculate the DTIM event end (add the DTIM length). Note that broadcast frames after the DTIM are not
 	   taken into consideration because their availability and length varies. Even if at some point SPS will be
@@ -2292,17 +2106,11 @@ TI_BOOL scanMngrDTIMInRange( TI_HANDLE hScanMngr, TI_UINT64 rangeStart, TI_UINT6
 
 	/* if this DTIM is after the SPS end - than no collision will occur! */
 	if ( DTIMEventStart > rangeEnd ) {
-#ifdef SCAN_MNGR_DTIM_DBG
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "no collision because DTIM is after SPS\n");
-#endif
 		return TI_FALSE;
 	}
 	/* if this DTIM end is not before the SPS range start - it means the DTIM is colliding with the SPS, because
 	   it neither ends before the SPS nor starts after it */
 	else if ( DTIMEventEnd >= rangeStart ) {
-#ifdef SCAN_MNGR_DTIM_DBG
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Collision beacuse DTIM is not before SPS\n");
-#endif
 		return TI_TRUE;
 	}
 	/* the DTIM is before the SPS range - find the first DTIM after the SPS start (and check if it's colliding
@@ -2317,22 +2125,13 @@ TI_BOOL scanMngrDTIMInRange( TI_HANDLE hScanMngr, TI_UINT64 rangeStart, TI_UINT6
 		DTIMEventStart = rangeStart - reminder + DTIMPeriodInUsec;
 		/* get DTIM end time */
 		DTIMEventEnd = DTIMEventStart + SCAN_SPS_FW_DTIM_LENGTH;
-#ifdef SCAN_MNGR_DTIM_DBG
-		TRACE7( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Diff from range start to last DTIM: %x-%x, reminder:%d, DTIM start:%x-%x, DTIM end: %x-%x\n", INT64_HIGHER(usecDiffFromRangeStartToLastDTIM), INT64_LOWER(usecDiffFromRangeStartToLastDTIM), reminder, INT64_HIGHER(DTIMEventStart), INT64_LOWER(DTIMEventStart), INT64_HIGHER(DTIMEventEnd), INT64_LOWER(DTIMEventEnd));
-#endif
 
 		/* if the SPS starts after the DTIM ends or before the DTIM starts - no collision occurs */
 		if ( (rangeStart > DTIMEventEnd) || (rangeEnd < DTIMEventStart)) {
-#ifdef SCAN_MNGR_DTIM_DBG
-			TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "No collision will occur because DTIM is before or after SPS\n");
-#endif
 			return TI_FALSE;
 		}
 		/* otherwise - a collision will occur! */
 		{
-#ifdef SCAN_MNGR_DTIM_DBG
-			TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Collision will occur!\n");
-#endif
 			return TI_TRUE;
 		}
 	}
@@ -2374,7 +2173,6 @@ void scanMngrAddNormalChannel( TI_HANDLE hScanMngr, TScanMethod* scanMethod, TI_
 		break;
 
 	default:
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Unercognized scan type %d when adding normal channel to scan list.\n", scanMethod->scanType );
 		basicMethodParams = NULL;
 		return;
 	}
@@ -2421,13 +2219,9 @@ void scanMngrRemoveBSSListEntry( TI_HANDLE hScanMngr, TI_UINT8 BSSEntryIndex )
 	   As this is the last entry, it won't be accessed any more. */
 	if ( (pScanMngr->BSSList.numOfEntries-1) == BSSEntryIndex ) {
 
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Removing last entry %d in BSS list\n", pScanMngr->BSSList.numOfEntries);
 
 		pScanMngr->BSSList.numOfEntries--;
 	} else {
-#ifdef SCAN_MNGR_DBG
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Removing entry %d of %d\n", BSSEntryIndex, pScanMngr->BSSList.numOfEntries);
-#endif
 		/* keep the scan result buffer pointer */
 		tempResultBuffer = pScanMngr->BSSList.BSSList[ BSSEntryIndex ].pBuffer;
 		/* copy the last entry over this one */
@@ -2461,9 +2255,6 @@ void scanMngrUpdateBSSList( TI_HANDLE hScanMngr, TI_BOOL bCheckNeighborAPs, TI_B
 
 	/* It looks like it never happens. Anyway decided to check */
 	if (pScanMngr->BSSList.numOfEntries > MAX_SIZE_OF_BSS_TRACK_LIST) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrUpdateBSSList problem. BSSList.numOfEntries=%d exceeds the limit %d\n",
-		        pScanMngr->BSSList.numOfEntries, MAX_SIZE_OF_BSS_TRACK_LIST);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
@@ -2693,20 +2484,13 @@ static char earlyTerminationDesc[ SCAN_ET_COND_NUM_OF_CONDS ][ MAX_DESC_LENGTH ]
  */
 void scanMngrTracePrintNeighborAPsList( TI_HANDLE hScanMngr, neighborAPList_t *neighborAPList )
 {
-	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 	int i;
 
 	/* It looks like it never happens. Anyway decided to check */
 	if ( neighborAPList->numOfEntries > MAX_NUM_OF_NEIGHBOR_APS ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrTracePrintNeighborAPsList. neighborAPList->numOfEntries=%d exceeds the limit %d\n",
-		        neighborAPList->numOfEntries, MAX_NUM_OF_NEIGHBOR_APS);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
-	/* print number of entries */
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Neighbor AP list with %d entries.\n\n", neighborAPList->numOfEntries);
-
 	/* print all APs in list */
 	for ( i = 0; i < neighborAPList->numOfEntries; i++ ) {
 		scanMngrTracePrintNeighborAP( hScanMngr, &(neighborAPList->APListPtr[ i ]));
@@ -2724,10 +2508,7 @@ void scanMngrTracePrintNeighborAPsList( TI_HANDLE hScanMngr, neighborAPList_t *n
  */
 void scanMngrTracePrintNeighborAP( TI_HANDLE hScanMngr, neighborAP_t* neighborAP )
 {
-	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 
-	/* print neighbor AP content */
-	TRACE7( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Neighbor AP band: , channel: %d, MAC address (BSSID): %2x:%2x:%2x:%2x:%2x:%2xn", neighborAP->channel, neighborAP->BSSID[ 0 ], neighborAP->BSSID[ 1 ], neighborAP->BSSID[ 2 ], neighborAP->BSSID[ 3 ], neighborAP->BSSID[ 4 ], neighborAP->BSSID[ 5 ]);
 }
 
 /**
@@ -2895,18 +2676,7 @@ void scanMngrTracePrintSPSScanMethod( TScanSPSMethodParams* SPSMethodParams )
  */
 void scanMngrDebugPrintReceivedFrame( TI_HANDLE hScanMngr, TScanFrameInfo *frameInfo )
 {
-	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 
-	TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "Scan manager received the following frame:\n");
-	TRACE8( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "from BSSID: %02x:%02x:%02x:%02x:%02x:%02x, band: %d, channel: %d\n", (*frameInfo->bssId)[ 0 ], (*frameInfo->bssId)[ 1 ], (*frameInfo->bssId)[ 2 ], (*frameInfo->bssId)[ 3 ], (*frameInfo->bssId)[ 4 ], (*frameInfo->bssId)[ 5 ], frameInfo->band, frameInfo->channel);
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "rate: %d, received at TSF (lower 32 bits): %d\n", frameInfo->rate, frameInfo->staTSF);
-	if ( BEACON == frameInfo->parsedIEs->subType ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "remote TSF value: %x-%x\n", INT64_HIGHER( frameInfo->parsedIEs->content.iePacket.timestamp ), INT64_LOWER( frameInfo->parsedIEs->content.iePacket.timestamp ));
-
-	} else {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "remote TSF value: %x-%x\n", INT64_HIGHER( frameInfo->parsedIEs->content.iePacket.timestamp ), INT64_LOWER( frameInfo->parsedIEs->content.iePacket.timestamp ));
-	}
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "RSSI: %d\n", frameInfo->rssi);
 }
 #ifdef TI_DBG
 /**
@@ -2929,9 +2699,6 @@ void scanMngrDebugPrintBSSList( TI_HANDLE hScanMngr )
 	limit = pScanMngr->BSSList.numOfEntries;
 	/* It looks like it never happens. Anyway decided to check */
 	if (pScanMngr->BSSList.numOfEntries > MAX_SIZE_OF_BSS_TRACK_LIST) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngrDebugPrintBSSList problem. BSSList.numOfEntries=%d Exceeds limit %d\n",
-		        pScanMngr->BSSList.numOfEntries, MAX_SIZE_OF_BSS_TRACK_LIST);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		limit = MAX_SIZE_OF_BSS_TRACK_LIST;
 	}
@@ -2994,14 +2761,6 @@ void scanMngrDebugPrintBSSEntry( TI_HANDLE hScanMngr, TI_UINT8 entryIndex )
  */
 void scanMngrDebugPrintSPSHelperList( TI_HANDLE hScanMngr, scan_SPSHelper_t* spsHelperList, int arrayHead, int arraySize )
 {
-	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
-	int i;
-
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "SPS helper list size:%d, list head:%d\n", arraySize, arrayHead);
-	for ( i = 0; i < arraySize; i++ ) {
-		TRACE7( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "track list index:%d, BSSID:%02x:%02x:%02x:%02x:%02x:%02x\n", spsHelperList[ i ].trackListIndex, pScanMngr->BSSList.BSSList[ spsHelperList[ i ].trackListIndex ].BSSID[ 0 ], pScanMngr->BSSList.BSSList[ spsHelperList[ i ].trackListIndex ].BSSID[ 1 ], pScanMngr->BSSList.BSSList[ spsHelperList[ i ].trackListIndex ].BSSID[ 2 ], pScanMngr->BSSList.BSSList[ spsHelperList[ i ].trackListIndex ].BSSID[ 3 ], pScanMngr->BSSList.BSSList[ spsHelperList[ i ].trackListIndex ].BSSID[ 4 ], pScanMngr->BSSList.BSSList[ spsHelperList[ i ].trackListIndex ].BSSID[ 5 ]);
-		TRACE3( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "TSF:%x-%x, next entry index:%d\n", INT64_HIGHER(spsHelperList[ i ].nextEventTSF), INT64_LOWER(spsHelperList[ i ].nextEventTSF), spsHelperList[ i ].nextAPIndex);
-	}
 }
 
 
@@ -3103,9 +2862,6 @@ void scanMngr_init (TStadHandlesList *pStadHandles)
 
 	/* create timer */
 	pScanMngr->hContinuousScanTimer = tmr_CreateTimer (pScanMngr->hTimer);
-	if (pScanMngr->hContinuousScanTimer == NULL) {
-		TRACE0(pScanMngr->hReport, REPORT_SEVERITY_ERROR, "scanMngr_init(): Failed to create hContinuousScanTimer!\n");
-	}
 
 	/* register scan concentrator callbacks */
 	scanCncn_RegisterScanResultCB( pScanMngr->hScanCncn, SCAN_SCC_ROAMING_CONT,
@@ -3135,11 +2891,8 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
 	TScanBandPolicy *gPolicy, *aPolicy;
 	EScanCncnResultStatus resultStatus;
 
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_startImmediateScan called, hScanMngr=0x%x, bNeighborAPsOnly=.\n", hScanMngr);
-
 	/* sanity check - whether immediate scan is already running */
 	if ( SCAN_ISS_IDLE != pScanMngr->immedScanState ) {
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Immediate scan attempted while it is already running, in state:%d.\n", pScanMngr->immedScanState);
 		return SCAN_MRS_SCAN_NOT_ATTEMPTED_ALREADY_RUNNING;
 	}
 
@@ -3150,7 +2903,6 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
 	/* check whether a policy is defined for at least one band */
 	if ( ((NULL == gPolicy) || (SCAN_TYPE_NO_SCAN == gPolicy->immediateScanMethod.scanType)) && /* no policy for G band */
 	        ((NULL == aPolicy) || (SCAN_TYPE_NO_SCAN == aPolicy->immediateScanMethod.scanType))) { /* no policy for A band */
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Immediatse scan attempted when no policy is defined.\n");
 		return SCAN_MRS_SCAN_NOT_ATTEMPTED_EMPTY_POLICY;
 	}
 
@@ -3168,7 +2920,6 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
 
 			/* if continuous scan is running, mark that it should quit */
 			if ( SCAN_CSS_IDLE != pScanMngr->contScanState ) {
-				TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_startImmediateScan called 1, switched to STOPPING state \n");
 
 				pScanMngr->contScanState = SCAN_CSS_STOPPING;
 			}
@@ -3177,7 +2928,6 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
 			resultStatus = scanMngr_Start1ShotScan(hScanMngr, SCAN_SCC_ROAMING_IMMED);
 
 			if ( SCAN_CRS_SCAN_RUNNING != resultStatus ) {
-				TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Failed to start immediate scan on band G, return code %d.\n", resultStatus);
 #ifdef TI_DBG
 				pScanMngr->stats.ImmediateGByStatus[ resultStatus ]++;
 #endif
@@ -3195,7 +2945,6 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
 
 		/* if no channels are available, report error */
 		if ( 0 == pScanMngr->scanParams.numOfChannels ) {
-			TRACE0( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "No channels available for scan operation.\n");
 			return SCAN_MRS_SCAN_NOT_ATTEMPTED_NO_CHANNLES_AVAILABLE;
 		} else {
 			/* mark that immediate scan is running on band A */
@@ -3203,7 +2952,6 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
 
 			/* if continuous scan is running, mark that it should quit */
 			if ( SCAN_CSS_IDLE != pScanMngr->contScanState ) {
-				TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_startImmediateScan called 2, switched to STOPPING state \n");
 
 				pScanMngr->contScanState = SCAN_CSS_STOPPING;
 			}
@@ -3211,7 +2959,6 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
 			/* send scan command to scan concentrator with the required scan params according to scanning operational mode */
 			resultStatus = scanMngr_Start1ShotScan(hScanMngr, SCAN_SCC_ROAMING_IMMED);
 			if ( SCAN_CRS_SCAN_RUNNING != resultStatus ) {
-				TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Failed to start immediate scan on band A, return code %d.\n", resultStatus);
 #ifdef TI_DBG
 				pScanMngr->stats.ImmediateAByStatus[ resultStatus ]++;
 #endif
@@ -3221,7 +2968,6 @@ scan_mngrResultStatus_e scanMngr_startImmediateScan( TI_HANDLE hScanMngr, TI_BOO
 		}
 	} else {
 		/* since we passed the policy check, we arrived here because we didn't had channel on G and policy on A */
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "No channels available for scan operation.\n");
 		return SCAN_MRS_SCAN_NOT_ATTEMPTED_NO_CHANNLES_AVAILABLE;
 	}
 }
@@ -3230,11 +2976,9 @@ void scanMngr_stopImmediateScan( TI_HANDLE hScanMngr )
 {
 	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngrStopImmediateScan called, hScanMngr=0x%x", hScanMngr);
 
 	/* check that immediate scan is running */
 	if ( (SCAN_ISS_A_BAND != pScanMngr->immedScanState) && (SCAN_ISS_G_BAND != pScanMngr->immedScanState)) {
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Immediate scan stop request when immediate scan is in state:%d", pScanMngr->immedScanState);
 		return;
 	}
 
@@ -3264,25 +3008,17 @@ void scanMngr_startContScan( TI_HANDLE hScanMngr, TMacAddr* currentBSS, ERadioBa
 	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 	int currentBSSNeighborIndex;
 
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_StartContScan called, hScanMngr=0x%x.\n", hScanMngr);
 	/* It looks like it never happens. Anyway decided to check */
 	if ( pScanMngr->currentBSSBand >= RADIO_BAND_NUM_OF_BANDS ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngr_startContScan. pScanMngr->currentBSSBand=%d exceeds the limit %d\n",
-		        pScanMngr->currentBSSBand, RADIO_BAND_NUM_OF_BANDS-1);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
 	if ( currentBSSBand >= RADIO_BAND_NUM_OF_BANDS ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngr_startContScan. currentBSSBand=%d exceeds the limit %d\n",
-		        currentBSSBand, RADIO_BAND_NUM_OF_BANDS-1);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
 	/* if continuous scan is already running, it means we get a start command w/o stop */
 	if ( TI_TRUE == pScanMngr->bContinuousScanStarted ) {
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Start continuous scan requested when continuous scan is running.\n");
 		return;
 	}
 
@@ -3330,11 +3066,9 @@ void scanMngr_stopContScan( TI_HANDLE hScanMngr )
 	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 	TI_UINT8 i;
 
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_stopContScan called, hScanMngr=0x%x, state =%d\n", hScanMngr, pScanMngr->contScanState);
 
 	/* if continuous scan is not running, it means we get a stop command w/o start */
 	if ( TI_FALSE == pScanMngr->bContinuousScanStarted ) {
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Stop continuous scan when continuous scan is not running.\n");
 		return;
 	}
 
@@ -3352,7 +3086,6 @@ void scanMngr_stopContScan( TI_HANDLE hScanMngr )
 	        (SCAN_CSS_STOPPING != pScanMngr->contScanState)) {
 		/* send a stop scan command to the scan concentartor */
 		scanCncn_StopScan( pScanMngr->hScanCncn, SCAN_SCC_ROAMING_CONT );
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_stopContScan called, switched to STOPPING state \n");
 
 #ifdef TI_DBG
 		switch ( pScanMngr->contScanState ) {
@@ -3398,12 +3131,8 @@ bssList_t* scanMngr_getBSSList( TI_HANDLE hScanMngr )
 	paramInfo_t param;
 
 
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_getBSSList called, hScanMngr=0x%x.\n", hScanMngr);
 	/* It looks like it never happens. Anyway decided to check */
 	if (pScanMngr->BSSList.numOfEntries > MAX_SIZE_OF_BSS_TRACK_LIST) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngr_getBSSList problem. BSSList.numOfEntries=%d exceeds the limit %d\n",
-		        pScanMngr->BSSList.numOfEntries, MAX_SIZE_OF_BSS_TRACK_LIST);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		/* Returning here a NULL pointer can cause problems because the calling procedures
 		 use the returned pointer without checking it for correctness. */
@@ -3439,21 +3168,16 @@ void scanMngr_setNeighborAPs( TI_HANDLE hScanMngr, neighborAPList_t* neighborAPL
 	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 	int neighborAPIndex, currentBSSNeighborIndex;
 
-	TRACE1( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_setNeighborAPs called, hScanMngr=0x%x.\n", hScanMngr);
 #ifdef TI_DBG
 	scanMngrTracePrintNeighborAPsList( hScanMngr, neighborAPList );
 #endif
 	/* if continuous scan is running, indicate that it shouldn't proceed to next scan (if any) */
 	if ( pScanMngr->contScanState != SCAN_CSS_IDLE ) {
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_setNeighborAPs called, switched to STOPPING state \n");
 
 		pScanMngr->contScanState = SCAN_CSS_STOPPING;
 	}
 	/* It looks like it never happens. Anyway decided to check */
 	if ( neighborAPList->numOfEntries > MAX_NUM_OF_NEIGHBOR_APS ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngr_setNeighborAPs. neighborAPList->numOfEntries=%d exceeds the limit %d\n",
-		        neighborAPList->numOfEntries, MAX_NUM_OF_NEIGHBOR_APS);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
@@ -3464,9 +3188,6 @@ void scanMngr_setNeighborAPs( TI_HANDLE hScanMngr, neighborAPList_t* neighborAPL
 	/* copy new neighbor APs, according to band */
 	for ( neighborAPIndex = 0; neighborAPIndex < neighborAPList->numOfEntries; neighborAPIndex++ ) {
 		if ( neighborAPList->APListPtr[ neighborAPIndex ].band >= RADIO_BAND_NUM_OF_BANDS ) {
-			TRACE3( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-			        "scanMngr_setNeighborAPs. neighborAPList->APListPtr[ %d ].band=%d exceeds the limit %d\n",
-			        neighborAPIndex, neighborAPList->APListPtr[ neighborAPIndex ].band, RADIO_BAND_NUM_OF_BANDS-1);
 			handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 			return;
 		}
@@ -3522,7 +3243,6 @@ void scanMngr_notifyChangeTrigger(TI_HANDLE hScanMngr, ERssiQuality eQuality)
 {
 	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_qualityChangeTrigger called, hScanMngr=0x%x, eQuality=%d.\n", hScanMngr, eQuality);
 
 	/* remember the low quality trigger (in case policy changes, to know which timer interval to use) */
 	pScanMngr->eQuality = eQuality;
@@ -3540,15 +3260,9 @@ void scanMngr_qualityChangeTrigger( TI_HANDLE hScanMngr )
 {
 	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_qualityChangeTrigger called, hScanMngr=0x%x, eQuality=%d.\n", hScanMngr, pScanMngr->eQuality);
-
 	/* remember the low quality trigger (in case policy changes, to know which timer interval to use) */
 	/*    pScanMngr->eQuality = eQuality;*/
 
-	/* This function shouldn't be called when continuous scan is not running */
-	if ( TI_FALSE == pScanMngr->bContinuousScanStarted ) {
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_WARNING, "Quality change trigger when continuous scan is not running.\n");
-	}
 
 	/* If the timer is running, stop it and start it again with the new interval */
 	if (pScanMngr->bTimerRunning) {
@@ -3571,34 +3285,20 @@ void scanMngr_handoverDone( TI_HANDLE hScanMngr, TMacAddr* macAddress, ERadioBan
 	/* mark that TSF values are not synchronized */
 	pScanMngr->bSynchronized = TI_FALSE;
 
-	TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_handoverDone called\n");
 	/* It looks like it never happens. Anyway decided to check */
 	if ( pScanMngr->currentBSSBand >= RADIO_BAND_NUM_OF_BANDS ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngr_handoverDone. pScanMngr->currentBSSBand=%d exceeds the limit %d\n",
-		        pScanMngr->currentBSSBand, RADIO_BAND_NUM_OF_BANDS-1);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
 	if ( pScanMngr->neighborAPsDiscoveryList[ pScanMngr->currentBSSBand ].numOfEntries > MAX_NUM_OF_NEIGHBOR_APS) {
-		TRACE3( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngr_handoverDone. pScanMngr->neighborAPsDiscoveryList[ %d ].numOfEntries=%d exceeds the limit %d\n",
-		        pScanMngr->currentBSSBand, pScanMngr->neighborAPsDiscoveryList[ pScanMngr->currentBSSBand ].numOfEntries,
-		        MAX_NUM_OF_NEIGHBOR_APS);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
 	if ( band >= RADIO_BAND_NUM_OF_BANDS ) {
-		TRACE2( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngr_handoverDone. band=%d exceeds the limit %d\n",
-		        band, RADIO_BAND_NUM_OF_BANDS-1);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
 	if ( pScanMngr->neighborAPsDiscoveryList[ band ].numOfEntries > MAX_NUM_OF_NEIGHBOR_APS) {
-		TRACE3( pScanMngr->hReport, REPORT_SEVERITY_ERROR,
-		        "scanMngr_handoverDone. pScanMngr->neighborAPsDiscoveryList[ %d ].numOfEntries=%d exceeds the limit %d\n",
-		        band, pScanMngr->neighborAPsDiscoveryList[ band ].numOfEntries, MAX_NUM_OF_NEIGHBOR_APS);
 		handleRunProblem(PROBLEM_BUF_SIZE_VIOLATION);
 		return;
 	}
@@ -3627,7 +3327,6 @@ void scanMngr_handoverDone( TI_HANDLE hScanMngr, TMacAddr* macAddress, ERadioBan
 	/* if a continuous scan is running, mark that it should stop */
 	if ( SCAN_CSS_IDLE != pScanMngr->contScanState ) {
 
-		TRACE0( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_handoverDone called, switched to STOPPING state \n");
 
 		pScanMngr->contScanState = SCAN_CSS_STOPPING;
 		scanCncn_StopScan( pScanMngr->hScanCncn, SCAN_SCC_ROAMING_CONT );
@@ -3645,8 +3344,6 @@ TI_STATUS scanMngr_getParam( TI_HANDLE hScanMngr, paramInfo_t *pParam )
 {
 	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
 
-	TRACE2( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_getParam called, hScanMngr=0x%x, pParam=0x%x\n", hScanMngr, pParam);
-
 	/* act according to parameter type */
 	switch ( pParam->paramType ) {
 	case SCAN_MNGR_BSS_LIST_GET:
@@ -3654,7 +3351,6 @@ TI_STATUS scanMngr_getParam( TI_HANDLE hScanMngr, paramInfo_t *pParam )
 		break;
 
 	default:
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_ERROR, "Scan manager getParam called with param type %d.\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 		/*        break; - unreachable */
 	}
@@ -3669,10 +3365,6 @@ TI_STATUS scanMngr_getParam( TI_HANDLE hScanMngr, paramInfo_t *pParam )
 
 TI_STATUS scanMngr_setParam( TI_HANDLE hScanMngr, paramInfo_t *pParam )
 {
-	scanMngr_t* pScanMngr = (scanMngr_t*)hScanMngr;
-
-	TRACE3( pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_setParam called, hScanMngr=0x%x, pParam=0x%x, pParam->paramType=%d\n", hScanMngr, pParam, pParam->paramType);
-
 	/* act according to parameter type */
 	switch ( pParam->paramType ) {
 	case SCAN_MNGR_SET_CONFIGURATION:
@@ -3680,7 +3372,6 @@ TI_STATUS scanMngr_setParam( TI_HANDLE hScanMngr, paramInfo_t *pParam )
 		break;
 
 	default:
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_ERROR, "Set param, Params is not supported:%d\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 	}
 
@@ -3790,7 +3481,6 @@ void scanMngr_startManual(TI_HANDLE hScanMngr)
 	pScanMngr->connStatus = CONNECTION_STATUS_CONNECTED;
 
 	scanMngr_setManualScanDefaultParams(hScanMngr);
-	TRACE0(pScanMngr->hReport,REPORT_SEVERITY_INFORMATION, "scanMngr_startManual() called. \n");
 
 	/* get policies by band */
 	scanMngrGetPolicyByBand( hScanMngr, RADIO_BAND_2_4_GHZ ); /* TODO: check if neccessary!!!*/
@@ -3867,8 +3557,6 @@ EScanCncnResultStatus scanMngr_Start1ShotScan (TI_HANDLE hScanMngr, EScanCncnCli
 	TScanParams* pScanParams;
 	EScanCncnResultStatus status;
 
-	TRACE2(pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_Start1ShotScan started... .Operational mode: %d, ScanClient=%d. \n",
-	       pScanMngr->scanningOperationalMode, eClient);
 
 	if (SCANNING_OPERATIONAL_MODE_AUTO == pScanMngr->scanningOperationalMode) {
 		pScanParams = &(pScanMngr->scanParams);
@@ -3932,11 +3620,9 @@ TI_STATUS scanMngr_reportImmediateScanResults(TI_HANDLE hScanMngr, scan_mngrResu
 
 
 	if (scanCmpltStatus == SCAN_MRS_SCAN_COMPLETE_OK) {
-		TRACE0(pScanMngr->hReport, REPORT_SEVERITY_INFORMATION ,"scanMngr_reportImmediateScanResults(): reporting scan results to App \n");
 		pListOfAPs  = scanMngr_getBSSList(hScanMngr);
 		EvHandlerSendEvent(pScanMngr->hEvHandler, IPC_EVENT_IMMEDIATE_SCAN_REPORT, (TI_UINT8*)pListOfAPs, sizeof(bssList_t));
 	} else {
-		TRACE1(pScanMngr->hReport, REPORT_SEVERITY_ERROR, "scanMngr_reportImmediateScanResults was not completed successfully. status: %d\n", scanCmpltStatus);
 		return TI_NOK;
 	}
 
@@ -3966,14 +3652,12 @@ TI_STATUS scanMngr_startContinuousScanByApp (TI_HANDLE hScanMngr, channelList_t*
 
 	scanMngr_setManualScanDefaultParams(hScanMngr);
 
-	TRACE1(pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_startContinuousScanByApp().pScanMngr->connStatus =  %d \n", pScanMngr->connStatus);
 
 	if (CONN_STATUS_CONNECTED == pScanMngr->connStatus) {
 		scanMngr_setManualScanChannelList(hScanMngr,pChannelList);
 		pCurBssEntry = apConn_getBSSParams(pScanMngr->hAPConnection);
 		scanMngr_startContScan(hScanMngr, &pCurBssEntry->BSSID, pCurBssEntry->band);
 	} else {
-		TRACE1( pScanMngr->hReport, REPORT_SEVERITY_ERROR, "scanMngr_startContinuousScanByApp failed. connection status %d\n", pScanMngr->connStatus);
 		return TI_NOK;
 	}
 
@@ -3996,9 +3680,6 @@ TI_STATUS scanMngr_startContinuousScanByApp (TI_HANDLE hScanMngr, channelList_t*
 */
 TI_STATUS scanMngr_stopContinuousScanByApp (TI_HANDLE hScanMngr)
 {
-	scanMngr_t* 	pScanMngr = (scanMngr_t*)hScanMngr;
-
-	TRACE0(pScanMngr->hReport, REPORT_SEVERITY_INFORMATION, "scanMngr_stopContinuousScanByApp(). call scanMngr_stopContScan() \n");
 	scanMngr_stopContScan(hScanMngr);
 	scanMngr_reportContinuousScanResults(hScanMngr,SCAN_CRS_SCAN_COMPLETE_OK);
 	return TI_OK;

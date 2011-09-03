@@ -256,7 +256,6 @@ TI_STATUS PowerMgr_SetDefaults (TI_HANDLE hPowerMgr, PowerMgrInitParams_t* pPowe
 
 	if ( (pPowerMgr->betDisableTMEvent == NULL) ||
 	        (pPowerMgr->betEnableTMEvent == NULL)) {
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INIT, "PowerMgr_init - TM - ERROR registering BET events - ABROTING init!\n");
 		return TI_NOK;
 	}
 	/*
@@ -267,7 +266,6 @@ TI_STATUS PowerMgr_SetDefaults (TI_HANDLE hPowerMgr, PowerMgrInitParams_t* pPowe
 	         pPowerMgr->betEnableTMEvent,
 	         TI_TRUE);
 	if ( status != TI_OK ) {
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INIT, "PowerMgr_init - PowerMgr_init - ERROR binding BET events - ABROTING init!\n");
 		return TI_NOK;
 	}
 
@@ -297,7 +295,6 @@ TI_STATUS PowerMgr_SetDefaults (TI_HANDLE hPowerMgr, PowerMgrInitParams_t* pPowe
 
 	if ( (pPowerMgr->passToActiveTMEvent == NULL) ||
 	        (pPowerMgr->passToDozeTMEvent == NULL)) {
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INIT, "PowerMgr_init - PowerMgr_init - ERROR registering Auto mode events - ABROTING init!\n");
 		return TI_NOK;
 	}
 
@@ -309,7 +306,6 @@ TI_STATUS PowerMgr_SetDefaults (TI_HANDLE hPowerMgr, PowerMgrInitParams_t* pPowe
 	         pPowerMgr->passToDozeTMEvent,
 	         TI_TRUE);
 	if ( status != TI_OK ) {
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INIT, "PowerMgr_init - PowerMgr_init - ERROR binding Auto mode events - ABROTING init!\n");
 		return TI_NOK;
 	}
 
@@ -354,7 +350,6 @@ TI_STATUS PowerMgr_SetDefaults (TI_HANDLE hPowerMgr, PowerMgrInitParams_t* pPowe
 	pPowerMgr->hPsPollFailureTimer = tmr_CreateTimer(pPowerMgr->hTimer);
 
 	if ( (pPowerMgr->hPsPollFailureTimer == NULL) || (pPowerMgr->hRetryPsTimer == NULL)) {
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INIT, "PowerMgr_SetDefaults - ERROR creating timers - ABROTING init!\n");
 		return TI_NOK;
 	}
 
@@ -365,7 +360,6 @@ TI_STATUS PowerMgr_SetDefaults (TI_HANDLE hPowerMgr, PowerMgrInitParams_t* pPowe
 	                   hPowerMgr);
 	TWD_EnableEvent (pPowerMgr->hTWD, TWD_OWN_EVENT_PSPOLL_DELIVERY_FAILURE);
 
-	TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INIT, "PowerMgr_init - PowerMgr Initialized\n");
 
 	/* set defaults for the power manager keep-alive sub module */
 	powerMgrKL_setDefaults (pPowerMgr->hPowerMgrKeepAlive);
@@ -389,10 +383,8 @@ TI_STATUS PowerMgr_startPS(TI_HANDLE hPowerMgr)
 	int frameCount;
 
 
-	TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMgr_startPS - called\n");
 
 	if ( pPowerMgr->psEnable == TI_TRUE ) {
-		TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgr_startPS - PS mechanism is already Enable! Aborting psEnable=%d !\n", pPowerMgr->psEnable);
 		/*
 		this is a FATAL ERROR of the power manager!
 		already enable power-save! thus return TI_OK, but there is an error in the upper
@@ -465,10 +457,8 @@ TI_STATUS PowerMgr_stopPS(TI_HANDLE hPowerMgr, TI_BOOL bDisconnect)
 	PowerMgr_t *pPowerMgr = (PowerMgr_t*)hPowerMgr;
 	/*TI_STATUS status;*/
 
-	TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMgr_stopPS - called\n");
 
 	if ( pPowerMgr->psEnable == TI_FALSE ) {
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMgr_stopPS - PS is already Disable! Aborting!\n");
 		/*
 		Print Info message incase callng PowerMgr_stopPS() more than once in a row, without
 		calling to PowerMgr_startPS() in the middle.
@@ -553,11 +543,9 @@ TI_STATUS PowerMgr_setPowerMode(TI_HANDLE hPowerMgr)
 
 	/* sanity checking */
 	if ( powerMode >= POWER_MODE_MAX) {
-		TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgr_setPowerMode - unknown parameter: %d\n", powerMode);
 		return TI_NOK;
 	}
 
-	TRACE1( pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMgr_setPowerMode, power mode = %d\n", powerMode);
 
 	if ( pPowerMgr->desiredPowerModeProfile != powerMode ) {
 		PowerMgr_PowerMode_e previousPowerModeProfile;
@@ -591,11 +579,6 @@ TI_STATUS PowerMgr_setPowerMode(TI_HANDLE hPowerMgr)
 			}
 			powerMgrPowerProfileConfiguration(hPowerMgr, powerMode);
 		}
-	} else {
-		/*
-		the power mode is already configure to the module - don't need to do anything!
-		*/
-		TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_WARNING, "PowerMgr_setPowerMode - desiredPowerModeProfile == thePowerMode (=%d), ABORTING!\n", powerMode);
 	}
 
 	return TI_OK;
@@ -618,7 +601,6 @@ void PowerMgr_setDozeModeInAuto(TI_HANDLE hPowerMgr, PowerMgr_PowerMode_e dozeMo
 
 	/* check if we are trying to configure the same Doze mode */
 	if ( dozeMode != pPowerMgr->autoModeDozeMode ) {
-		TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMgr_setDozeModeInAuto - autoModeDozeMode == %d \n", dozeMode);
 
 		pPowerMgr->autoModeDozeMode = dozeMode;
 
@@ -638,10 +620,7 @@ void PowerMgr_setDozeModeInAuto(TI_HANDLE hPowerMgr, PowerMgr_PowerMode_e dozeMo
 				}
 			}
 
-			TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMgr_setDozeModeInAuto - already in Auto\n");
 		}
-	} else {
-		TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_WARNING, "PowerMgr_setDozeModeInAuto - autoModeDozeMode == %d (same same ...)\n", dozeMode);
 	}
 }
 
@@ -714,7 +693,6 @@ TI_STATUS powerMgr_setParam(TI_HANDLE thePowerMgrHandle,
 
 
 	default:
-		TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgr_setParam - ERROR - Param is not supported, %d\n\n", theParamP->paramType);
 
 		return PARAM_NOT_SUPPORTED;
 	}
@@ -763,7 +741,6 @@ TI_STATUS powerMgr_getParam(TI_HANDLE thePowerMgrHandle,
 
 
 	default:
-		TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgr_getParam - ERROR - Param is not supported, %d\n\n", theParamP->paramType);
 		return PARAM_NOT_SUPPORTED;
 	}
 
@@ -786,7 +763,6 @@ TI_STATUS powerMgr_suspend(TI_HANDLE thePowerMgrHandle)
 	powerSuspensionValues_t *pSuspensionSettings = &pPowerMgr->suspensionValues;
 	const PowerMgr_PowerMode_e newPowerMode = pSuspensionSettings->powerMode;
 
-	TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "Entering suspend\n");
 
 	TWD_CfgEnableMulticastMACFixup(pPowerMgr->hTWD, FIXUP_MULTICAST_IN_FW_LEVEL);
 
@@ -805,20 +781,13 @@ TI_STATUS powerMgr_suspend(TI_HANDLE thePowerMgrHandle)
 
 	/* check current PS mode */
 	bInPsMode = PowerMgr_getPsStatus(thePowerMgrHandle);
-	TRACE4(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "Current data: beacon_filter_state=%d, powermode=%d, dtim=%d, bInPsMode=%d\n",
-	       pSavedSettings->desiredBeaconFilterState,
-	       pSavedSettings->powerMode,
-	       pSavedSettings->dtimListenInterval,
-	       bInPsMode);
 
 	if (! bInPsMode) {
 		/* we are not in PS mode yet. */
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "Not in PS mode!\n");
 
 		switch (pSavedSettings->powerMode) {
 		case POWER_MODE_SHORT_DOZE:
 		case POWER_MODE_LONG_DOZE:
-			TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "the chip should have already been in PS mode. fail.\n");
 			return TI_NOK;
 
 		case POWER_MODE_AUTO:
@@ -830,8 +799,6 @@ TI_STATUS powerMgr_suspend(TI_HANDLE thePowerMgrHandle)
 			/* enter powersave */
 			bEnterPS = TI_TRUE;
 		}
-	} else {
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "In PS mode. only reconfigure.\n");
 	}
 
 	/* set new parameters */
@@ -871,15 +838,12 @@ TI_STATUS powerMgr_suspend(TI_HANDLE thePowerMgrHandle)
 
 	if (bEnterPS) {
 		/* start PM, wait for completion CB. */
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "Calling powerMgrStartSuspendPS in order to enter long doze\n");
                 status = powerMgrStartSuspendPS(thePowerMgrHandle);
 	} else {
 		/* read (statistics) from FW (with CB), so we can know all previous commands have been completed */
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "Calling NOP function...\n");
                 status = powerMgrNOP(thePowerMgrHandle);
 	}
 
-        TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "powerMgr_suspend return value: %d\n", status);
         return status;
 }
 
@@ -893,12 +857,6 @@ TI_STATUS powerMgr_resume(TI_HANDLE thePowerMgrHandle)
 	int i;
 #endif
 
-	/* set old parameters */
-	TRACE3(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "Setting old PM settings: beacon_filter_state=%d, powermode=%d, dtim=%d\n",
-	       pSavedSettings->desiredBeaconFilterState,
-	       pSavedSettings->powerMode,
-	       pSavedSettings->dtimListenInterval);
-
 	TWD_CfgEnableMulticastMACFixup(pPowerMgr->hTWD, FIXUP_MULTICAST_DISABLED);
 
 	/* set beacon filtering */
@@ -908,7 +866,6 @@ TI_STATUS powerMgr_resume(TI_HANDLE thePowerMgrHandle)
 
 #ifndef AVOID_KEEPALIVE_RECONFIGURATION
 	/* set keep-alive templates */
-	TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "Restoring Keep-Alive templates\n");
 	if (pPowerMgr->suspensionValues.keepAliveConfig.enaDisFlag != pSavedSettings->keepAliveConfig.enaDisFlag) {
 		param.paramType = POWER_MGR_KEEP_ALIVE_ENA_DIS;
 		param.content.powerMgrKeepAliveEnaDis = pSavedSettings->keepAliveConfig.enaDisFlag;
@@ -967,8 +924,6 @@ static void powerSaveCompleteCB(TI_HANDLE hPowerMgr,TI_UINT8 PSMode,TI_UINT8 tra
 {
 	PowerMgr_t *pPowerMgr = (PowerMgr_t*)hPowerMgr;
 
-	TRACE1( pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "powerSaveCompleteCB, statud = %d\n", transStatus);
-
 	/* Handling the event*/
 	switch ( (EventsPowerSave_e)transStatus ) {
 	case ENTER_POWER_SAVE_FAIL:
@@ -986,7 +941,6 @@ static void powerSaveCompleteCB(TI_HANDLE hPowerMgr,TI_UINT8 PSMode,TI_UINT8 tra
 		break;
 
 	default:
-		TRACE1( pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "powerSaveCompleteCB: invliad status: %d\n", transStatus);
 		break;
 	}
 }
@@ -1004,8 +958,6 @@ static void PowerMgrTMThresholdCrossCB( TI_HANDLE hPowerMgr, TI_UINT32 cookie )
 {
 	PowerMgr_t *pPowerMgr = (PowerMgr_t*)hPowerMgr;
 
-	TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMgrTMThresholdCrossCB - TM notified threshold crossed, cookie: %d\n", cookie);
-
 	/* sanity cehcking - TM notifications should only be received when PM is enabled and in auto mode */
 	if ( (pPowerMgr->psEnable == TI_TRUE) && (pPowerMgr->desiredPowerModeProfile == POWER_MODE_AUTO)) {
 		switch ((PowerMgr_PowerMode_e)cookie) {
@@ -1019,14 +971,11 @@ static void PowerMgrTMThresholdCrossCB( TI_HANDLE hPowerMgr, TI_UINT32 cookie )
 			break;
 
 		default:
-			TRACE1( pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgrTMThresholdCrossCB: TM notification with invalid cookie: %d!\n", cookie);
 			break;
 		}
 	} else if ((pPowerMgr->psEnable == TI_TRUE) && (pPowerMgr->desiredPowerModeProfile != POWER_MODE_ACTIVE)) {
 		TI_BOOL bPsTrafficOn = ((PowerMgr_PowerMode_e)cookie == POWER_MODE_ACTIVE) ? TI_TRUE : TI_FALSE;
 		qosMngr_UpdatePsTraffic(pPowerMgr->hQosMngr,bPsTrafficOn);
-	} else {
-		TRACE2( pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgrTMThresholdCrossCB: TM motification when psEnable is :%d or desired profile is: %d\n", pPowerMgr->psEnable, pPowerMgr->desiredPowerModeProfile);
 	}
 
 }
@@ -1074,7 +1023,6 @@ static void powerMgrEnableThresholdsIndications(TI_HANDLE hPowerMgr)
 {
 	PowerMgr_t *pPowerMgr = (PowerMgr_t*)hPowerMgr;
 
-	TRACE0( pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "powerMgrEnableThresholdsIndications called\n");
 	/*
 	auto is not a static/fix state, but rather a dynamic state that flows between
 	the 3 static/fix states: active, short-doze and long-doze.
@@ -1106,7 +1054,6 @@ static void powerMgrStartAutoPowerMode(TI_HANDLE hPowerMgr)
 
 	frameCount = TrafficMonitor_GetFrameBandwidth(pPowerMgr->hTrafficMonitor);
 
-	TRACE0( pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "powerMgrStartAutoPowerMode: Starting auto power mode,");
 
 	/*Activates the correct profile*/
 	/*Activate the active profile just in case frame count bigger than active TH and bigger than 0*/
@@ -1146,7 +1093,6 @@ static void powerMgrRetryPsTimeout(TI_HANDLE hPowerMgr, TI_BOOL bTwdInitOccured)
 {
 	PowerMgr_t *pPowerMgr = (PowerMgr_t*)hPowerMgr;
 
-	TRACE0( pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "powerMgrRetryPsTimeout: timer expired.\n");
 
 	if ( pPowerMgr->lastPsTransaction == ENTER_POWER_SAVE_FAIL ) {
 		TWD_SetPsMode (pPowerMgr->hTWD, POWER_SAVE_ON, TI_TRUE, hPowerMgr,powerSaveCompleteCB, NULL);/*NULL as GWSI callback*/
@@ -1177,7 +1123,6 @@ static void powerMgrPowerProfileConfiguration(TI_HANDLE hPowerMgr, PowerMgr_Powe
 
 	switch ( desiredPowerMode ) {
 	case POWER_MODE_AUTO:
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMode==AUTO - This mode should not be sent to the GWSI - we send AUTO instead\n");
 		break;
 
 	case POWER_MODE_ACTIVE:
@@ -1189,7 +1134,6 @@ static void powerMgrPowerProfileConfiguration(TI_HANDLE hPowerMgr, PowerMgr_Powe
 		               powerSaveCompleteCB,
 		               NULL);
 
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMode==ACTIVE\n");
 		break;
 
 	case POWER_MODE_SHORT_DOZE:
@@ -1206,7 +1150,6 @@ static void powerMgrPowerProfileConfiguration(TI_HANDLE hPowerMgr, PowerMgr_Powe
 		               powerSaveCompleteCB,
 		               NULL);
 
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMode==SHORT_DOZE\n");
 		break;
 
 	case POWER_MODE_LONG_DOZE:
@@ -1222,7 +1165,6 @@ static void powerMgrPowerProfileConfiguration(TI_HANDLE hPowerMgr, PowerMgr_Powe
 		               powerSaveCompleteCB,
 		               NULL);
 
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMode==LONG_DOZE\n");
 		break;
 
 	case POWER_MODE_PS_ONLY:
@@ -1236,11 +1178,9 @@ static void powerMgrPowerProfileConfiguration(TI_HANDLE hPowerMgr, PowerMgr_Powe
 		               powerSaveCompleteCB,
 		               NULL);
 
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMode==PS_ONLY\n");
 		break;
 
 	default:
-		TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgr_setWakeUpConfiguration - ERROR - PowerMode - unknown parameter: %d\n", desiredPowerMode);
 		return;
 	}
 }
@@ -1267,13 +1207,9 @@ static TI_STATUS powerMgrSendMBXWakeUpConditions(TI_HANDLE hPowerMgr,
 	powerMgmtConfig.listenInterval = listenInterval;
 	powerMgmtConfig.tnetWakeupOn = tnetWakeupOn;
 
-	TRACE2(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "powerMgrSendMBXWakeUpConditions: listenInterval = %d, tnetWakeupOn = %d\n", listenInterval,tnetWakeupOn);
 
 	status = TWD_CfgWakeUpCondition (pPowerMgr->hTWD, &powerMgmtConfig);
 
-	if ( status != TI_OK ) {
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "powerMgrSendMBXWakeUpConditions - Error in wae up condition IE!\n");
-	}
 	return status;
 }
 
@@ -1290,7 +1226,6 @@ static TI_STATUS powerMgrNullPacketRateConfiguration(TI_HANDLE hPowerMgr)
 		TWD_SetNullRateModulation (pPowerMgr->hTWD, (TI_UINT16)param.content.siteMgrCurrentRateMask.basicRateMask);
 	} else {
 		TWD_SetNullRateModulation (pPowerMgr->hTWD, (DRV_RATE_MASK_1_BARKER | DRV_RATE_MASK_2_BARKER));
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "powerMgrNullPacketRateConfiguration: error - faild to set rate so default was seted!\n");
 	}
 	return TI_OK;
 
@@ -1309,7 +1244,6 @@ static PowerMgr_PowerMode_e powerMgrGetHighestPriority(TI_HANDLE hPowerMgr)
 
 	}
 
-	TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "powerMgrGetHighestPriority - error - faild to get highest priority! sefault deseired mode was returned !!!\n");
 	return pPowerMgr->desiredPowerModeProfile;
 }
 
@@ -1328,7 +1262,6 @@ TI_STATUS PowerMgr_notifyFWReset(TI_HANDLE hPowerMgr)
 {
 	PowerMgr_t *pPowerMgr = (PowerMgr_t*)hPowerMgr;
 
-	TRACE2(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMgr_notifyFWReset(): psEnable = %d, lastPowerModeProfile = %d\n", pPowerMgr->psEnable, pPowerMgr->lastPowerModeProfile);
 
 	if (pPowerMgr->psEnable) {
 		powerMgrPowerProfileConfiguration(hPowerMgr, pPowerMgr->lastPowerModeProfile);
@@ -1384,14 +1317,12 @@ static void PowerMgrConfigBetToFw( TI_HANDLE hPowerMgr, TI_UINT32 BetEnable )
 	}
 
 	if (listenInterval == 0) {
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_WARNING, "PowerMgrConfigBetToFw: listenInterval is ZERO\n");
 		return;
 	}
 
 	/* MaximumConsecutiveET = MaximalFullBeaconReceptionInterval / MAX( BeaconInterval, ListenInterval) */
 	MaximumConsecutiveET = pPowerMgr->maxFullBeaconInterval / listenInterval;
 
-	TRACE5(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMgrConfigBetToFw:\n                           Power Mode = %d\n                           beaconInterval = %d\n                           listenInterval = %d\n                           Bet Enable = %d\n                           MaximumConsecutiveET = %d\n", powerMode, beaconInterval, listenInterval, BetEnable, MaximumConsecutiveET);
 
 	pPowerMgr->betEnable = BetEnable; /* save BET enable flag for CLI configuration */
 
@@ -1452,8 +1383,7 @@ static void powerMgr_SGSetUserDesiredwakeUpCond( TI_HANDLE hPowerMgr )
 			}
 			break;
 
-		default:
-			TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, ": ERROR - PowerMode for user prioirty is: %d\n", pPowerMgr->powerMngModePriority[ POWER_MANAGER_USER_PRIORITY ].powerMode);
+		default: {}
 		}
 	}/*end of if (psEnable)*/
 }
@@ -1478,7 +1408,6 @@ static void PowerMgr_PsPollFailureCB( TI_HANDLE hPowerMgr )
 	if ( pPowerMgr->PsPollDeliveryFailureRecoveryPeriod ) {
 		paramInfo_t param;
 
-		TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_WARNING, " Oh boy, AP is not answering Ps-Poll's. enter active PS for %d Ms\n", pPowerMgr->PsPollDeliveryFailureRecoveryPeriod);
 
 		/*
 		 * Set the system to Active power save
@@ -1500,8 +1429,6 @@ static void PowerMgr_PsPollFailureCB( TI_HANDLE hPowerMgr )
 		               (TI_HANDLE)pPowerMgr,
 		               pPowerMgr->PsPollDeliveryFailureRecoveryPeriod,
 		               TI_FALSE);
-	} else { /* Work-around is disabled */
-		TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_WARNING, " Oh boy, AP is not answering Ps-Poll's !!!\n");
 	}
 	return;
 }
@@ -1517,10 +1444,8 @@ RETURN:
 ****************************************************************************************/
 static void powerMgr_PsPollFailureTimeout( TI_HANDLE hPowerMgr, TI_BOOL bTwdInitOccured )
 {
-	PowerMgr_t *pPowerMgr = (PowerMgr_t*)hPowerMgr;
+//	PowerMgr_t *pPowerMgr = (PowerMgr_t*)hPowerMgr;
 	paramInfo_t param;
-
-	TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, " \n");
 
 	/* disable Ps-Poll priority */
 	param.paramType = POWER_MGR_DISABLE_PRIORITY;
@@ -1541,8 +1466,6 @@ static void PowerMgr_SuspendCompletedCB(TI_HANDLE hPowerMgr,TI_UINT8 PSMode,TI_U
 {
 	PowerMgr_t *pPowerMgr = (PowerMgr_t*)hPowerMgr;
 
-	TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "*** PowerMgr_SuspendCompletedCB, status = %d\n ***", transStatus);
-
 	/* Handling the event*/
 	switch ( (EventsPowerSave_e)transStatus ) {
 	case ENTER_POWER_SAVE_FAIL:
@@ -1556,7 +1479,6 @@ static void PowerMgr_SuspendCompletedCB(TI_HANDLE hPowerMgr,TI_UINT8 PSMode,TI_U
 		break;
 
 	default:
-		TRACE1( pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgr_SuspendCompletedCB: invliad status: %d\n", transStatus);
 		break;
 	}
 }
@@ -1589,7 +1511,6 @@ static TI_STATUS powerMgr_StatisticsReadCB (TI_HANDLE hPowerMgr, TI_UINT16 MboxS
 {
 	PowerMgr_t *pPowerMgr = (PowerMgr_t*)hPowerMgr;
 
-	TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "*** Nop function called! ***\n");
 	drvMain_PowerMgrSuspended(pPowerMgr->hDrvMain, TI_TRUE);
 	return TI_OK;
 }

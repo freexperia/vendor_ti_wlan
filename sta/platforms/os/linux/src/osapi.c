@@ -62,7 +62,7 @@
 /*#include "debug_module.h"*/
 #include "host_platform.h"
 #include "WlanDrvIf.h"
-#include "bmtrace_api.h"
+//#include "bmtrace_api.h"
 #include "TI_IPC_Api.h"
 #include "802_11Defs.h"
 #include "osApi.h"
@@ -476,14 +476,11 @@ TI_BOOL os_receivePacket(TI_HANDLE OsContext, void *pRxDesc ,void *pPacket, TI_U
 	 * it responsibly of the Linux kernel to free the skb
 	 */
 	{
-		CL_TRACE_START_L1();
 
 		os_wake_lock_timeout_enable(drv);
 
 		netif_rx_ni(skb);
 
-		/* Note: Don't change this trace (needed to exclude OS processing from Rx CPU utilization) */
-		CL_TRACE_END_L1("tiwlan_drv.ko", "OS", "RX", "");
 	}
 
 	return TI_TRUE;
@@ -734,12 +731,6 @@ Return Value:  TI_OK
 int os_RequestSchedule (TI_HANDLE OsContext)
 {
 	TWlanDrvIfObj *drv = (TWlanDrvIfObj *)OsContext;
-
-	/* Note: The performance trace below doesn't inclose the schedule
-	 *   itself because the rescheduling can occur immediately and call
-	 *   os_RequestSchedule again which will confuse the trace tools */
-	CL_TRACE_START_L3();
-	CL_TRACE_END_L3("tiwlan_drv.ko", "OS", "TASK", "");
 
 	if ( !queue_work(drv->tiwlan_wq, &drv->tWork) ) {
 		/* printk("%s: Fail\n",__func__); */

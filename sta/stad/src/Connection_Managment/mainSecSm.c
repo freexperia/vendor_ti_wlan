@@ -186,8 +186,6 @@ TI_STATUS mainSec_config (mainSec_t *pMainSec,
 	pMainSec->hReport = hReport;
 	pMainSec->hOs = hOs;
 
-	TRACE4(pMainSec->hReport, REPORT_SEVERITY_SM, "MainSec SM: config, authProtocol = %d, keyExchangeProtocol=%d, unicastSuite=%d, broadcastSuite=%d\n", pInitData->pPaeConfig->authProtocol, pInitData->pPaeConfig->keyExchangeProtocol, pInitData->pPaeConfig->unicastSuite, pInitData->pPaeConfig->broadcastSuite);
-
 	if (TI_TRUE == pMainSec->pParent->bRsnExternalMode) {
 		status = externalSec_config(pMainSec);
 	} else {
@@ -215,11 +213,8 @@ TI_STATUS mainSec_config (mainSec_t *pMainSec,
 	                           pMainSec->pParent,
 	                           hTimer);
 	if (status != TI_OK) {
-		TRACE0(pMainSec->hReport, REPORT_SEVERITY_ERROR, "MAIN_SEC_SM: error in configuring mainKeys SM\n");
 		return status;
 	}
-
-	TRACE0(pMainSec->hReport, REPORT_SEVERITY_SM, "MAIN_SEC_SM: successful configuration SM\n");
 
 	return status;
 }
@@ -251,22 +246,10 @@ TI_STATUS mainSec_unload(mainSec_t *pMainSec)
 	}
 
 	status = mainKeys_unload(pMainSec->pMainKeys);
-	if (status != TI_OK) {
-		/* report failure but don't stop... */
-		TRACE0(pMainSec->hReport, REPORT_SEVERITY_ERROR, "MAIN_SEC_SM: Error releasing Main Keys SM memory \n");
-	}
 
 	status = fsm_Unload(pMainSec->hOs, pMainSec->pMainSecSm);
-	if (status != TI_OK) {
-		/* report failure but don't stop... */
-		TRACE0(pMainSec->hReport, REPORT_SEVERITY_ERROR, "MAIN_SEC_SM: Error releasing FSM memory \n");
-	}
 
 	status = externalSec_Destroy (pMainSec->pExternalSec);
-	if (status != TI_OK) {
-		/* report failure but don't stop... */
-		TRACE0(pMainSec->hReport, REPORT_SEVERITY_ERROR, "MAIN_SEC_SM: Error releasing External Security SM memory \n");
-	}
 
 	os_memoryFree(pMainSec->hOs, pMainSec, sizeof(mainSec_t));
 
@@ -300,7 +283,6 @@ TI_STATUS mainSec_setKey(struct _mainSec_t *pMainSec, TSecurityKeys *pKey)
 	}
 
 	if (pKey->keyType != KEY_NULL) {
-		TRACE6(pMainSec->hReport, REPORT_SEVERITY_INFORMATION, "MAIN_SEC_SM: setting key #%d, value = 0x%X 0x%X 0x%X 0x%X 0x%X\n", pKey->keyIndex, (TI_UINT8)pKey->encKey[0], (TI_UINT8)pKey->encKey[1], (TI_UINT8)pKey->encKey[2], (TI_UINT8)pKey->encKey[3], (TI_UINT8)pKey->encKey[4]);
 
 		status = pMainSec->pParent->setKey(pMainSec->pParent, pKey);
 	}
@@ -335,7 +317,6 @@ TI_STATUS mainSec_removeKey(struct _mainSec_t *pMainSec, TSecurityKeys *pKey)
 	}
 
 	if (pKey->keyType != KEY_NULL) {
-		TRACE1(pMainSec->hReport, REPORT_SEVERITY_INFORMATION, "MAIN_SEC_SM: removing key #%d, \n", pKey->keyIndex);
 
 		status = pMainSec->pParent->removeKey(pMainSec->pParent, pKey);
 	}

@@ -171,11 +171,8 @@ TI_STATUS unicastKey802_1x_event(struct _unicastKey_t *pUnicastKey, TI_UINT8 eve
 
 	status = fsm_GetNextState(pUnicastKey->pUcastKeySm, pUnicastKey->currentState, event, &nextState);
 	if (status != TI_OK) {
-		TRACE0(pUnicastKey->hReport, REPORT_SEVERITY_ERROR, "UNICAST_KEY_802_1x: ERROR: failed getting next state\n");
 		return TI_NOK;
 	}
-
-	TRACE3(pUnicastKey->hReport, REPORT_SEVERITY_INFORMATION, "STATION_UNICAST_KEY_802_1x: <currentState = %d, event = %d> --> nextState = %d\n", pUnicastKey->currentState, event, nextState);
 
 	status = fsm_Event(pUnicastKey->pUcastKeySm, &pUnicastKey->currentState, event, pData);
 

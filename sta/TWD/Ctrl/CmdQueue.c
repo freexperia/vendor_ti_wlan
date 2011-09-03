@@ -42,7 +42,7 @@
 #define __FILE_ID__  FILE_ID_97
 #include "tidef.h"
 #include "osApi.h"
-#include "report.h"
+//#include "report.h"
 #include "TwIf.h"
 #include "public_commands.h"
 #include "CmdQueue_api.h"
@@ -204,16 +204,6 @@ static TI_STATUS cmdQueue_SM (TI_HANDLE hCmdQueue, ECmdQueueSmEvents eCmdQueueEv
 
 				pHead = &pCmdQueue->aCmdQueue[pCmdQueue->head];
 
-#ifdef CMDQUEUE_DEBUG_PRINT
-				TRACE4(pCmdQueue->hReport, REPORT_SEVERITY_CONSOLE, "cmdQueue_SM: Send Cmd: CmdType = %d(%d) Len = %d, NumOfCmd = %d", pHead->cmdType, (pHead->aParamsBuf) ?  *(TI_UINT16 *)pHead->aParamsBuf:0, pHead->uParamsLen, pCmdQueue->uNumberOfCommandInQueue);
-
-				WLAN_OS_REPORT(("cmdQueue_SM: Send Cmd: CmdType = %s(%s)\n"
-				                "Len = %d, NumOfCmd = %d \n",
-				                cmdQueue_GetCmdString(pHead->cmdType),
-				                (pHead->aParamsBuf) ?  cmdQueue_GetIEString(pHead->cmdType,*(TI_UINT16 *)pHead->aParamsBuf):"",
-				                pHead->uParamsLen, pCmdQueue->uNumberOfCommandInQueue));
-#endif
-
 #ifdef TI_DBG
 				pCmdQueue->uCmdSendCounter++;
 #endif
@@ -257,7 +247,6 @@ static TI_STATUS cmdQueue_SM (TI_HANDLE hCmdQueue, ECmdQueueSmEvents eCmdQueueEv
 				break;
 
 			default:
-				TRACE1(pCmdQueue->hReport, REPORT_SEVERITY_ERROR, "cmdQueue_SM: ** ERROR **  No such event (%d) for state CMDQUEUE_STATE_IDLE\n",eCmdQueueEvent);
 				bBreakWhile = TI_TRUE;
 				rc =  TI_NOK;
 
@@ -310,7 +299,6 @@ static TI_STATUS cmdQueue_SM (TI_HANDLE hCmdQueue, ECmdQueueSmEvents eCmdQueueEv
 						pCmdQueue->bErrorFlag = TI_FALSE;
 					} else {
 						WLAN_OS_REPORT(("cmdQueue_SM: ** ERROR **  Mbox status error %d, set bErrorFlag !!!!!\n", cmdStatus));
-						TRACE1(pCmdQueue->hReport, REPORT_SEVERITY_ERROR, "cmdQueue_SM: ** ERROR **  Mbox status error %d, set bErrorFlag !!!!!\n", cmdStatus);
 						pCmdQueue->bErrorFlag = TI_TRUE;
 					}
 				} else {
@@ -353,7 +341,6 @@ static TI_STATUS cmdQueue_SM (TI_HANDLE hCmdQueue, ECmdQueueSmEvents eCmdQueueEv
 			break;
 
 			default:
-				TRACE1(pCmdQueue->hReport, REPORT_SEVERITY_ERROR, "cmdQueue_SM: ** ERROR **  No such event (%d) for state CMDQUEUE_STATE_IDLE\n",eCmdQueueEvent);
 				bBreakWhile = TI_TRUE;
 				rc =  TI_NOK;
 
@@ -450,7 +437,6 @@ static TI_STATUS cmdQueue_Push (TI_HANDLE  hCmdQueue,
 	 * Check if Queue is Full
 	 */
 	if (pCmdQueue->uNumberOfCommandInQueue == CMDQUEUE_QUEUE_DEPTH) {
-		TRACE0(pCmdQueue->hReport, REPORT_SEVERITY_ERROR, "cmdQueue_Push: ** ERROR ** The Queue is full\n");
 
 		return  TI_NOK;
 	}
@@ -546,7 +532,6 @@ TI_STATUS cmdQueue_Restart (TI_HANDLE hCmdQueue)
 	pCmdQueue->state = CMDQUEUE_STATE_IDLE;
 	pCmdQueue->bAwake = TI_FALSE;
 
-	TRACE0(pCmdQueue->hReport, REPORT_SEVERITY_INFORMATION, "cmdQueue_Clean: Cleaning aCmdQueue Queue");
 
 	/*
 	 * Save The Call Back Function in the Queue in order the return them after the recovery
@@ -636,7 +621,6 @@ TI_STATUS cmdQueue_RegisterCmdCompleteGenericCb (TI_HANDLE hCmdQueue, void *fCb,
 	TCmdQueue* pCmdQueue = (TCmdQueue*)hCmdQueue;
 
 	if (fCb == NULL || hCb == NULL) {
-		TRACE0(pCmdQueue->hReport, REPORT_SEVERITY_ERROR, "cmdQueue_RegisterCmdCompleteGenericCB: NULL parameter\n");
 		return TI_NOK;
 	}
 
@@ -664,7 +648,6 @@ TI_STATUS cmdQueue_RegisterForErrorCb (TI_HANDLE hCmdQueue, void *fCb, TI_HANDLE
 	TCmdQueue* pCmdQueue = (TCmdQueue*)hCmdQueue;
 
 	if (fCb == NULL || hCb == NULL) {
-		TRACE0(pCmdQueue->hReport, REPORT_SEVERITY_ERROR, "cmdQueue_RegisterForErrorCB: NULL parameters\n");
 		return TI_NOK;
 	}
 
@@ -729,41 +712,8 @@ TI_STATUS cmdQueue_Error (TI_HANDLE hCmdQueue, TI_UINT32 command, TI_UINT32 stat
 {
 	TCmdQueue* pCmdQueue = (TCmdQueue*)hCmdQueue;
 
-	if (status == CMD_STATUS_UNKNOWN_CMD) {
-		TRACE1(pCmdQueue->hReport, REPORT_SEVERITY_ERROR , "cmdQueue_Error: Unknown Cmd  (%d)\n", command);
-	} else if (status == CMD_STATUS_UNKNOWN_IE) {
-		TRACE4( pCmdQueue->hReport, REPORT_SEVERITY_CONSOLE, "cmdQueue_Error: Unknown IE, cmdType : %d (%d) IE: %d (%d)\n",
-		        command,
-		        command,
-		        (param) ? *((TI_UINT16 *) param) : 0,
-		        (param) ? *((TI_UINT16 *) param) : 0
-		      );
-
-		WLAN_OS_REPORT(("cmdQueue_Error: Unknown IE, cmdType : %s (%d) IE: %s (%d)\n",
-		                cmdQueue_GetCmdString (command),
-		                command,
-		                (param) ? cmdQueue_GetIEString (command, *((TI_UINT16 *) param)) : "",
-		                *((TI_UINT16 *) param)));
-	} else {
-		TRACE1(pCmdQueue->hReport, REPORT_SEVERITY_ERROR , "cmdQueue_Error: CmdMbox status is %d\n", status);
-	}
-
 	if (status != CMD_STATUS_UNKNOWN_CMD && status != CMD_STATUS_UNKNOWN_IE) {
 #ifdef TI_DBG
-#ifdef REPORT_LOG
-		TCmdQueueNode* pHead = &pCmdQueue->aCmdQueue[pCmdQueue->head];
-		TI_UINT32 TimeStamp = os_timeStampMs(pCmdQueue->hOs);
-
-		WLAN_OS_REPORT(("cmdQueue_Error: **ERROR**  Command Occured \n"
-		                "                                        Cmd = %s %s, Len = %d \n"
-		                "                                        NumOfCmd = %d\n"
-		                "                                        MAC TimeStamp on timeout = %d\n",
-		                cmdQueue_GetCmdString(pHead->cmdType),
-		                (pHead->aParamsBuf) ? cmdQueue_GetIEString(pHead->cmdType, *(TI_UINT16 *)pHead->aParamsBuf) : "",
-		                pHead->uParamsLen,
-		                pCmdQueue->uNumberOfCommandInQueue,
-		                TimeStamp));
-#endif
 		/* Print The command that was sent before the timeout occur */
 		cmdQueue_PrintHistory(pCmdQueue, CMDQUEUE_HISTORY_DEPTH);
 

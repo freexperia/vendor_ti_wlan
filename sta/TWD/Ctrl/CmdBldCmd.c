@@ -121,7 +121,6 @@ TI_STATUS cmdBld_CmdStartScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanR
 		break;
 
 	default:
-		TRACE1( pCmdBld->hReport, REPORT_SEVERITY_ERROR, "Invalid scan type:%d\n", pScanVals->scanType);
 		return TI_NOK;
 	}
 
@@ -183,15 +182,10 @@ TI_STATUS cmdBld_CmdStartScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanR
 		    pScanVals->channelEntry[ i ].normalChannelEntry.channel;
 	}
 
-	TRACE7(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "RxCfg = 0x%x\n                             RxFilterCfg = 0x%x\n                             scanOptions = 0x%x\n                             numChannels = %d\n                             probeNumber = %d\n                             probeRateModulation = 0x%x\n                             tidTrigger = %d\n" ,                               tnetScanParams.basicScanParameters.rxCfg.ConfigOptions,                               tnetScanParams.basicScanParameters.rxCfg.FilterOptions,                              tnetScanParams.basicScanParameters.scanOptions,                               tnetScanParams.basicScanParameters.numChannels,                               tnetScanParams.basicScanParameters.numOfProbRqst,                              tnetScanParams.basicScanParameters.txdRateSet,                               tnetScanParams.basicScanParameters.tidTrigger);
-
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Channel      BSSID           MinTime     MaxTime     ET     TxPower   probChan\n");
-
 	for ( i=0; i < pScanVals->numOfChannels; i++) {
 		chanPtr = &tnetScanParams.basicScanChannelParameters[i];
 		pBSSID = (TI_UINT8*)&chanPtr->bssIdL;
 
-		TRACE12(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "%06d   %02x:%02x:%02x:%02x:%02x:%02x    %05d %05d %02d %05d %05d\n",i, pBSSID[5],pBSSID[4],pBSSID[3],pBSSID[2],pBSSID[1],pBSSID[0], chanPtr->scanMinDuration, chanPtr->scanMaxDuration, chanPtr->ETCondCount, chanPtr->txPowerAttenuation, chanPtr->channel);
 	}
 
 	return cmdBld_CmdIeStartScan (hCmdBld, &tnetScanParams, ScanCommandResponseCB, hCb);
@@ -214,7 +208,6 @@ TI_STATUS cmdBld_CmdStartScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanR
 TI_STATUS cmdBld_CmdStartSPSScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, EScanResultTag eScanTag,
                                   void* fScanCommandResponseCB, TI_HANDLE hCb)
 {
-	TCmdBld  *pCmdBld = (TCmdBld *)hCmdBld;
 	ScheduledScanParameters_t   tnetSPSScanParams;
 	TI_INT32 i;
 
@@ -268,18 +261,7 @@ TI_STATUS cmdBld_CmdStartSPSScan (TI_HANDLE hCmdBld, TScanParams *pScanVals, ESc
 		    pScanVals->channelEntry[ i ].SPSChannelEntry.channel;
 	}
 
-	TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "RxCfg = 0x%x\n                             RxFilterCfg = 0x%x\n                             scanOptions = 0x%x\n                             numChannels = %d\n", tnetSPSScanParams.scheduledGeneralParameters.rxCfg.ConfigOptions, tnetSPSScanParams.scheduledGeneralParameters.rxCfg.FilterOptions, tnetSPSScanParams.scheduledGeneralParameters.scanOptions, tnetSPSScanParams.scheduledGeneralParameters.numChannels);
 
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Channel      BSSID           StartTime     Duration     ET     probChan\n");
-
-#ifdef TI_DBG
-	for ( i=0; i < tnetSPSScanParams.scheduledGeneralParameters.numChannels; i++) {
-		ScheduledChannelParameters_t* chanPtr = &tnetSPSScanParams.scheduledChannelParameters[ i ];
-		TI_UINT8* pBSSID = (TI_UINT8*)&chanPtr->bssIdL;
-
-		TRACE11(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "%6d   %02x:%02x:%02x:%02x:%02x:%02x    %5d %5d %2d %5d\n",i, pBSSID[5],pBSSID[4],pBSSID[3],pBSSID[2],pBSSID[1],pBSSID[0], chanPtr->scanStartTime, chanPtr->scanMaxDuration, chanPtr->ETCondCount, chanPtr->channel);
-	}
-#endif /* TI_DBG */
 
 	return cmdBld_CmdIeStartSPSScan (hCmdBld, &tnetSPSScanParams, fScanCommandResponseCB, hCb);
 }
@@ -343,14 +325,6 @@ TI_STATUS cmdBld_CmdSetSplitScanTimeOut (TI_HANDLE hCmdBld, TI_UINT32 uTimeOut)
 void cmdBld_debugPrintPeriodicScanChannles (TI_HANDLE hCmdBld, ConnScanChannelInfo_t* pChannel,
         TI_UINT32 uChannelCount)
 {
-	TCmdBld                 *pCmdBld = (TCmdBld *)hCmdBld;
-	TI_UINT32               uIndex;
-
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Index  Channel  MinTime  MaxTime  DFStime  PowerLevel\n");
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "-------------------------------------------------------------------\n");
-	for (uIndex = 0; uIndex <  uChannelCount; uIndex++) {
-		TRACE6(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "%-10d %-10d %-10d %-10d %-10d %-11d\n", uIndex, pChannel[ uIndex ].channel, pChannel[ uIndex ].scanMinDuration, pChannel[ uIndex ].scanMaxDuration, pChannel[ uIndex ].passiveScanDuration, pChannel[ uIndex ].txPowerLevelDbm);
-	}
 }
 
 /**
@@ -366,33 +340,13 @@ void cmdBld_debugPrintPeriodicScanChannles (TI_HANDLE hCmdBld, ConnScanChannelIn
  */
 void cmdBld_debugPrintPeriodicScanParams (TI_HANDLE hCmdBld, ConnScanParameters_t* pCommand)
 {
-	TCmdBld                 *pCmdBld = (TCmdBld *)hCmdBld;
-
-	/* print periodic scan params command */
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Cycle intervals:\n");
-	TRACE8(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "0:  %-6d %-6d %-6d %-6d %-6d %-6d %-6d %-6d\n", pCommand->cycleIntervals[ 0 ], pCommand->cycleIntervals[ 1 ], pCommand->cycleIntervals[ 2 ], pCommand->cycleIntervals[ 3 ], pCommand->cycleIntervals[ 4 ], pCommand->cycleIntervals[ 5 ], pCommand->cycleIntervals[ 6 ], pCommand->cycleIntervals[ 7 ]);
-	TRACE8(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "8:  %-6d %-6d %-6d %-6d %-6d %-6d %-6d %-6d\n", pCommand->cycleIntervals[ 8 ], pCommand->cycleIntervals[ 9 ], pCommand->cycleIntervals[ 10 ], pCommand->cycleIntervals[ 11 ], pCommand->cycleIntervals[ 12 ], pCommand->cycleIntervals[ 13 ], pCommand->cycleIntervals[ 14 ], pCommand->cycleIntervals[ 15 ]);
-	TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "RSSI threshold: %d, SNR threshold: %d, number of cycles: %d, reporth threshold: %d\n", pCommand->rssiThreshold, pCommand->snrThreshold, pCommand->maxNumOfCycles, pCommand->reportThreshold);
-	TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Terminate on report: %d, result tag: %d, BSS type: %d, number of probe requests: %d\n", pCommand->terminateOnReport, pCommand->resultsTag, pCommand->bssType, pCommand->numProbe);
-	TRACE2(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "SSID filter type: %d, SSID length: %d, SSID: \n", pCommand->ssidFilterType, pCommand->ssidLength);
-	/* print channel info */
-
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "2.4 GHz Channels:\n");
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "-----------------\n");
-	TRACE2(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Number of passive channels: %d, number of active channels: %d\n", pCommand->numOfPassive[ 0 ], pCommand->numOfActive[ 0 ]);
 	cmdBld_debugPrintPeriodicScanChannles (hCmdBld, &(pCommand->channelList[ 0 ]),
 	                                       pCommand->numOfPassive[ 0 ] +
 	                                       pCommand->numOfActive[ 0 ]);
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "5.0 GHz Channels:\n");
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "-----------------\n");
-	TRACE3(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Number of passive channels: %d, number of DFS channels: %d, number of active channels: %d\n", pCommand->numOfPassive[ 1 ], pCommand->numOfDfs, pCommand->numOfActive[ 2 ]);
 	cmdBld_debugPrintPeriodicScanChannles (hCmdBld, &(pCommand->channelList[ CONN_SCAN_MAX_CHANNELS_BG ]),
 	                                       pCommand->numOfPassive[ 1 ] +
 	                                       pCommand->numOfActive[ 1 ] +
 	                                       pCommand->numOfDfs);
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "4.9 GHz channles:\n");
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "-----------------\n");
-	TRACE2(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Number of passive channels: %d, number of active channels: %d\n", pCommand->numOfPassive[ 2 ], pCommand->numOfActive[ 2 ]);
 	cmdBld_debugPrintPeriodicScanChannles (hCmdBld, &(pCommand->channelList[ CONN_SCAN_MAX_CHANNELS_BG + CONN_SCAN_MAX_CHANNELS_A ]),
 	                                       pCommand->numOfPassive[ 2 ] +
 	                                       pCommand->numOfActive[ 2 ]);
@@ -411,17 +365,6 @@ void cmdBld_debugPrintPeriodicScanParams (TI_HANDLE hCmdBld, ConnScanParameters_
  */
 void cmdBld_debugPrintPeriodicScanSsidList (TI_HANDLE hCmdBld, ConnScanSSIDList_t* pCommand)
 {
-	TCmdBld                 *pCmdBld = (TCmdBld *)hCmdBld;
-	TI_UINT32               uIndex;
-
-	/* print SSID list command */
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "SSID list:\n");
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "---------\n");
-	TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Num of entries: %d\n", pCommand->numOfSSIDEntries);
-	for (uIndex = 0; uIndex < pCommand->numOfSSIDEntries; uIndex++) {
-		TRACE3(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "index: %d, SSID type: %d, SSID length:% d, SSID string:\n", uIndex, pCommand->SSIDList[ uIndex ].ssidType, pCommand->SSIDList[ uIndex ].ssidLength);
-	}
-
 }
 
 /**
@@ -503,8 +446,6 @@ TI_STATUS cmdBld_StartPeriodicScan (TI_HANDLE hCmdBld, TPeriodicScanParams *pPer
 	TI_UINT32                       uIndex;
 	TI_STATUS                       tStatus;
 
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Building start periodic scan commands:\n");
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "--------------------------------------\n");
 	/* copy parameters to FW structure */
 	tFWPeriodicScanParams.bssType = (ScanBssType_e)pPeriodicScanParams->eBssType;
 	for (uIndex = 0; uIndex < PERIODIC_SCAN_MAX_INTERVAL_NUM; uIndex ++) {
@@ -553,7 +494,6 @@ TI_STATUS cmdBld_StartPeriodicScan (TI_HANDLE hCmdBld, TPeriodicScanParams *pPer
 		tStatus = cmdBld_CmdIeScanSsidList (hCmdBld, pFWSsidList, NULL, NULL);
 		os_memoryFree(pCmdBld->hOs, pFWSsidList, sizeof(ConnScanSSIDList_t));
 		if (TI_OK != tStatus) {
-			TRACE1(pCmdBld->hReport, REPORT_SEVERITY_ERROR , "cmdBld_StartPeriodicScan: status %d when configuring SSID list", tStatus);
 			return tStatus;
 		}
 		break;
@@ -586,7 +526,6 @@ TI_STATUS cmdBld_StartPeriodicScan (TI_HANDLE hCmdBld, TPeriodicScanParams *pPer
 	/* Send the periodic scan parameters command */
 	tStatus = cmdBld_CmdIePeriodicScanParams (hCmdBld, &tFWPeriodicScanParams, NULL, NULL);
 	if (TI_OK != tStatus) {
-		TRACE1(pCmdBld->hReport, REPORT_SEVERITY_ERROR , "cmdBld_StartPeriodicScan: status %d when configuring periodic scan parameters", tStatus);
 		return tStatus;
 	}
 
@@ -632,7 +571,6 @@ TI_STATUS cmdBld_StopPeriodicScan (TI_HANDLE hCmdBld, EScanResultTag eScanTag,
  ****************************************************************************/
 static TI_STATUS cmdBld_CmdSetBssType (TI_HANDLE hCmdBld, ScanBssType_e BssType, TI_UINT8 *HwBssType)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 
 	switch (BssType) {
 	case BSS_INFRASTRUCTURE:
@@ -646,7 +584,6 @@ static TI_STATUS cmdBld_CmdSetBssType (TI_HANDLE hCmdBld, ScanBssType_e BssType,
 		break;
 
 	default:
-		TRACE1(pCmdBld->hReport, REPORT_SEVERITY_FATAL_ERROR, "cmdBld_SetBssType: FATAL_ERROR, unknown BssType %d\n", BssType);
 		return TI_NOK;
 	}
 
@@ -670,15 +607,6 @@ static TI_STATUS cmdBld_CmdSetBssType (TI_HANDLE hCmdBld, ScanBssType_e BssType,
 TI_STATUS cmdBld_CmdStartJoin (TI_HANDLE hCmdBld, ScanBssType_e BssType, void *fJoinCompleteCB, TI_HANDLE hCb)
 {
 	TI_UINT8  HwBssType = 0;
-#ifdef TI_DBG
-	TCmdBld  *pCmdBld = (TCmdBld *)hCmdBld;
-	TI_UINT8 *pBssId = DB_BSS(hCmdBld).BssId;
-
-	TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INIT, "cmdBld_StartJoin: Enable Tx, Rx and Start the Bss, type=%d\n", BssType);
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INIT, "------------------------------------------------------------\n");
-	TRACE7(pCmdBld->hReport, REPORT_SEVERITY_INIT, "START/JOIN, SSID=, BSSID=%02X-%02X-%02X-%02X-%02X-%02X, Chan=%d\n", pBssId[0], pBssId[1], pBssId[2], pBssId[3], pBssId[4], pBssId[5], DB_BSS(hCmdBld).RadioChannel);
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INIT, "------------------------------------------------------------\n");
-#endif /* TI_DBG */
 
 	CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CMD_START_JOIN)
 
@@ -714,7 +642,6 @@ TI_STATUS cmdBld_CmdJoinBss (TI_HANDLE hCmdBld, TJoinBss *pJoinBssParams, void *
 	os_memoryCopy (pCmdBld->hOs, (void *)dbgSsidStr, (void *)pJoinBssParams->pSSID, pJoinBssParams->ssidLength);
 	dbgSsidStr[pJoinBssParams->ssidLength] = '\0';
 
-	TRACE14(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "TWD_JoinBss : bssType = %d, beaconInterval = %d, dtimInterval = %d, channel = %d, BSSID = %x-%x-%x-%x-%x-%x, ssidLength = %d, basicRateSet = 0x%x, RadioBand = %d, Ctrl = 0x%x", pJoinBssParams->bssType, pJoinBssParams->beaconInterval, pJoinBssParams->dtimInterval, pJoinBssParams->channel, pJoinBssParams->pBSSID[0], pJoinBssParams->pBSSID[1], pJoinBssParams->pBSSID[2], pJoinBssParams->pBSSID[3], pJoinBssParams->pBSSID[4], pJoinBssParams->pBSSID[5], pJoinBssParams->ssidLength, pJoinBssParams->basicRateSet, pJoinBssParams->radioBand, pBssInfoParams->Ctrl);
 #endif /* TI_DBG */
 	/*
 	 * save Bss info parameters
@@ -762,8 +689,6 @@ TI_STATUS cmdBld_CmdTemplate (TI_HANDLE hCmdBld, TSetTemplate *pTemplateParams, 
 	TTemplateParams *pTemplate;
 	TI_UINT8   uIndex = 0;
 	TemplateType_e eType;
-
-	TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "cmdBld_CmdTemplate: Type=%d, size=%d, index=%d, RateMask=0x%x\n", pTemplateParams->type, pTemplateParams->len, pTemplateParams->index, pTemplateParams->uRateMask);
 
 	switch (pTemplateParams->type) {
 	case BEACON_TEMPLATE:
@@ -826,8 +751,6 @@ TI_STATUS cmdBld_CmdTemplate (TI_HANDLE hCmdBld, TSetTemplate *pTemplateParams, 
 		break;
 
 	default:
-		TRACE1( pCmdBld->hReport, REPORT_SEVERITY_ERROR,
-		        "cmdBld_CmdTemplate. Invalid template type:%d\n", pTemplateParams->type);
 		return TI_NOK;
 	}
 
@@ -901,10 +824,6 @@ TI_STATUS cmdBld_CmdDisableTx (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb)
  ****************************************************************************/
 TI_STATUS cmdBld_CmdSwitchChannel (TI_HANDLE hCmdBld, TSwitchChannelParams *pSwitchChannelCmd, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
-
-	TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "\n SwitchChannelCmd :\n                             channelNumber = %d\n                             switchTime = %d\n                             txFlag = %d\n                             flush = %d \n ", pSwitchChannelCmd->channelNumber, pSwitchChannelCmd->switchTime, pSwitchChannelCmd->txFlag, pSwitchChannelCmd->flush);
-
 	DB_BSS(hCmdBld).RadioChannel = pSwitchChannelCmd->channelNumber;
 
 	return cmdBld_CmdIeSwitchChannel (hCmdBld, pSwitchChannelCmd, fCb, hCb);
@@ -924,10 +843,6 @@ TI_STATUS cmdBld_CmdSwitchChannel (TI_HANDLE hCmdBld, TSwitchChannelParams *pSwi
  ****************************************************************************/
 TI_STATUS cmdBld_CmdSwitchChannelCancel (TI_HANDLE hCmdBld, TI_UINT8 channel, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
-
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "\n TWD_SwitchChannelCancelCmd :\n ");
-
 	DB_BSS(hCmdBld).RadioChannel = channel;
 
 	return cmdBld_CmdIeSwitchChannelCancel (hCmdBld, fCb, hCb);
@@ -947,13 +862,11 @@ TI_STATUS cmdBld_CmdSwitchChannelCancel (TI_HANDLE hCmdBld, TI_UINT8 channel, vo
  ****************************************************************************/
 TI_STATUS cmdBld_CmdFwDisconnect (TI_HANDLE hCmdBld, TI_UINT32 uConfigOptions, TI_UINT32 uFilterOptions, DisconnectType_e uDisconType, TI_UINT16 uDisconReason, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 	TWlanParams *pWlanParams = &DB_WLAN(hCmdBld);
 
 	pWlanParams->bJoin = TI_FALSE;
 	pWlanParams->bStaConnected = TI_FALSE;
 
-	TRACE4(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Sending FW disconnect, ConfigOptions=%x, FilterOPtions=%x, uDisconType=%d, uDisconReason=%d\n",uConfigOptions, uFilterOptions, uDisconType, uDisconReason);
 
 
 	return cmdBld_CmdIeFwDisconnect (hCmdBld, uConfigOptions, uFilterOptions, uDisconType, uDisconReason, fCb, hCb);
@@ -982,10 +895,6 @@ TI_STATUS cmdBld_CmdMeasurement (TI_HANDLE          hCmdBld,
  ****************************************************************************/
 TI_STATUS cmdBld_CmdMeasurementStop (TI_HANDLE hCmdBld, void* fMeasureCommandResponseCB, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
-
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "cmdBld_measurementStop\n");
-
 	return cmdBld_CmdIeMeasurementStop (hCmdBld, fMeasureCommandResponseCB, hCb);
 }
 
@@ -1004,10 +913,6 @@ TI_STATUS cmdBld_CmdMeasurementStop (TI_HANDLE hCmdBld, void* fMeasureCommandRes
  ****************************************************************************/
 TI_STATUS cmdBld_CmdApDiscovery (TI_HANDLE hCmdBld, TApDiscoveryParams *pApDiscoveryParams, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
-
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_ApDiscovery\n");
-
 	return cmdBld_CmdIeApDiscovery (hCmdBld, pApDiscoveryParams, fCb, hCb);
 }
 
@@ -1025,10 +930,6 @@ TI_STATUS cmdBld_CmdApDiscovery (TI_HANDLE hCmdBld, TApDiscoveryParams *pApDisco
  ****************************************************************************/
 TI_STATUS cmdBld_CmdApDiscoveryStop (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
-
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_ApDiscoveryStop\n");
-
 	return cmdBld_CmdIeApDiscoveryStop (hCmdBld, fCb, hCb);
 }
 
@@ -1052,14 +953,11 @@ TI_STATUS cmdBld_CmdNoiseHistogram (TI_HANDLE hCmdBld, TNoiseHistogram *pNoiseHi
  ****************************************************************************/
 TI_STATUS cmdBld_CmdSetPsMode (TI_HANDLE hCmdBld, TPowerSaveParams* powerSaveParams, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
-
 	/* Rate conversion is done in the HAL */
 	cmdBld_ConvertAppRatesBitmap (powerSaveParams->NullPktRateModulation,
 	                              0,
 	                              &powerSaveParams->NullPktRateModulation);
 
-	TRACE5(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, " cmdBld_PowerMgmtConfigurationSet  ps802_11Enable=0x%x hangOverPeriod=%d needToSendNullData=0x%x  numNullPktRetries=%d  NullPktRateModulation=0x%x\n", powerSaveParams->ps802_11Enable, powerSaveParams->hangOverPeriod, powerSaveParams->needToSendNullData, powerSaveParams->numNullPktRetries, powerSaveParams->NullPktRateModulation);
 
 	return cmdBld_CmdIeSetPsMode (hCmdBld, powerSaveParams, fCb, hCb);
 }
@@ -1091,13 +989,11 @@ TI_STATUS cmdBld_CmdAddKey (TI_HANDLE hCmdBld, TSecurityKeys* pKey, TI_BOOL reco
 	/* store the security key for reconfigure phase (FW reload)*/
 	if (reconfFlag != TI_TRUE) {
 		if (keyIdx >= (pCmdBld->tSecurity.uNumOfStations * NO_OF_RECONF_SECUR_KEYS_PER_STATION + NO_OF_EXTRA_RECONF_SECUR_KEYS)) {
-			TRACE2(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "cmdBld_CmdAddKey: ERROR Key keyIndex field out of range =%d, range is (0 to %d)\n", pKey->keyIndex, pCmdBld->tSecurity.uNumOfStations * NO_OF_RECONF_SECUR_KEYS_PER_STATION+NO_OF_EXTRA_RECONF_SECUR_KEYS - 1);
 
 			return TI_NOK;
 		}
 
 		if (pKey->keyType == KEY_NULL) {
-			TRACE0(pCmdBld->hReport, REPORT_SEVERITY_ERROR, "cmdBld_CmdAddKey: ERROR KeyType is NULL_KEY\n");
 
 			return TI_NOK;
 		}
@@ -1262,10 +1158,6 @@ TI_STATUS cmdBld_CmdRemoveKey (TI_HANDLE hCmdBld, TSecurityKeys* pKey, void *fCb
 					break;
 				}
 			}
-		}
-		if (index == pCmdBld->tSecurity.uNumOfStations * NO_OF_RECONF_SECUR_KEYS_PER_STATION + NO_OF_EXTRA_RECONF_SECUR_KEYS) {
-			TRACE1( pCmdBld->hReport, REPORT_SEVERITY_ERROR, "Failed to remove GEM key (index=%d) from reconfig DB!\n",
-			        pKey->keyIndex);
 		}
 
 	} else {
@@ -1545,8 +1437,6 @@ TI_STATUS cmdBld_CmdAddAesMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecurit
 
 	keyType = CIPHER_SUITE_AES;
 
-	TRACE2(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_AesMappingKeyAdd: uSecuritySeqNumHigh=%ld, pHwCtrl->uSecuritySeqNumLow=%ld \n", pCmdBld->uSecuritySeqNumHigh, pCmdBld->uSecuritySeqNumLow);
-
 	return cmdBld_CmdIeSetKey (hCmdBld,
 	                           KEY_ADD_OR_REPLACE,
 	                           (TI_UINT8*)aSecurityKey->macAddress,
@@ -1608,13 +1498,11 @@ TI_STATUS cmdBld_CmdRemoveAesMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecu
  ****************************************************************************/
 TI_STATUS cmdBld_CmdSetStaState (TI_HANDLE hCmdBld, TI_UINT8 staState, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 	TWlanParams *pWlanParams = &DB_WLAN(hCmdBld);
 
 	CMD_BLD_MARK_INIT_SEQUENCE_CMD_AS_VALID(hCmdBld, __CMD_STA_STATE);
 
 	pWlanParams->bStaConnected = TI_TRUE;
-	TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION , "Sending StaState %d\n",staState);
 
 	return cmdBld_CmdIeSetStaState (hCmdBld, staState, fCb, hCb);
 }
@@ -1701,10 +1589,6 @@ TI_STATUS cmdBld_CmdRemoveGemMappingKey (TI_HANDLE hCmdBld, TSecurityKeys* aSecu
  ****************************************************************************/
 TI_STATUS cmdBld_CmdHealthCheck (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb)
 {
-	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
-
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CmdIeHealthCheck\n");
-
 	return cmdBld_CmdIeHealthCheck (hCmdBld, fCb, hCb);
 }
 

@@ -92,7 +92,6 @@ TI_STATUS mlmeBuilder_sendFrame(TI_HANDLE hMlme,
 	                                        pPktCtrlBlk,
 	                                        MAX_MANAGEMENT_FRAME_BODY_LEN + WLAN_HDR_LEN);
 	if (pPktBuffer == NULL) {
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR , ": No memory\n");
 		TWD_txCtrlBlk_Free (pHandle->hTWD, pPktCtrlBlk);
 		return TI_NOK;
 	}
