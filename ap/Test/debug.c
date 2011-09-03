@@ -186,7 +186,9 @@ TI_STATUS debugFunction(TStadHandlesList *pStadHandles, TI_UINT32 functionNumber
 		break;
 
 	case TEST_TWD_MODULE_PARAM:
+#ifdef TI_DBG
 		TWD_Debug (pStadHandles->hTWD, functionNumber % 100, pParam);
+#endif /* TI_DBG */
 		break;
 
 	case TEST_QOS_MNGR_MODULE_PARAM:

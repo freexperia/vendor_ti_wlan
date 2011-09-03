@@ -1405,8 +1405,9 @@ TI_STATUS currBSS_getParam(TI_HANDLE hCurrBSS, paramInfo_t *pParam)
 void currBss_DbgPrintTriggersTable(TI_HANDLE hCurrBSS)
 {
 	int i=0;
+#ifdef TI_DBG
 	currBSS_t *pCurrBSS = (currBSS_t *)hCurrBSS;
-
+#endif /* TI_DBG */
 	WLAN_OS_REPORT(("\n -------------------  Triggers Table -------------------------- \n"));
 
 	for (i=0; i< MAX_NUM_OF_RSSI_SNR_TRIGGERS ; i++) {

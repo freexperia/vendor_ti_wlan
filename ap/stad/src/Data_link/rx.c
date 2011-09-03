@@ -1944,7 +1944,6 @@ static ERxBufferStatus rxData_RequestForBuffer (TI_HANDLE   hRxData,
 *                        DEBUG FUNCTIONS                           *
 *******************************************************************/
 
-#ifdef TI_DBG
 
 /***************************************************************************
 *                        rxData_resetCounters                              *
@@ -1963,6 +1962,8 @@ void rxData_resetCounters(TI_HANDLE hRxData)
 
 	os_memoryZero(pRxData->hOs, &pRxData->rxDataCounters, sizeof(rxDataCounters_t));
 }
+
+#ifdef TI_DBG
 
 /***************************************************************************
 *                        rxData_resetDbgCounters                           *
@@ -1984,6 +1985,7 @@ void rxData_resetDbgCounters(TI_HANDLE hRxData)
 	os_memoryZero(pRxData->hOs, &pRxData->rxDataLinkCounters, sizeof(rxDataLinkCounters_t)* WLANLINKS_MAX_LINKS);
 }
 
+#endif /* TI_DBG */
 /***************************************************************************
 *                        rxData_resetLinkCounters                          *
 ****************************************************************************
@@ -2005,6 +2007,7 @@ void rxData_resetLinkCounters(TI_HANDLE hRxData, TI_UINT32 uHlid)
 
 }
 
+#ifdef TI_DBG
 
 /***************************************************************************
 *                            test functions                                *

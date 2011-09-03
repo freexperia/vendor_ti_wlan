@@ -61,7 +61,9 @@ static void txDataQ_RunScheduler (TI_HANDLE hTxDataQ);
 static void txDataQ_UpdateQueuesBusyState (TTxDataQ *pTxDataQ, TI_UINT32 uTidBitMap);
 static void txDataQ_UpdateLinksBusyState (TTxDataQ *pTxDataQ, TI_UINT32 uLinkBitMap);
 static void txDataQ_TxSendPaceTimeout (TI_HANDLE hTxDataQ, TI_BOOL bTwdInitOccured);
+#ifdef TI_DBG
 static void txDataQ_PrintResources (TTxDataQ *pTxDataQ);
+#endif /* TI_DBG */
 static void txDataQ_InitResources (TTxDataQ *pTxDataQ, TTxDataResourcesParams_t *pDataRsrcParams);
 extern void wlanDrvIf_StopTx (TI_HANDLE hOs);
 extern void wlanDrvIf_ResumeTx (TI_HANDLE hOs);

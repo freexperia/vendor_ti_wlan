@@ -367,8 +367,9 @@ void healthMonitor_proccessFailureEvent (TI_HANDLE hHealthMonitor, TI_BOOL bTwdI
 		/* FW debug, print SCR_PAD4 register */
 		tParam.addr = 0x305618;
 		tParam.length = 4;
+#ifdef TI_DBG
 		TWD_Debug (pHealthMonitor->hTWD, 3, &tParam);
-
+#endif /* TI_DBG */
 		if (TWD_RecoveryEnabled (pHealthMonitor->hTWD)) {
 			pHealthMonitor->numOfRecoveryPerformed ++;
 			drvMain_Recovery (pHealthMonitor->hDrvMain);

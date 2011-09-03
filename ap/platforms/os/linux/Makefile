@@ -44,7 +44,7 @@ TEST ?= n
 ETH_SUPPORT ?= n
 
 
-DEBUG ?= y
+DEBUG ?= n
 
 STRIP ?= y
 

@@ -246,12 +246,10 @@ TI_STATUS que_Enqueue (TI_HANDLE hQue, TI_HANDLE hItem)
 			AddToHead (pQueNodeHdr, &pQue->tHead);
 			pQue->uCount++;
 
-#ifdef TI_DBG
 			if (pQue->uCount > pQue->uMaxCount) {
 				pQue->uMaxCount = pQue->uCount;
 			}
 			TRACE0(pQue->hReport, REPORT_SEVERITY_INFORMATION , "que_Enqueue(): Enqueued Successfully\n");
-#endif
 
 			return TI_OK;
 		}
@@ -259,10 +257,8 @@ TI_STATUS que_Enqueue (TI_HANDLE hQue, TI_HANDLE hItem)
 	/*
 	 *  Queue is overflowed, return TI_NOK.
 	 */
-#ifdef TI_DBG
 	pQue->uOverflow++;
 	TRACE0(pQue->hReport, REPORT_SEVERITY_INFORMATION , "que_Enqueue(): Queue Overflow\n");
-#endif
 	}
 	return TI_NOK;
 }
@@ -294,10 +290,8 @@ TI_HANDLE que_Dequeue (TI_HANDLE hQue)
 			DelFromTail (pQue->tHead.pPrev);    /* remove node from the queue */
 			pQue->uCount--;
 
-#ifdef TI_DBG
 			/* Clear the pNext so we can do a sanity check when enqueuing this structre in the future */
 			((TQueNodeHdr *)((TI_UINT8*)hItem + pQue->uNodeHeaderOffset))->pNext = NULL;
-#endif
 
 			return (hItem);
 		}
@@ -343,11 +337,9 @@ TI_STATUS que_Requeue (TI_HANDLE hQue, TI_HANDLE hItem)
 		AddToTail (pQueNodeHdr, &pQue->tHead);
 		pQue->uCount++;
 
-#ifdef TI_DBG
 		if (pQue->uCount > pQue->uMaxCount)
 			pQue->uMaxCount = pQue->uCount;
 		TRACE0(pQue->hReport, REPORT_SEVERITY_INFORMATION , "que_Requeue(): Requeued successfully\n");
-#endif
 
 		return TI_OK;
 	}
@@ -357,10 +349,8 @@ TI_STATUS que_Requeue (TI_HANDLE hQue, TI_HANDLE hItem)
 	 *  Note: This is not expected in the current design, since Tx packet may be requeued
 	 *          only right after it was dequeued in the same context so the queue can't be full.
 	 */
-#ifdef TI_DBG
 	pQue->uOverflow++;
 	TRACE0(pQue->hReport, REPORT_SEVERITY_ERROR , "que_Requeue(): Queue Overflow\n");
-#endif
 
 	return TI_NOK;
 }
