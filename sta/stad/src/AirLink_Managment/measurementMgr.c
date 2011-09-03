@@ -306,7 +306,6 @@ TI_STATUS measurementMgr_setParam(TI_HANDLE hMeasurementMgr, paramInfo_t * pPara
  */
 TI_STATUS measurementMgr_getParam(TI_HANDLE hMeasurementMgr, paramInfo_t * pParam)
 {
-	measurementMgr_t * pMeasurementMgr = (measurementMgr_t *) hMeasurementMgr;
 
 	switch (pParam->paramType) {
 
