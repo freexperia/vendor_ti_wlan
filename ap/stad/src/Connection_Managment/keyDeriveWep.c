@@ -113,7 +113,6 @@ TI_STATUS keyDeriveWep_derive(struct _keyDerive_t *pKeyDerive, encodedKeyMateria
 	if ((pEncodedKey->keyLen != DERIVE_WEP_KEY_LEN_40) &&
 	    (pEncodedKey->keyLen != DERIVE_WEP_KEY_LEN_104) &&
 	    (pEncodedKey->keyLen != DERIVE_WEP_KEY_LEN_232)) {
-		TRACE1(pKeyDerive->hReport, REPORT_SEVERITY_ERROR, "DeriveWep_derive: ERROR: it is not WEP key lenghth (len=%d) !!!\n", pEncodedKey->keyLen);
 		return TI_NOK;
 	}
 

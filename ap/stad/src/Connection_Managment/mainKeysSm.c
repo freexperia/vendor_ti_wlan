@@ -239,7 +239,6 @@ TI_STATUS mainKeys_config (mainKeys_t    *pMainKeys,
 	if (pMainKeys->hSessionTimer == NULL) {
 		pMainKeys->hSessionTimer = tmr_CreateTimer (pMainKeys->hTimer);
 		if (pMainKeys->hSessionTimer == NULL) {
-			TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "mainKeys_config(): Failed to create hSessionTimer!\n");
 			return TI_NOK;
 		}
 	}
@@ -247,7 +246,6 @@ TI_STATUS mainKeys_config (mainKeys_t    *pMainKeys,
 	status = fsm_Config(pMainKeys->pMainKeysSm, &mainKeysSM_matrix[0][0],
 	                    MAIN_KEYS_NUM_STATES, MAIN_KEYS_NUM_EVENTS, NULL, pMainKeys->hOs);
 	if (status != TI_OK) {
-		TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error in configuring SM\n");
 		return status;
 	}
 
@@ -260,19 +258,16 @@ TI_STATUS mainKeys_config (mainKeys_t    *pMainKeys,
 	                          hOs,
 	                          hCtrlData);
 	if (status != TI_OK) {
-		TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error in configuring key parser\n");
 		return status;
 	}
 
 	status = broadcastKey_config(pMainKeys->pBcastSm, pPaeConfig, pMainKeys, hReport, hOs);
 	if (status != TI_OK) {
-		TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error in configuring broadcast key SM\n");
 		return status;
 	}
 
 	status = unicastKey_config(pMainKeys->pUcastSm, pPaeConfig, pMainKeys, hReport, hOs);
 	if (status != TI_OK) {
-		TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error in configuring unicast key SM\n");
 		return status;
 	}
 
@@ -306,10 +301,6 @@ TI_STATUS mainKeys_unload(mainKeys_t *pMainKeys)
 	}
 
 	status = fsm_Unload(pMainKeys->hOs, pMainKeys->pMainKeysSm);
-	if (status != TI_OK) {
-		/* report failure but don't stop... */
-		TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error releasing FSM memory \n");
-	}
 
 	if (pMainKeys->hSessionTimer) {
 		tmr_DestroyTimer (pMainKeys->hSessionTimer);
@@ -317,22 +308,10 @@ TI_STATUS mainKeys_unload(mainKeys_t *pMainKeys)
 	pMainKeys->hSessionTimer = NULL;
 
 	status = keyParser_unload(pMainKeys->pKeyParser);
-	if (status != TI_OK) {
-		/* report failure but don't stop... */
-		TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error unloading key parser\n");
-	}
 
 	status = broadcastKey_unload(pMainKeys->pBcastSm);
-	if (status != TI_OK) {
-		/* report failure but don't stop... */
-		TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error unloading broadcast key SM\n");
-	}
 
 	status = unicastKey_unload(pMainKeys->pUcastSm);
-	if (status != TI_OK) {
-		/* report failure but don't stop... */
-		TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: Error unloading unicast key SM\n");
-	}
 
 	os_memoryFree(pMainKeys->hOs, pMainKeys, sizeof(mainKeys_t));
 
@@ -594,12 +573,10 @@ static TI_STATUS mainKeys_smEvent(struct _mainKeys_t *pMainKeys, TI_UINT8 event,
 
 	status = fsm_GetNextState(pMainKeys->pMainKeysSm, pMainKeys->currentState, event, &nextState);
 	if (status != TI_OK) {
-		TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEYS_SM: ERROR - failed getting next state \n");
 
 		return(TI_NOK);
 	}
 
-	TRACE3( pMainKeys->hReport, REPORT_SEVERITY_INFORMATION, "mainKeys_smEvent: <currentState = %d, event = %d> --> nextState = %d\n", pMainKeys->currentState, event, nextState);
 
 	status = fsm_Event(pMainKeys->pMainKeysSm, &pMainKeys->currentState, event, pData);
 
@@ -739,7 +716,6 @@ TI_STATUS mainKeys_bcastCompleteUcastComplete(struct _mainKeys_t *pMainKeys)
 {
 	TI_STATUS  status;
 
-	TRACE0(pMainKeys->hReport, REPORT_SEVERITY_INFORMATION, "mainKeys_bcastCompleteUcastComplete - sending Interrogate \n");
 
 	tmr_StopTimer (pMainKeys->hSessionTimer);
 
@@ -804,7 +780,6 @@ TI_STATUS mainKeys_ucastCompleteBcastComplete(struct _mainKeys_t *pMainKeys)
 {
 	TI_STATUS  status;
 
-	TRACE0(pMainKeys->hReport, REPORT_SEVERITY_INFORMATION, "mainKeys_ucastCompleteBcastComplete \n");
 
 	tmr_StopTimer (pMainKeys->hSessionTimer);
 	pMainKeys->mainKeysTimeoutCounter = TI_FALSE;
@@ -872,7 +847,6 @@ TI_STATUS mainKeys_smTimeOut(void* data)
 	struct _mainKeys_t 		*pMainKeys = (struct _mainKeys_t *)data;
 
 
-	TRACE1(pMainKeys->hReport, REPORT_SEVERITY_INFORMATION, "MAIN_KEY_SM: TRAP: Session Timeout for station , mainKeysTimeoutCounter=%d\n", pMainKeys->mainKeysTimeoutCounter);
 
 	request = (OS_802_11_AUTHENTICATION_REQUEST *)(AuthBuf + sizeof(TI_UINT32));
 	request->Length = sizeof(OS_802_11_AUTHENTICATION_REQUEST);
@@ -883,7 +857,6 @@ TI_STATUS mainKeys_smTimeOut(void* data)
 		return TI_NOK;
 	}
 
-	TRACE1(pMainKeys->hReport, REPORT_SEVERITY_INFORMATION, "current station is banned from the roaming candidates list for %d Ms\n", RSN_MAIN_KEYS_SESSION_TIMEOUT);
 
 	rsn_banSite(pMainKeys->hRsn, param.content.ctrlDataCurrentBSSID, RSN_SITE_BAN_LEVEL_FULL, RSN_MAIN_KEYS_SESSION_TIMEOUT);
 
@@ -900,7 +873,6 @@ TI_STATUS mainKeys_smTimeOut(void* data)
 
 		*(TI_UINT32*)AuthBuf = os802_11StatusType_Authentication;
 
-		TRACE1(pMainKeys->hReport, REPORT_SEVERITY_INFORMATION, " %d Ms\n",RSN_MAIN_KEYS_SESSION_TIMEOUT);
 
 		EvHandlerSendEvent(pMainKeys->hEvHandler, IPC_EVENT_MEDIA_SPECIFIC, (TI_UINT8*)AuthBuf,
 		                   sizeof(TI_UINT32) + sizeof(OS_802_11_AUTHENTICATION_REQUEST));
@@ -923,8 +895,6 @@ TI_STATUS mainKeys_smTimeOut(void* data)
 
 TI_STATUS mainKeySmUnexpected(struct _mainKeys_t *pMainKeys)
 {
-	TRACE0(pMainKeys->hReport, REPORT_SEVERITY_ERROR, "MAIN_KEY_SM: ERROR UnExpected Event\n");
-
 	return(TI_OK);
 }
 

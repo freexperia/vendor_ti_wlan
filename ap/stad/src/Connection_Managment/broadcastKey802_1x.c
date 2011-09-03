@@ -166,11 +166,9 @@ TI_STATUS broadcastKey802_1x_event(struct _broadcastKey_t *pBroadcastKey, TI_UIN
 
 	status = fsm_GetNextState(pBroadcastKey->pBcastKeySm, pBroadcastKey->currentState, event, &nextState);
 	if (status != TI_OK) {
-		TRACE0(pBroadcastKey->hReport, REPORT_SEVERITY_ERROR, "BROADCAST_KEY_SM: ERROR: failed getting next state\n");
 		return TI_NOK;
 	}
 
-	TRACE3(pBroadcastKey->hReport, REPORT_SEVERITY_INFORMATION, "STATION_BROADCAST_KEY_SM: <currentState = %d, event = %d> --> nextState = %d\n", pBroadcastKey->currentState, event, nextState);
 
 	status = fsm_Event(pBroadcastKey->pBcastKeySm, &pBroadcastKey->currentState, event, pData);
 

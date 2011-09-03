@@ -182,10 +182,6 @@ TI_STATUS externalSec_Destroy (struct externalSec_t *pExternalSec)
 	}
 
 	status = fsm_Unload (pExternalSec->hOs, pExternalSec->pExternalSecSm);
-	if (status != TI_OK) {
-		/* report failure but don't stop... */
-		TRACE0(pExternalSec->hReport, REPORT_SEVERITY_ERROR, "EXTERNAL SECURITY: Error releasing FSM memory \n");
-	}
 
 	os_memoryFree (pExternalSec->hOs, pExternalSec, sizeof(struct externalSec_t));
 
@@ -263,11 +259,9 @@ TI_STATUS externalSec_event(struct externalSec_t *pExternalSec, TI_UINT8 event, 
 	                          event,
 	                          &nextState);
 	if (status != TI_OK) {
-		TRACE0(pExternalSec->hReport, REPORT_SEVERITY_ERROR, "EXTERNAL_SEC_SM: ERROR: failed getting next state\n");
 		return TI_NOK;
 	}
 
-	TRACE3(pExternalSec->hReport, REPORT_SEVERITY_INFORMATION, "STATION_EXT_SEC_SM: <currentState = %d, event = %d> --> nextState = %d\n", pExternalSec->currentState, event, nextState);
 	status = fsm_Event(pExternalSec->pExternalSecSm,
 	                   &pExternalSec->currentState,
 	                   event,
@@ -347,7 +341,6 @@ TI_STATUS externalSecSM_Nop(struct externalSec_t *pExternalSec)
 */
 TI_STATUS externalSecSM_Unexpected(struct externalSec_t *pExternalSec)
 {
-	TRACE0(pExternalSec->hReport, REPORT_SEVERITY_ERROR, "EXTERNAL_SEC_SM: ERROR UnExpected Event\n");
 	return(TI_OK);
 }
 

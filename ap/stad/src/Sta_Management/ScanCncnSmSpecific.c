@@ -69,19 +69,16 @@ void scanCncnSmApp1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
 	                          SCR_RESOURCE_SERVING_CHANNEL, &eScrPendReason)) {
 	case SCR_CRS_PEND:
 		/* send a reject event to the SM */
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmApp1Shot_ScrRequest: SCR pending, pend reason: %d.\n", eScrPendReason);
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, hScanCncnClient);
 		break;
 
 	case SCR_CRS_RUN:
 		/* send a run event to the SM */
-		TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmApp1Shot_ScrRequest: SCR acquired.\n");
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_RUN, hScanCncnClient);
 		break;
 
 	default:
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmApp1Shot_ScrRequest: SCR returned unrecognized status: %d.\n", eScrReplyStatus);
 		/* Send a reject event to recover from this error */
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, hScanCncnClient);
@@ -131,7 +128,6 @@ void scanCncnSmApp1Shot_StartScan (TI_HANDLE hScanCncnClient)
 	                    bPsRequired, NULL, NULL);
 
 	if (TI_OK != tStatus) {
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmApp1Shot_StartScan: TWD returned status %d, quitting app scan.\n", tStatus);
 
 		/* mark the return status */
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
@@ -165,7 +161,6 @@ void scanCncnSmApp1Shot_StopScan (TI_HANDLE hScanCncnClient)
 
 	/* if stop scan operation failed, send a scan complete event to reset the SM */
 	if (TI_OK != tStatus) {
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmApp1Shot_StopScan: status %d from TWD_StopScan, sending scan complete to SM\n", tStatus);
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE, hScanCncnClient);
 	}
 }
@@ -210,19 +205,16 @@ void scanCncnSmAppP_ScrRequest (TI_HANDLE hScanCncnClient)
 	                          SCR_RESOURCE_PERIODIC_SCAN, &eScrPendReason)) {
 	case SCR_CRS_PEND:
 		/* send a reject event to the SM */
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmAppP_ScrRequest: SCR pending, pend reason: %d.\n", eScrPendReason);
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, hScanCncnClient);
 		break;
 
 	case SCR_CRS_RUN:
 		/* send a run event to the SM */
-		TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmAppP_ScrRequest: SCR acquired.\n");
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_RUN, hScanCncnClient);
 		break;
 
 	default:
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmAppP_ScrRequest: SCR returned unrecognized status: %d.\n", eScrReplyStatus);
 		/* Send a reject event to recover from this error */
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, hScanCncnClient);
@@ -267,7 +259,6 @@ void scanCncnSmAppP_StartScan (TI_HANDLE hScanCncnClient)
 	                                   SCAN_RESULT_TAG_APPLICATION_PEIODIC,
 	                                   pScanCncn->tInitParams.uDfsPassiveDwellTimeMs, NULL, NULL);
 	if (TI_OK != tStatus) {
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmAppP_StartScan: TWD returned status %d, quitting app scan.\n", tStatus);
 
 		/* mark the return status */
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
@@ -296,7 +287,6 @@ void scanCncnSmAppP_StopScan (TI_HANDLE hScanCncnClient)
 
 	/* if stop scan operation failed, send a scan complete event to reset the SM */
 	if (TI_OK != status) {
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmAppP_StopScan: status %d from TWD_StopPeriodicScan, sending scan complete to SM\n", status);
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE, hScanCncnClient);
 	}
 }
@@ -336,7 +326,6 @@ void scanCncnSmDrvP_ScrRequest (TI_HANDLE hScanCncnClient)
 	switch (eScrReplyStatus = scr_clientRequest( pScanCncnClient->hSCR, SCR_CID_DRIVER_FG_SCAN,
 	                          SCR_RESOURCE_PERIODIC_SCAN, &eScrPendReason ) ) {
 	case SCR_CRS_PEND:
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmAppP_ScrRequest: SCR pending, pend reason: %d.\n", eScrPendReason);
 
 		/* check the pending reason */
 		if (SCR_PR_OTHER_CLIENT_ABORTING != eScrPendReason) {
@@ -352,12 +341,10 @@ void scanCncnSmDrvP_ScrRequest (TI_HANDLE hScanCncnClient)
 
 	case SCR_CRS_RUN:
 		/* send a run event to the SM */
-		TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmAppP_ScrRequest: SCR acquired.\n");
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_RUN, hScanCncnClient);
 		break;
 
 	default:
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmAppP_ScrRequest: SCR returned unrecognized status: %d\n", eScrReplyStatus);
 		/* Send a reject event to recover from this error */
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, hScanCncnClient);
@@ -403,7 +390,6 @@ void scanCncnSmDrvP_StartScan (TI_HANDLE hScanCncnClient)
 	                                  pScanCncn->tInitParams.uDfsPassiveDwellTimeMs, NULL, NULL);
 
 	if (TI_OK != status) {
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmDrvP_StartScan: TWD returned status %d, quitting app scan.\n", status);
 
 		/* mark the return status */
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
@@ -432,7 +418,6 @@ void scanCncnSmDrvP_StopScan (TI_HANDLE hScanCncnClient)
 
 	/* if stop scan operation failed, send a scan complete event to reset the SM */
 	if (TI_OK != status) {
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmDrvP_StopScan: status %d from TWD_StopPeriodicScan, sending scan complete to SM\n", status);
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE, hScanCncnClient);
 	}
 }
@@ -472,7 +457,6 @@ void scanCncnSmCont1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
 	switch (eScrReplyStatus = scr_clientRequest (pScanCncnClient->hSCR, SCR_CID_CONT_SCAN,
 	                          SCR_RESOURCE_SERVING_CHANNEL, &eScrPendReason ) ) {
 	case SCR_CRS_PEND:
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmCont1Shot_ScrRequest: SCR pending, pend Reason: %d.\n", eScrPendReason);
 		/* check pend reason */
 		if (SCR_PR_DIFFERENT_GROUP_RUNNING == eScrPendReason) {
 			/* send a reject event to the SM - will not scan if not in connected group */
@@ -484,12 +468,10 @@ void scanCncnSmCont1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
 
 	case SCR_CRS_RUN:
 		/* send a run event to the SM */
-		TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmCont1Shot_ScrRequest: SCR acquired.\n");
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_RUN, hScanCncnClient);
 		break;
 
 	default:
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmCont1Shot_ScrRequest: SCR returned unrecognized status: %d.\n", eScrReplyStatus);
 		/* Send a reject event to recover from this error */
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, hScanCncnClient);
@@ -534,7 +516,6 @@ void scanCncnSmCont1Shot_StartScan (TI_HANDLE hScanCncnClient)
 	                   NULL, NULL);
 
 	if (TI_OK != status) {
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmCont1Shot_StartScan: TWD returned status %d, quitting continuous scan.\n", status);
 
 		/* mark the return status */
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
@@ -563,7 +544,6 @@ void scanCncnSmCont1Shot_StopScan (TI_HANDLE hScanCncnClient)
 
 	/* if stop scan operation failed, send a scan complete event to reset the SM */
 	if (TI_OK != status) {
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmCont1Shot_StopScan: status %d from TWD_StopScan, sending scan complete to SM\n", status);
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE, hScanCncnClient);
 	}
 }
@@ -607,7 +587,6 @@ void scanCncnSmImmed1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
 	switch (eScrReplyStatus = scr_clientRequest (pScanCncnClient->hSCR, SCR_CID_IMMED_SCAN,
 	                          SCR_RESOURCE_SERVING_CHANNEL, &eScrPendReason)) {
 	case SCR_CRS_PEND:
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmImmed1Shot_ScrRequest: SCR pending, pend Reason: %d.\n", eScrPendReason);
 
 		/* check pend reason */
 		if ( SCR_PR_DIFFERENT_GROUP_RUNNING == eScrPendReason ) {
@@ -620,12 +599,10 @@ void scanCncnSmImmed1Shot_ScrRequest (TI_HANDLE hScanCncnClient)
 
 	case SCR_CRS_RUN:
 		/* send a run event to the SM */
-		TRACE0(pScanCncnClient->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnSmImmed1Shot_ScrRequest: SCR acquired.\n");
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_RUN, hScanCncnClient);
 		break;
 
 	default:
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmImmed1Shot_ScrRequest: SCR returned unrecognized status: %d.\n", eScrReplyStatus);
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
 		/* Send a reject event to recover from this error */
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_REJECT, hScanCncnClient);
@@ -678,7 +655,6 @@ void scanCncnSmImmed1Shot_StartScan (TI_HANDLE hScanCncnClient)
 
 	/* call the scan SRV start scan */
 	if (TI_OK != status) {
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmImmed1Shot_StartScan: TWD start scanreturned status %d, quitting immediate scan.\n", status);
 
 		/* mark the return status */
 		pScanCncnClient->eScanResult = SCAN_CRS_SCAN_FAILED;
@@ -707,7 +683,6 @@ void scanCncnSmImmed1Shot_StopScan (TI_HANDLE hScanCncnClient)
 
 	/* if stop scan operation failed, send a scan complete event to reset the SM */
 	if (TI_OK != status) {
-		TRACE1(pScanCncnClient->hReport, REPORT_SEVERITY_ERROR , "scanCncnSmImmed1Shot_StopScan: status %d from TWD_StopScan, sending scan complete to SM\n", status);
 		genSM_Event (pScanCncnClient->hGenSM, SCAN_CNCN_SM_EVENT_SCAN_COMPLETE, hScanCncnClient);
 	}
 }

@@ -429,7 +429,6 @@ void scr_init (TStadHandlesList *pStadHandles)
 		pScr->clientArray[ i ].ClientRequestCBObj = NULL;
 	}
 
-	TRACE0(pScr->hReport, REPORT_SEVERITY_INIT , ".....SCR configured successfully\n");
 }
 
 /**
@@ -452,7 +451,6 @@ void scr_registerClientCB( TI_HANDLE hScr,
 
 #ifdef TI_DBG
 	if (client >= SCR_CID_NUM_OF_CLIENTS) {
-		TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Attempting to register callback for invalid client %d\n", client);
 		return;
 	}
 #endif
@@ -477,19 +475,11 @@ void scr_notifyFWReset( TI_HANDLE hScr )
 	for (uResourceIndex = 0; uResourceIndex < SCR_RESOURCE_NUM_OF_RESOURCES; uResourceIndex++) {
 		/* if a client is currently running, notify it of the recovery event */
 		if ( SCR_CID_NO_CLIENT != pScr->runningClient[ uResourceIndex ] ) {
-			TRACE1( pScr->hReport, REPORT_SEVERITY_INFORMATION, "FW reset occured. Client %d Notified.\n", pScr->runningClient[ uResourceIndex ]);
 			if ( NULL != pScr->clientArray[ pScr->runningClient[ uResourceIndex ] ].clientRequestCB ) {
 				pScr->clientArray[ pScr->runningClient[ uResourceIndex ] ].clientRequestCB( pScr->clientArray[ pScr->runningClient[ uResourceIndex ] ].ClientRequestCBObj,
 				        SCR_CRS_FW_RESET, uResourceIndex, SCR_PR_NONE );
-			} else {
-				TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Trying to call client %d callback, which is NULL\n", pScr->runningClient[ uResourceIndex ]);
 			}
 		}
-#ifdef TI_DBG
-		else {
-			TRACE0( pScr->hReport, REPORT_SEVERITY_INFORMATION, "FW reset occured. No client was running.\n");
-		}
-#endif
 	}
 }
 
@@ -508,11 +498,9 @@ void scr_setGroup( TI_HANDLE hScr, EScrGroupId newGroup )
 	TI_UINT32       i, uResourceIndex;
 	EScrClientId    highestPending;
 
-	TRACE1( pScr->hReport, REPORT_SEVERITY_INFORMATION, "Setting group %d.\n", newGroup);
 
 #ifdef TI_DBG
 	if (newGroup >= SCR_GID_NUM_OF_GROUPS) {
-		TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Attempting to set invalid group to %d\n", newGroup);
 		return;
 	}
 #endif
@@ -535,8 +523,6 @@ void scr_setGroup( TI_HANDLE hScr, EScrGroupId newGroup )
 				if ( NULL != pScr->clientArray[ i ].clientRequestCB ) {
 					pScr->clientArray[ i ].clientRequestCB( pScr->clientArray[ i ].ClientRequestCBObj,
 					                                        SCR_CRS_PEND, uResourceIndex, SCR_PR_DIFFERENT_GROUP_RUNNING );
-				} else {
-					TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Trying to call client %d callback, which is NULL\n", i);
 				}
 			}
 		}
@@ -556,8 +542,6 @@ void scr_setGroup( TI_HANDLE hScr, EScrGroupId newGroup )
 				if ( NULL != pScr->clientArray[ highestPending ].clientRequestCB ) {
 					pScr->clientArray[ highestPending ].clientRequestCB( pScr->clientArray[ highestPending ].ClientRequestCBObj,
 					        SCR_CRS_RUN, uResourceIndex, SCR_PR_NONE );
-				} else {
-					TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Trying to call client %d callback, which is NULL\n", highestPending);
 				}
 			}
 		}
@@ -581,11 +565,9 @@ void scr_setMode( TI_HANDLE hScr, EScrModeId newMode )
 	EScrClientId    highestPending;
 #endif
 
-	TRACE1( pScr->hReport, REPORT_SEVERITY_INFORMATION, "Setting mode %d.\n", newMode);
 
 #ifdef TI_DBG
 	if (newMode >= SCR_MID_NUM_OF_MODES) {
-		TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Attempting to set invalid mode to %d\n", newMode);
 		return;
 	}
 #endif
@@ -602,13 +584,10 @@ void scr_setMode( TI_HANDLE hScr, EScrModeId newMode )
 			/* abort the running client */
 			pScr->clientArray[ pScr->runningClient[ uResourceIndex ] ].state[ uResourceIndex ] = SCR_CS_ABORTING;
 			if ( NULL != pScr->clientArray[ pScr->runningClient[ uResourceIndex ] ].clientRequestCB ) {
-				TRACE2( pScr->hReport, REPORT_SEVERITY_INFORMATION, "Sending abort request to client %d for resource %d\n", pScr->runningClient[ uResourceIndex ], uResourceIndex);
 				pScr->clientArray[ pScr->runningClient[ uResourceIndex ] ].clientRequestCB( pScr->clientArray[ pScr->runningClient[ uResourceIndex ] ].ClientRequestCBObj,
 				        SCR_CRS_ABORT,
 				        uResourceIndex,
 				        SCR_PR_NONE );
-			} else {
-				TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Trying to call client %d callback, which is NULL\n", pScr->runningClient[ uResourceIndex ]);
 			}
 		}
 
@@ -627,8 +606,6 @@ void scr_setMode( TI_HANDLE hScr, EScrModeId newMode )
 					pScr->clientArray[ i ].clientRequestCB( pScr->clientArray[ i ].ClientRequestCBObj,
 					                                        SCR_CRS_PEND, uResourceIndex,
 					                                        SCR_PR_DIFFERENT_GROUP_RUNNING );
-				} else {
-					TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Trying to call client %d callback, which is NULL\n", i);
 				}
 			}
 		}
@@ -646,8 +623,6 @@ void scr_setMode( TI_HANDLE hScr, EScrModeId newMode )
 					pScr->clientArray[ highestPending ].clientRequestCB( pScr->clientArray[ highestPending ].ClientRequestCBObj,
 					        SCR_CRS_RUN, uResourceIndex,
 					        SCR_PR_NONE );
-				} else {
-					TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Trying to call client %d callback, which is NULL\n", highestPending);
 				}
 			}
 		}
@@ -676,15 +651,12 @@ EScrClientRequestStatus scr_clientRequest( TI_HANDLE hScr, EScrClientId client,
 {
 	TScr    *pScr = (TScr*)hScr;
 
-	TRACE2( pScr->hReport, REPORT_SEVERITY_INFORMATION, "scr_clientRequest: Client %d requesting the channel for resource %d.\n", client, eResource);
 
 #ifdef TI_DBG
 	if (client >= SCR_CID_NUM_OF_CLIENTS) {
-		TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Attempting to request SCR for invalid client %d\n", client);
 		return SCR_CRS_PEND;
 	}
 	if (SCR_RESOURCE_NUM_OF_RESOURCES <= eResource) {
-		TRACE2( pScr->hReport, REPORT_SEVERITY_ERROR, "Attempting to request SCR by client %d for invalid resource %d\n", client, eResource);
 		return SCR_CRS_PEND;
 	}
 #endif
@@ -693,17 +665,14 @@ EScrClientRequestStatus scr_clientRequest( TI_HANDLE hScr, EScrClientId client,
 
 	/* check if already inside a request - shouldn't happen!!! */
 	if ( TI_TRUE == pScr->statusNotficationPending ) {
-		TRACE0( pScr->hReport, REPORT_SEVERITY_ERROR, "request call while already in request!\n");
 		return SCR_CRS_PEND;
 	}
 
 	/* check if current running client is requesting */
 	if ( client == pScr->runningClient[ eResource ] ) {
-		TRACE2( pScr->hReport, REPORT_SEVERITY_WARNING, "Client %d re-requesting SCR for resource %d\n", client, eResource);
 		return SCR_CRS_RUN;
 	}
 
-	TRACE5( pScr->hReport, REPORT_SEVERITY_INFORMATION, "scr_clientRequest: is client enabled = %d. eResource=%d,currentMode=%d,currentGroup=%d,client=%d,\n", clientStatus[ eResource ][ pScr->currentMode ][ pScr->currentGroup ][ client ], eResource, pScr->currentMode, pScr->currentGroup, client);
 
 	/* check if the client is enabled in the current group */
 	if ( TI_TRUE != clientStatus[ eResource ][ pScr->currentMode ][ pScr->currentGroup ][ client ]) {
@@ -716,7 +685,6 @@ EScrClientRequestStatus scr_clientRequest( TI_HANDLE hScr, EScrClientId client,
 	/* check if a there's no running client at the moment */
 	if ( SCR_CID_NO_CLIENT == pScr->runningClient[ eResource ] ) {
 		/* no running or aborted client - allow access */
-		TRACE2( pScr->hReport, REPORT_SEVERITY_INFORMATION, "Resource %d allocated to client: %d\n", eResource, client);
 		pScr->clientArray[ client ].state[ eResource ] = SCR_CS_RUNNING;
 		pScr->runningClient[ eResource ] = client;
 		return SCR_CRS_RUN;
@@ -743,8 +711,6 @@ EScrClientRequestStatus scr_clientRequest( TI_HANDLE hScr, EScrClientId client,
 				if ( NULL != pScr->clientArray[ highestPending ].clientRequestCB ) {
 					pScr->clientArray[ highestPending ].clientRequestCB( pScr->clientArray[ highestPending ].ClientRequestCBObj,
 					        SCR_CRS_PEND, eResource, SCR_PR_OTHER_CLIENT_RUNNING );
-				} else {
-					TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Trying to call client %d callback, which is NULL\n", highestPending);
 				}
 			}
 			pScr->clientArray[ client ].currentPendingReason[ eResource ] = *pPendReason = SCR_PR_OTHER_CLIENT_ABORTING;
@@ -781,12 +747,9 @@ EScrClientRequestStatus scr_clientRequest( TI_HANDLE hScr, EScrClientId client,
 	/* abort the running client */
 	pScr->clientArray[ pScr->runningClient[ eResource ] ].state[ eResource ] = SCR_CS_ABORTING;
 	if ( NULL != pScr->clientArray[ pScr->runningClient[ eResource ] ].clientRequestCB ) {
-		TRACE2( pScr->hReport, REPORT_SEVERITY_INFORMATION, "Sending abort request to client %d for resource %d\n", pScr->runningClient[ eResource ], eResource);
 		pScr->clientArray[ pScr->runningClient[ eResource ] ].clientRequestCB( pScr->clientArray[ pScr->runningClient[ eResource ] ].ClientRequestCBObj,
 		        SCR_CRS_ABORT, eResource,
 		        SCR_PR_NONE );
-	} else {
-		TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Trying to call client %d callback, which is NULL\n", pScr->runningClient[ eResource ]);
 	}
 
 	/* mark that we have finished the request process */
@@ -794,7 +757,6 @@ EScrClientRequestStatus scr_clientRequest( TI_HANDLE hScr, EScrClientId client,
 
 	/* return the current status (in case the completion changed the client status to run) */
 	if ( SCR_CS_RUNNING == pScr->clientArray[ client ].state[ eResource ] ) {
-		TRACE1( pScr->hReport, REPORT_SEVERITY_INFORMATION, "channel allocated to client: %d\n", client);
 		return SCR_CRS_RUN;
 	} else {
 		pScr->clientArray[ client ].currentPendingReason[ eResource ] = *pPendReason = SCR_PR_OTHER_CLIENT_ABORTING;
@@ -820,15 +782,12 @@ void scr_clientComplete( TI_HANDLE hScr, EScrClientId client, EScrResourceId eRe
 	TScr            *pScr = (TScr*)hScr;
 	EScrClientId    highestPending;
 
-	TRACE2( pScr->hReport, REPORT_SEVERITY_INFORMATION, "Client %d releasing resource %d.\n", client, eResource);
 
 #ifdef TI_DBG
 	if (client >= SCR_CID_NUM_OF_CLIENTS) {
-		TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Attempting to release SCR for invalid client %d\n", client);
 		return;
 	}
 	if (SCR_RESOURCE_NUM_OF_RESOURCES <= eResource) {
-		TRACE2( pScr->hReport, REPORT_SEVERITY_ERROR, "Attempting to release invalid resource %d by client %d\n", eResource, client);
 		return;
 	}
 #endif
@@ -857,8 +816,6 @@ void scr_clientComplete( TI_HANDLE hScr, EScrClientId client, EScrResourceId eRe
 				if ( NULL != pScr->clientArray[ highestPending ].clientRequestCB ) {
 					pScr->clientArray[ highestPending ].clientRequestCB( pScr->clientArray[ highestPending ].ClientRequestCBObj,
 					        SCR_CRS_RUN, eResource, SCR_PR_NONE );
-				} else {
-					TRACE1( pScr->hReport, REPORT_SEVERITY_ERROR, "Trying to call client %d callback, which is NULL\n", highestPending);
 				}
 			}
 		}

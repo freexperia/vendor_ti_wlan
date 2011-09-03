@@ -167,7 +167,6 @@ void txDataQ_Init (TStadHandlesList *pStadHandles)
 
 			/* If any Queues' allocation failed, print error, free TxDataQueue module and exit */
 			if (pLinkQ->aQueues[uQueId] == NULL) {
-				TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_CONSOLE , "Failed to create queue\n");
 				WLAN_OS_REPORT(("Failed to create queue\n"));
 				os_memoryFree (pTxDataQ->hOs, pTxDataQ, sizeof(TTxDataQ));
 				return;
@@ -183,7 +182,6 @@ void txDataQ_Init (TStadHandlesList *pStadHandles)
 	}
 	pTxDataQ->hTxSendPaceTimer = tmr_CreateTimer (pStadHandles->hTimer);
 	if (pTxDataQ->hTxSendPaceTimer == NULL) {
-		TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_ERROR, "txDataQ_Init(): Failed to create hTxSendPaceTimer!\n");
 		return;
 	}
 
@@ -219,7 +217,6 @@ TI_STATUS txDataQ_SetDefaults (TI_HANDLE  hTxDataQ, txDataInitParams_t *pTxDataI
 	/* configure the classifier sub-module */
 	eStatus = txDataClsfr_Config (hTxDataQ, &pTxDataInitParams->ClsfrInitParam);
 	if (eStatus != TI_OK) {
-		TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_CONSOLE ,"FATAL ERROR: txDataQ_SetDefaults(): txDataClsfr_Config failed - Aborting\n");
 		WLAN_OS_REPORT(("FATAL ERROR: txDataQ_SetDefaults(): txDataClsfr_Config failed - Aborting\n"));
 		return eStatus;
 	}
@@ -234,7 +231,6 @@ TI_STATUS txDataQ_SetDefaults (TI_HANDLE  hTxDataQ, txDataInitParams_t *pTxDataI
 	/* configure the classifier sub-module */
 	txDataQ_InitResources (pTxDataQ, &pTxDataInitParams->tDataRsrcParam);
 
-	TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_INIT, ".....Tx Data Queue configured successfully\n");
 
 	return TI_OK;
 }
@@ -271,7 +267,6 @@ TI_STATUS txDataQ_Destroy (TI_HANDLE hTxDataQ)
 		/* Free Data queues */
 		for (uQueId = 0 ; uQueId < pTxDataQ->uNumQueues ; uQueId++) {
 			if (que_Destroy(pLinkQ->aQueues[uQueId]) != TI_OK) {
-				TRACE1(pTxDataQ->hReport, REPORT_SEVERITY_ERROR, "txDataQueue_unLoad: fail to free Data Queue number: %d\n",uQueId);
 				status = TI_NOK;
 			}
 		}
@@ -365,7 +360,6 @@ void txDataQ_SetLinkType (TI_HANDLE hTxDataQ, TI_UINT32 uHlid, EWlanLinkType eLi
 
 	pLinkQ->eType = eLinkType;
 
-	TRACE3(pTxDataQ->hReport, REPORT_SEVERITY_INFORMATION, "%s: link %d, LinkType %d\n", __FUNCTION__, uHlid, pLinkQ->eType);
 
 	/* save broadcast link id */
 	if (pLinkQ->eType == WLANLINK_TYPE_BRCST) {
@@ -403,7 +397,6 @@ TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_
 	TI_BOOL          bStopNetStack = TI_FALSE;
 	TDataLinkQ       *pLinkQ;
 	TI_UINT32        uHlid;
-	CL_TRACE_START_L3();
 
 	/* If packet is EAPOL or from the generic Ethertype, forward it to the Mgmt-Queue and exit */
 	if ((HTOWLANS(pEthHead->type) == ETHERTYPE_EAPOL) ||
@@ -447,7 +440,6 @@ TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_
 	if (txDataClsfr_ClassifyTxPacket (hTxDataQ, pPktCtrlBlk, uPacketDtag) != TI_OK) {
 #ifdef TI_DBG
 		pTxDataQ->uClsfrMismatchCount++;
-		TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_WARNING, "txDataQueue_xmit: No matching classifier found \n");
 #endif /* TI_DBG */
 	}
 
@@ -462,7 +454,6 @@ TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_
 
 		/* Leave critical section */
 		context_LeaveCriticalSection (pTxDataQ->hContext);
-		TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_WARNING, "txDataQ_InsertPacket: No Resources \n");
 		/* If the packet can't be queued drop it - Should be out of the critical section */
 		/* !!! This call should be out of the critical section */
 		txCtrl_FreePacket (pTxDataQ->hTxCtrl, pPktCtrlBlk, TI_NOK);
@@ -518,7 +509,6 @@ TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_
 	if (eStatus != TI_OK) {
 		/* If the packet can't be queued drop it */
 		txCtrl_FreePacket (pTxDataQ->hTxCtrl, pPktCtrlBlk, TI_NOK);
-		TRACE0(pTxDataQ->hReport, REPORT_SEVERITY_INFORMATION, "txDataQ_InsertPacket: Packet dropped\n");
 #ifdef TI_DBG
 		pLinkQ->aQueueCounters[uQueId].uDroppedPacket++;
 #endif /* TI_DBG */
@@ -528,7 +518,6 @@ TI_STATUS txDataQ_InsertPacket (TI_HANDLE hTxDataQ, TTxCtrlBlk *pPktCtrlBlk, TI_
 #endif /* TI_DBG */
 	}
 
-	CL_TRACE_END_L3 ("tiwlan_drv.ko", "INHERIT", "TX", "");
 
 	return eStatus;
 }
@@ -668,7 +657,6 @@ void txDataQ_DisableLink (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
 
 	pLinkQ->bEnabled = TI_FALSE;
 
-	TRACE3(pTxDataQ->hReport, REPORT_SEVERITY_INFORMATION, "%s: link %d, bEnable %d\n", __FUNCTION__, uHlid, pLinkQ->bEnabled);
 }
 
 
@@ -690,7 +678,6 @@ void txDataQ_EnableLink (TI_HANDLE hTxDataQ, TI_UINT32 uHlid)
 
 	pLinkQ->bEnabled = TI_TRUE;
 
-	TRACE3(pTxDataQ->hReport, REPORT_SEVERITY_INFORMATION, "%s: link %d, bEnable %d\n", __FUNCTION__, uHlid, pLinkQ->bEnabled);
 
 	/* Run the scheduler */
 	txDataQ_RunScheduler (hTxDataQ);
@@ -1347,7 +1334,6 @@ void TxDataQ_SetEncryptFlag(TI_HANDLE hTxDataQ, TI_UINT32  uHlid,int flag)
 	TTxDataQ *pTxDataQ = (TTxDataQ *)hTxDataQ;
 	TDataLinkQ *pLinkQ;
 
-	TRACE3(pTxDataQ->hReport, REPORT_SEVERITY_INFORMATION, "%s : data encryption flag %d,  hlid %d  ************ \n",__FUNCTION__,flag, uHlid);
 
 	pLinkQ = &pTxDataQ->aDataLinkQ[uHlid]; /* Link queues */
 	pLinkQ->bEncrypt = flag;

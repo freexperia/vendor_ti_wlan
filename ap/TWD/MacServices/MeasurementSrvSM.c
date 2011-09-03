@@ -162,12 +162,8 @@ TI_STATUS measurementSRVSM_SMEvent( TI_HANDLE hMeasurementSrv, measurements_SRVS
 	/* obtain the next state */
 	status = fsm_GetNextState( pMeasurementSRV->SM, (TI_UINT8)*currentState, (TI_UINT8)event, &nextState );
 	if ( status != TI_OK ) {
-		TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, "measurementSRVSM_SMEvent: State machine error, failed getting next state\n");
 		return TI_NOK;
 	}
-
-	/* report the move */
-	TRACE3( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, "measurementSRVSM_SMEvent: <currentState = %d, event = %d> --> nextState = %d\n", currentState, event, nextState);
 
 	/* move */
 	return fsm_Event( pMeasurementSRV->SM, (TI_UINT8*)currentState, (TI_UINT8)event, hMeasurementSrv );
@@ -205,18 +201,15 @@ TI_STATUS measurementSRVSM_requestDriverMode( TI_HANDLE hMeasurementSRV )
 
 	switch (PSStatus) {
 	case POWER_SAVE_802_11_IS_CURRENT:
-		TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Driver mode entered successfully\n");
 		/* send a power save success event */
 		return measurementSRVSM_SMEvent( hMeasurementSRV, &(pMeasurementSRV->SMState),
 		                                 MSR_SRV_EVENT_DRIVER_MODE_SUCCESS );
 
 	case POWER_SAVE_802_11_PENDING:
 	case TI_OK:
-		TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Driver mode pending\n");
 		break;
 
 	default: /* Error */
-		TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": Error %d when requesting driver mode\n",PSStatus);
 
 		/* Set the return status to TI_NOK */
 		pMeasurementSRV->returnStatus = PSStatus;
@@ -251,7 +244,6 @@ TI_STATUS measurementSRVSM_requestMeasureStart( TI_HANDLE hMeasurementSRV )
 	     < currentTime ) {
 		TI_INT32 i;
 
-		TRACE2( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": request time has expired, request expiry time:%d, current time:%d\n", pMeasurementSRV->requestRecptionTimeStampMs + pMeasurementSRV->timeToRequestExpiryMs, currentTime);
 
 		/* mark that all measurement types has failed */
 		for ( i = 0; i < pMeasurementSRV->msrRequest.numberOfTypes; i++ ) {
@@ -304,7 +296,6 @@ TI_STATUS measurementSRVSM_requestMeasureStart( TI_HANDLE hMeasurementSRV )
 	                                pMeasurementSRV);
 
 	if ( TI_OK != status ) {
-		TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": Failed to send measurement start command, statud=%d,\n", status);
 
 		/* keep the faulty return status */
 		pMeasurementSRV->returnStatus = status;
@@ -314,7 +305,6 @@ TI_STATUS measurementSRVSM_requestMeasureStart( TI_HANDLE hMeasurementSRV )
 		                                 MSR_SRV_EVENT_START_FAILURE );
 	}
 
-	TRACE6( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": measure start command sent. Params:\n channel=%d, band=%d, duration=%d, \n configOptions=0x%x, filterOptions=0x%x, status=%d, \n", pMeasurementCmd.channel, pMeasurementCmd.band, pMeasurementCmd.duration, pMeasurementCmd.ConfigOptions, pMeasurementCmd.FilterOptions, status);
 
 	/* start the FW guard timer */
 	pMeasurementSRV->bStartStopTimerRunning = TI_TRUE;
@@ -352,7 +342,6 @@ TI_STATUS measurementSRVSM_startMeasureTypes( TI_HANDLE hMeasurementSRV )
 	     < currentTime ) {
 		TI_INT32 i;
 
-		TRACE2( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": request time has expired, request expiry time:%d, current time:%d\n", pMeasurementSRV->requestRecptionTimeStampMs + pMeasurementSRV->timeToRequestExpiryMs, currentTime);
 
 		/* mark that all measurement types has failed */
 		for ( i = 0; i < pMeasurementSRV->msrRequest.numberOfTypes; i++ ) {
@@ -379,7 +368,6 @@ TI_STATUS measurementSRVSM_startMeasureTypes( TI_HANDLE hMeasurementSRV )
 			    (TI_UINT8*)&pMeasurementSRV->mediumOccupancyResults;
 			status = cmdBld_GetParam (pMeasurementSRV->hCmdBld, &tTwdParam);
 			if( TI_OK == status  ) {
-				TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Medium Usage has been nullified, starting timer.\n");
 
 				/* Start Timer */
 				tmr_StartTimer (pMeasurementSRV->hRequestTimer[requestIndex],
@@ -388,8 +376,6 @@ TI_STATUS measurementSRVSM_startMeasureTypes( TI_HANDLE hMeasurementSRV )
 				                pMeasurementSRV->msrRequest.msrTypes[requestIndex].duration,
 				                TI_FALSE);
 				pMeasurementSRV->bRequestTimerRunning[requestIndex] = TI_TRUE;
-			} else {
-				TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": TWD_GetParam (for channel load) returned status %d\n", status);
 			}
 
 			break;
@@ -417,16 +403,10 @@ TI_STATUS measurementSRVSM_startMeasureTypes( TI_HANDLE hMeasurementSRV )
 			}
 			pNoiseHistParams.ranges[rangeIndex] = 0xFE;
 
-			/* Print for Debug */
-			TRACE8(pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ":Noise histogram Measurement Ranges:\n%d %d %d %d %d %d %d %d\n", (TI_INT8) pNoiseHistParams.ranges[0], (TI_INT8) pNoiseHistParams.ranges[1], (TI_INT8) pNoiseHistParams.ranges[2], (TI_INT8) pNoiseHistParams.ranges[3], (TI_INT8) pNoiseHistParams.ranges[4], (TI_INT8) pNoiseHistParams.ranges[5], (TI_INT8) pNoiseHistParams.ranges[6], (TI_INT8) pNoiseHistParams.ranges[7]);
-
 			/* Send a Start command to the FW */
 			status = cmdBld_CmdNoiseHistogram (pMeasurementSRV->hCmdBld, &pNoiseHistParams, NULL, NULL);
 
 			if ( TI_OK == status ) {
-				/* Print for Debug */
-				TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": Sent noise histogram command. Starting timer\n");
-
 				/* Start Timer */
 				tmr_StartTimer (pMeasurementSRV->hRequestTimer[requestIndex],
 				                MacServices_measurementSRV_requestTimerExpired,
@@ -434,8 +414,6 @@ TI_STATUS measurementSRVSM_startMeasureTypes( TI_HANDLE hMeasurementSRV )
 				                pMeasurementSRV->msrRequest.msrTypes[requestIndex].duration,
 				                TI_FALSE);
 				pMeasurementSRV->bRequestTimerRunning[requestIndex] = TI_TRUE;
-			} else {
-				TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": TWD_NoiseHistogramCmd returned status %d\n", status);
 			}
 			break;
 
@@ -461,7 +439,6 @@ TI_STATUS measurementSRVSM_startMeasureTypes( TI_HANDLE hMeasurementSRV )
 			status = cmdBld_CmdApDiscovery (pMeasurementSRV->hCmdBld, &pApDiscoveryParams, NULL, NULL);
 
 			if ( TI_OK == status ) {
-				TRACE7( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": AP discovery command sent. Params:\n scanDuration=%d, scanOptions=%d, numOfProbRqst=%d, txdRateSet=%d, txPowerDbm=%d, configOptions=%d, filterOptions=%d\n Starting timer...\n", pApDiscoveryParams.scanDuration, pApDiscoveryParams.scanOptions, pApDiscoveryParams.numOfProbRqst, pApDiscoveryParams.txdRateSet, pApDiscoveryParams.txPowerDbm, pApDiscoveryParams.ConfigOptions, pApDiscoveryParams.FilterOptions);
 
 				/* Start Timer */
 				tmr_StartTimer (pMeasurementSRV->hRequestTimer[requestIndex],
@@ -470,15 +447,12 @@ TI_STATUS measurementSRVSM_startMeasureTypes( TI_HANDLE hMeasurementSRV )
 				                pMeasurementSRV->msrRequest.msrTypes[requestIndex].duration,
 				                TI_FALSE);
 				pMeasurementSRV->bRequestTimerRunning[ requestIndex ] = TI_TRUE;
-			} else {
-				TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": TWD_ApDiscoveryCmd returned status %d\n", status);
 			}
 			break;
 
 		case MSR_TYPE_BASIC_MEASUREMENT: /* not supported in current implemntation */
 		case MSR_TYPE_FRAME_MEASUREMENT: /* not supported in current implemntation */
 		default:
-			TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": Measurement type %d is not supported\n", pMeasurementSRV->msrRequest.msrTypes[ requestIndex ].msrType);
 			break;
 		}
 	}
@@ -524,14 +498,12 @@ TI_STATUS measurementSRVSM_requestMeasureStop( TI_HANDLE hMeasurementSRV )
 	pMeasurementSRV->commandResponseCBObj = NULL;
 
 	if ( TI_OK != status ) {
-		TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": Failed to send measurement stop command, statud=%d,\n", status);
 
 		/* send a measurement complete event - since it can't be stopped */
 		measurementSRVSM_SMEvent( hMeasurementSRV, &(pMeasurementSRV->SMState), MSR_SRV_EVENT_STOP_COMPLETE );
 		return TI_OK;
 	}
 
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": measure stop command sent.\n");
 
 	/* start the FW guard timer */
 	pMeasurementSRV->bStartStopTimerRunning = TI_TRUE;
@@ -592,12 +564,10 @@ TI_STATUS measurementSRVSM_stopFromWaitForDriverMode( TI_HANDLE hMeasurementSRV 
 
 	/* if we are not running within a stop request context (shouldn't happen), call the CBs */
 	if ( TI_FALSE == pMeasurementSRV->bInRequest ) {
-		TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": stop from wait for driver mode: not within a request context?!? \n");
 
 		/* call the response CB - this shouldn't happen, as only GWSI has response CB, and it shouldn't call
 		   stop before driver */
 		if ( NULL != pMeasurementSRV->commandResponseCBFunc ) {
-			TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": stop from wait for driver mode: command response CB is not NULL?!? \n");
 			pMeasurementSRV->commandResponseCBFunc( pMeasurementSRV->commandResponseCBObj, TI_OK );
 
 			pMeasurementSRV->commandResponseCBFunc = NULL;
@@ -613,8 +583,6 @@ TI_STATUS measurementSRVSM_stopFromWaitForDriverMode( TI_HANDLE hMeasurementSRV 
 			/* call the complete CB */
 			pMeasurementSRV->measurmentCompleteCBFunc( pMeasurementSRV->measurementCompleteCBObj,
 			        &(pMeasurementSRV->msrReply));
-		} else {
-			TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": stop from wait for driver mode and response CB is NULL!!!\n");
 		}
 	}
 	/* we are within a stop request context */
@@ -626,8 +594,6 @@ TI_STATUS measurementSRVSM_stopFromWaitForDriverMode( TI_HANDLE hMeasurementSRV 
 		if ( NULL != pMeasurementSRV->commandResponseCBFunc ) {
 			/* shouldn't happen - a command response is valid (GWSI) and stop measure called
 			   before measure start response was received (driver) */
-			TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": stop from wait for driver mode - within request context and command response is not NULL?!?\n");
-
 			cmdBld_CmdMeasurementStop (pMeasurementSRV->hCmdBld,
 			                           (void *)pMeasurementSRV->commandResponseCBFunc,
 			                           pMeasurementSRV->commandResponseCBObj);
@@ -706,9 +672,6 @@ TI_STATUS measurementSRVSM_stopFromMeasureInProgress( TI_HANDLE hMeasurementSRV 
 			case MSR_TYPE_BEACON_MEASUREMENT:
 				/* send stop AP discovery command */
 				status = cmdBld_CmdApDiscoveryStop (pMeasurementSRV->hCmdBld, NULL, NULL);
-				if ( TI_OK != status ) {
-					TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": TWD_ApDiscoveryStop returned status %d\n", status);
-				}
 				break;
 
 			case MSR_TYPE_NOISE_HISTOGRAM_MEASUREMENT:
@@ -720,9 +683,6 @@ TI_STATUS measurementSRVSM_stopFromMeasureInProgress( TI_HANDLE hMeasurementSRV 
 				/* Send a Stop command to the FW */
 				status = cmdBld_CmdNoiseHistogram (pMeasurementSRV->hCmdBld, &pNoiseHistParams, NULL, NULL);
 
-				if ( TI_OK != status ) {
-					TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": TWD_NoiseHistogramCmd returned status %d\n", status);
-				}
 				break;
 
 				/* These are just to avoid compilation warnings, nothing is actualy done here! */
@@ -731,7 +691,6 @@ TI_STATUS measurementSRVSM_stopFromMeasureInProgress( TI_HANDLE hMeasurementSRV 
 			case MSR_TYPE_FRAME_MEASUREMENT:
 			case MSR_TYPE_MAX_NUM_OF_MEASURE_TYPES:
 			default:
-				TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": unsupported measurement type: %d\n", pMeasurementSRV->msrRequest.msrTypes[ i ].msrType);
 				break;
 			}
 
@@ -749,7 +708,6 @@ TI_STATUS measurementSRVSM_stopFromMeasureInProgress( TI_HANDLE hMeasurementSRV 
 	pMeasurementSRV->commandResponseCBObj = NULL;
 
 	if ( TI_OK != status ) {
-		TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": Failed to send measurement stop command, statud=%d,\n", status);
 
 		/* send a measurement complete event - since it can't be stopped */
 		measurementSRVSM_SMEvent( hMeasurementSRV, &(pMeasurementSRV->SMState),
@@ -757,7 +715,6 @@ TI_STATUS measurementSRVSM_stopFromMeasureInProgress( TI_HANDLE hMeasurementSRV 
 		return TI_OK;
 	}
 
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": measure stop command sent.\n");
 
 	/* start the FW guard timer */
 	pMeasurementSRV->bStartStopTimerRunning = TI_TRUE;
@@ -809,8 +766,6 @@ TI_STATUS measurementSRVSM_DriverModeFailure( TI_HANDLE hMeasurementSRV )
 			/* call the complete CB */
 			pMeasurementSRV->measurmentCompleteCBFunc( pMeasurementSRV->measurementCompleteCBObj,
 			        &(pMeasurementSRV->msrReply));
-		} else {
-			TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": driver mode failure and complete CB is NULL!!!\n");
 		}
 	}
 
@@ -857,8 +812,6 @@ TI_STATUS measurementSRVSM_measureStartFailure( TI_HANDLE hMeasurementSRV )
 			/* call the complete CB */
 			pMeasurementSRV->measurmentCompleteCBFunc( pMeasurementSRV->measurementCompleteCBObj,
 			        &(pMeasurementSRV->msrReply));
-		} else {
-			TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_ERROR, ": Start measurement failure and response and complete CBs are NULL!!!\n");
 		}
 	}
 
@@ -871,25 +824,16 @@ static void measurementSRVSM_requestMeasureStartResponseCB(TI_HANDLE hMeasuremen
 	measurementSRV_t* pMeasurementSRV = (measurementSRV_t*)hMeasurementSRV;
 	TI_INT32 i;
 
-	TRACE1( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": FW has responded with CMD_STATUS = %d\n", uMboxStatus);
 
 	if (uMboxStatus == TI_OK) {
-		TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": FW has responded with CMD_STATUS_SUCCESS!\n");
 
 		if ( NULL != pMeasurementSRV->commandResponseCBFunc ) {
 			pMeasurementSRV->commandResponseCBFunc( pMeasurementSRV->commandResponseCBObj, TI_OK );
 		}
 	} else {
-		if (uMboxStatus == SG_REJECT_MEAS_SG_ACTIVE) {
-			TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": FW has responded with CMD_STATUS_REJECT_MEAS_SG_ACTIVE!\n");
-		}
-
-		TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, ": FW has responded with CMD_STATUS NOK!!!\n");
-
 
 		/* if a timer is running, stop it */
 		if ( TI_TRUE == pMeasurementSRV->bStartStopTimerRunning ) {
-			TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, "***** STOP TIMER 8 *****\n");
 			tmr_StopTimer( pMeasurementSRV->hStartStopTimer );
 			pMeasurementSRV->bStartStopTimerRunning = TI_FALSE;
 		}
@@ -919,7 +863,6 @@ TI_STATUS measurementSRVSRVSM_dummyStop( TI_HANDLE hMeasurementSrv )
 {
 	measurementSRV_t *pMeasurementSRV = (measurementSRV_t*)hMeasurementSrv;
 
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_WARNING, ": sending unnecessary stop measurement command to FW...\n");
 
 	/* send a stop command to FW, to obtain a different context in ehich to cal the command response CB */
 	cmdBld_CmdMeasurementStop (pMeasurementSRV->hCmdBld,
@@ -946,7 +889,6 @@ TI_STATUS actionUnexpected( TI_HANDLE hMeasurementSrv )
 	measurementSRV_t *pMeasurementSRV = (measurementSRV_t*)hMeasurementSrv;
 	TI_INT32 i;
 
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_SM, ": measurement SRV state machine error, unexpected Event\n");
 
 	if (pMeasurementSRV->bStartStopTimerRunning) {
 		tmr_StopTimer (pMeasurementSRV->hStartStopTimer);

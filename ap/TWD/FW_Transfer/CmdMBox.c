@@ -162,7 +162,6 @@ TI_STATUS cmdMbox_Init (TI_HANDLE hCmdMbox,
 	/* allocate OS timer memory */
 	pCmdMbox->hCmdMboxTimer = tmr_CreateTimer (hTimer);
 	if (pCmdMbox->hCmdMboxTimer == NULL) {
-		TRACE0(pCmdMbox->hReport, REPORT_SEVERITY_ERROR, "cmdMbox_Init(): Failed to create hCmdMboxTimer!\n");
 		return TI_NOK;
 	}
 
@@ -202,7 +201,6 @@ TI_STATUS cmdMbox_SendCommand       (TI_HANDLE hCmdMbox, Command_e cmdType, TI_U
 
 
 	if (pCmdMbox->bCmdInProgress) {
-		TRACE0(pCmdMbox->hReport, REPORT_SEVERITY_ERROR, "cmdMbox_SendCommand(): Trying to send Cmd while other Cmd is still in progres!\n");
 		return TI_NOK;
 	}
 
@@ -218,7 +216,6 @@ TI_STATUS cmdMbox_SendCommand       (TI_HANDLE hCmdMbox, Command_e cmdType, TI_U
 
 	/* Must make sure that the length is multiple of 32 bit */
 	if (pCmdMbox->uWriteLen & 0x3) {
-		TRACE1(pCmdMbox->hReport, REPORT_SEVERITY_WARNING, "cmdMbox_SendCommand(): Command length isn't 32bit aligned! CmdId=%d\n", pCmd->cmdID);
 		pCmdMbox->uWriteLen = (pCmdMbox->uWriteLen + 4) & 0xFFFFFFFC;
 	}
 
@@ -327,7 +324,6 @@ static void cmdMbox_TimeOut (TI_HANDLE hCmdMbox, TI_BOOL bTwdInitOccured)
 	TCmdMbox   *pCmdMbox = (TCmdMbox *)hCmdMbox;
 	Command_t  *pCmd = (Command_t*)&pCmdMbox->aCmdTxn[0].tCmdMbox;
 
-	TRACE0(pCmdMbox->hReport, REPORT_SEVERITY_ERROR , "cmdMbox_TimeOut: Timeout occured in CmdMbox\n");
 
 	/* Call error CB */
 	if (pCmdMbox->fErrorCb != NULL) {
@@ -435,7 +431,6 @@ TI_STATUS cmdMbox_GetStatus (TI_HANDLE hCmdMbox, CommandStatus_e *cmdStatus)
 	TI_STATUS   status;
 
 	status = (pCmd->cmdStatus == CMD_STATUS_SUCCESS) ? TI_OK : TI_NOK;
-	TRACE2(pCmdMbox->hReport, REPORT_SEVERITY_INFORMATION , "cmdMbox_GetStatus: TI_STATUS = (%d) <= pCmdMbox->tCmdMbox.cmdStatus = %d\n", status, pCmd->cmdStatus);
 	*cmdStatus = pCmd->cmdStatus;
 	return status;
 }

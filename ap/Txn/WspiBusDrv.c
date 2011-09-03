@@ -229,13 +229,8 @@ TI_STATUS busDrv_ConnectBus (TI_HANDLE        hBusDrv,
 
 
 	if ((iStatus == 0) || (iStatus == 1)) {
-		TRACE1 (pBusDrv->hReport, REPORT_SEVERITY_INIT, "busDrv_ConnectBus: called Status %d\n",iStatus);
-
-
-		TRACE2 (pBusDrv->hReport, REPORT_SEVERITY_INFORMATION, "busDrv_ConnectBus: Successful Status %d\n",iStatus);
 		return TI_OK;
 	} else {
-		TRACE2(pBusDrv->hReport, REPORT_SEVERITY_ERROR, "busDrv_ConnectBus: Status = %d,\n", iStatus);
 		return TI_NOK;
 	}
 }
@@ -340,11 +335,8 @@ static void asyncEnded_CB(TI_HANDLE hBusDrv, int status)
 	TBusDrvObj *pBusDrv = (TBusDrvObj*)hBusDrv;
 	/* If the last transaction failed, call failure CB and exit. */
 	if (status != 0) {
-		TRACE2(pBusDrv->hReport, REPORT_SEVERITY_ERROR, "asyncEnded_CB : Status = %d, fTxnDoneCb = 0x%x\n", status,pBusDrv->fTxnDoneCb);
 
 		TXN_PARAM_SET_STATUS(pBusDrv->pCurrTxn, TXN_PARAM_STATUS_ERROR);
-	} else {
-		TRACE2(pBusDrv->hReport, REPORT_SEVERITY_INFORMATION,"asyncEnded_CB: Successful async cb done pBusDrv->pCurrTxn %x\n", pBusDrv->pCurrTxn);
 	}
 
 	/* Call the upper layer CB */
@@ -371,11 +363,8 @@ static void ConnectDone_CB(TI_HANDLE hBusDrv, int status)
 	TBusDrvObj *pBusDrv = (TBusDrvObj*)hBusDrv;
 	/* If the last transaction failed, call failure CB and exit. */
 	if (status != 0) {
-		TRACE2(pBusDrv->hReport, REPORT_SEVERITY_ERROR, "ConnectDone_CB : Status = %d, fTxnConnectDoneCb = 0x%x\n", status,pBusDrv->fTxnConnectDoneCb);
 
 		TXN_PARAM_SET_STATUS(pBusDrv->pCurrTxn, TXN_PARAM_STATUS_ERROR);
-	} else {
-		TRACE1 (pBusDrv->hReport, REPORT_SEVERITY_INIT, "ConnectDone_CB: Successful Connect Async cb done \n");
 	}
 
 	/* Call the upper layer CB */

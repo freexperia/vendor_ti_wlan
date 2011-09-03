@@ -143,7 +143,6 @@ static int xmit_Bridge (struct sk_buff *skb, struct net_device *dev, TIntraBssBr
 	TEthernetHeader *pEthHead = (TEthernetHeader *)(skb->data);
 	int status;
 
-	CL_TRACE_START_L1();
 
 	os_profile (drv, 0, 0);
 	drv->stats.tx_packets++;
@@ -154,7 +153,6 @@ static int xmit_Bridge (struct sk_buff *skb, struct net_device *dev, TIntraBssBr
 	if (pPktCtrlBlk == NULL) {
 		drv->stats.tx_errors++;
 		os_profile (drv, 1, 0);
-		CL_TRACE_END_L1("tiwlan_drv.ko", "OS", "TX", "");
 		return 0;
 	}
 
@@ -203,7 +201,6 @@ static int xmit_Bridge (struct sk_buff *skb, struct net_device *dev, TIntraBssBr
 	}
 	os_profile (drv, 1, 0);
 
-	CL_TRACE_END_L1("tiwlan_drv.ko", "OS", "TX", "");
 
 	return 0;
 }
@@ -446,9 +443,6 @@ int wlanDrvIf_LoadFiles (TWlanDrvIfObj *drv, TLoaderFilesData *pInitFiles)
 	if (pInitFiles->uIniFileLength) {
 		drv->tCommon.tIniFile.uSize = pInitFiles->uIniFileLength;
 		drv->tCommon.tIniFile.pImage = kmalloc (pInitFiles->uIniFileLength, GFP_KERNEL);
-#ifdef TI_MEM_ALLOC_TRACE
-		os_printf ("MTT:%s:%d ::kmalloc(%lu, %x) : %lu\n", __FUNCTION__, __LINE__, pInitFiles->uIniFileLength, GFP_KERNEL, pInitFiles->uIniFileLength);
-#endif
 		if (!drv->tCommon.tIniFile.pImage) {
 			ti_dprintf (TIWLAN_LOG_ERROR, "Cannot allocate buffer for Ini-File!\n");
 			return -ENOMEM;
@@ -461,10 +455,6 @@ int wlanDrvIf_LoadFiles (TWlanDrvIfObj *drv, TLoaderFilesData *pInitFiles)
 	if (pInitFiles->uNvsFileLength) {
 		drv->tCommon.tNvsImage.uSize = pInitFiles->uNvsFileLength;
 		drv->tCommon.tNvsImage.pImage = kmalloc (drv->tCommon.tNvsImage.uSize, GFP_KERNEL);
-#ifdef TI_MEM_ALLOC_TRACE
-		os_printf ("MTT:%s:%d ::kmalloc(%lu, %x) : %lu\n",
-		           __FUNCTION__, __LINE__, drv->tCommon.tNvsImage.uSize, GFP_KERNEL, drv->tCommon.tNvsImage.uSize);
-#endif
 		if (!drv->tCommon.tNvsImage.pImage) {
 			ti_dprintf (TIWLAN_LOG_ERROR, "Cannot allocate buffer for NVS image\n");
 			return -ENOMEM;
@@ -478,10 +468,6 @@ int wlanDrvIf_LoadFiles (TWlanDrvIfObj *drv, TLoaderFilesData *pInitFiles)
 		return -EINVAL;
 	}
 	drv->tCommon.tFwImage.pImage = os_memoryAlloc (drv, drv->tCommon.tFwImage.uSize);
-#ifdef TI_MEM_ALLOC_TRACE
-	os_printf ("MTT:%s:%d ::kmalloc(%lu, %x) : %lu\n",
-	           __FUNCTION__, __LINE__, drv->tCommon.tFwImage.uSize, GFP_KERNEL, drv->tCommon.tFwImage.uSize);
-#endif
 	if (!drv->tCommon.tFwImage.pImage) {
 		ti_dprintf(TIWLAN_LOG_ERROR, "Cannot allocate buffer for firmware image\n");
 		return -ENOMEM;
@@ -863,9 +849,6 @@ static int wlanDrvIf_Create (void)
 	tb_init(TB_OPTION_NONE);
 #endif
 	pDrvStaticHandle = drv;  /* save for module destroy */
-#ifdef TI_MEM_ALLOC_TRACE
-	os_printf ("MTT:%s:%d ::kmalloc(%lu, %x) : %lu\n", __FUNCTION__, __LINE__, sizeof(TWlanDrvIfObj), GFP_KERNEL, sizeof(TWlanDrvIfObj));
-#endif
 	memset (drv, 0, sizeof(TWlanDrvIfObj));
 
 	drv->tCommon.eDriverState = DRV_STATE_IDLE;
@@ -1029,24 +1012,12 @@ static void wlanDrvIf_Destroy (TWlanDrvIfObj *drv)
 	 */
 	if (drv->tCommon.tFwImage.pImage) {
 		os_memoryFree (drv, drv->tCommon.tFwImage.pImage, drv->tCommon.tFwImage.uSize);
-#ifdef TI_MEM_ALLOC_TRACE
-		os_printf ("MTT:%s:%d ::kfree(0x%p) : %d\n",
-		           __FUNCTION__, __LINE__, drv->tCommon.tFwImage.uSize, -drv->tCommon.tFwImage.uSize);
-#endif
 	}
 	if (drv->tCommon.tNvsImage.pImage) {
 		kfree (drv->tCommon.tNvsImage.pImage);
-#ifdef TI_MEM_ALLOC_TRACE
-		os_printf ("MTT:%s:%d ::kfree(0x%p) : %d\n",
-		           __FUNCTION__, __LINE__, drv->tCommon.tNvsImage.uSize, -drv->tCommon.tNvsImage.uSize);
-#endif
 	}
 	if (drv->tCommon.tIniFile.pImage) {
 		kfree (drv->tCommon.tIniFile.pImage);
-#ifdef TI_MEM_ALLOC_TRACE
-		os_printf ("MTT:%s:%d ::kfree(0x%p) : %d\n",
-		           __FUNCTION__, __LINE__, drv->tCommon.tIniFile.uSize, -drv->tCommon.tIniFile.uSize);
-#endif
 	}
 
 	/* Free the driver object */
@@ -1180,17 +1151,13 @@ TI_BOOL wlanDrvIf_receivePacket(TI_HANDLE OsContext, void *pRxDesc ,void *pPacke
 	}
 	if(INTRA_BSS_BRIDGE_NO_BRIDGE == eBridge) {
 		/* Forward packet to network stack*/
-		CL_TRACE_START_L1();
 		skb->protocol  = eth_type_trans(skb, drv->netdev);
 		skb->ip_summed = CHECKSUM_NONE;
 		netif_rx_ni(skb);
 
-		/* Note: Don't change this trace (needed to exclude OS processing from Rx CPU utilization) */
-		CL_TRACE_END_L1("tiwlan_drv.ko", "OS", "RX", "");
 
 	} else if( INTRA_BSS_BRIDGE_UNICAST == eBridge) {
 		/* Send packet to Tx */
-		TRACE2(drv->tCommon.hReport, REPORT_SEVERITY_INFORMATION, " wlanDrvIf_receivePacket() Unicast Bridge data=0x%x len=%d  \n", RX_ETH_PKT_DATA(pPacket), RX_ETH_PKT_LEN(pPacket));
 		xmit_Bridge (skb, pDrvStaticHandle->netdev, pBridgeDecision);
 	} else { /* Broadcast/Multicast packet*/
 		/* Duplicate packet*/

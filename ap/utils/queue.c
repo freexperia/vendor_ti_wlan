@@ -177,9 +177,6 @@ TI_STATUS que_Destroy (TI_HANDLE hQue)
 
 	if (pQue) {
 		/* Alert if the queue is unloaded before it was cleared from items */
-		if (pQue->uCount) {
-			TRACE0(pQue->hReport, REPORT_SEVERITY_WARNING, "que_Destroy() Queue Not Empty!!");
-		}
 		/* free Queue object */
 		os_memoryFree (pQue->hOs, pQue, sizeof(TQueue));
 	}
@@ -238,7 +235,6 @@ TI_STATUS que_Enqueue (TI_HANDLE hQue, TI_HANDLE hItem)
 			/* Verify that pNext is NULL --> Sanity check that this item is not already linked to a queue */
 			if (pQueNodeHdr->pNext) {
 				/* Not an error since we have a case where a timer may expire twice in a row (in TxDataQueue) */
-				TRACE0(pQue->hReport, REPORT_SEVERITY_WARNING, "que_Enqueue(): Trying to enqueue an item that is already enqueued!!");
 				return TI_NOK;
 			}
 
@@ -249,7 +245,6 @@ TI_STATUS que_Enqueue (TI_HANDLE hQue, TI_HANDLE hItem)
 			if (pQue->uCount > pQue->uMaxCount) {
 				pQue->uMaxCount = pQue->uCount;
 			}
-			TRACE0(pQue->hReport, REPORT_SEVERITY_INFORMATION , "que_Enqueue(): Enqueued Successfully\n");
 
 			return TI_OK;
 		}
@@ -258,7 +253,6 @@ TI_STATUS que_Enqueue (TI_HANDLE hQue, TI_HANDLE hItem)
 	 *  Queue is overflowed, return TI_NOK.
 	 */
 	pQue->uOverflow++;
-	TRACE0(pQue->hReport, REPORT_SEVERITY_INFORMATION , "que_Enqueue(): Queue Overflow\n");
 	}
 	return TI_NOK;
 }
@@ -298,7 +292,6 @@ TI_HANDLE que_Dequeue (TI_HANDLE hQue)
 	}
 
 	/* Queue is empty */
-	TRACE0(pQue->hReport, REPORT_SEVERITY_INFORMATION , "que_Dequeue(): Queue is empty\n");
 	return NULL;
 }
 
@@ -329,7 +322,6 @@ TI_STATUS que_Requeue (TI_HANDLE hQue, TI_HANDLE hItem)
 
 		/* Verify that pNext is NULL --> Sanity check that this item is not already linked to a queue */
 		if (pQueNodeHdr->pNext) {
-			TRACE0(pQue->hReport, REPORT_SEVERITY_ERROR, "que_Requeue(): Trying to Requeue an item that is already enqueued!!");
 			return TI_NOK;
 		}
 
@@ -339,7 +331,6 @@ TI_STATUS que_Requeue (TI_HANDLE hQue, TI_HANDLE hItem)
 
 		if (pQue->uCount > pQue->uMaxCount)
 			pQue->uMaxCount = pQue->uCount;
-		TRACE0(pQue->hReport, REPORT_SEVERITY_INFORMATION , "que_Requeue(): Requeued successfully\n");
 
 		return TI_OK;
 	}
@@ -350,7 +341,6 @@ TI_STATUS que_Requeue (TI_HANDLE hQue, TI_HANDLE hItem)
 	 *          only right after it was dequeued in the same context so the queue can't be full.
 	 */
 	pQue->uOverflow++;
-	TRACE0(pQue->hReport, REPORT_SEVERITY_ERROR , "que_Requeue(): Queue Overflow\n");
 
 	return TI_NOK;
 }

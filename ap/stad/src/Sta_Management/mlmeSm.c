@@ -298,7 +298,6 @@ TI_STATUS mlme_setParam(TI_HANDLE           hMlmeSm,
 			return auth_setParam(pMlmeSm->hAuth, pParam);
 
 		default:
-			TRACE1(pMlmeSm->hReport, REPORT_SEVERITY_ERROR, "Set param, Params is not supported, 0x%x\n\n", pParam->content.mlmeLegacyAuthType);
 			return PARAM_VALUE_NOT_VALID;
 		}
 		/*      break;  - unreachable */
@@ -308,7 +307,6 @@ TI_STATUS mlme_setParam(TI_HANDLE           hMlmeSm,
 		break;
 
 	default:
-		TRACE1(pMlmeSm->hReport, REPORT_SEVERITY_ERROR, "Set param, Params is not supported, 0x%x\n\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 	}
 
@@ -335,7 +333,6 @@ TI_STATUS mlme_getParam(TI_HANDLE           hMlmeSm,
 		break;
 
 	default:
-		TRACE1(pMlmeSm->hReport, REPORT_SEVERITY_ERROR, "Get param, Params is not supported, %d\n\n", pParam->content.mlmeLegacyAuthType);
 		return PARAM_NOT_SUPPORTED;
 	}
 
@@ -370,7 +367,6 @@ TI_STATUS mlme_start(TI_HANDLE hMlme)
 	}
 
 	if (pHandle->legacyAuthType == AUTH_LEGACY_NONE) {
-		TRACE0(pHandle->hReport, REPORT_SEVERITY_ERROR, "mlme_start: pHandle->legacyAuthType == AUTH_LEGACY_NONE\n");
 		return TI_NOK;
 	}
 
@@ -552,12 +548,10 @@ TI_STATUS mlme_smEvent(TI_UINT8 *currentState, TI_UINT8 event, TI_HANDLE hMlme)
 
 	status = fsm_GetNextState(pMlme->pMlmeSm, *currentState, event, &nextState);
 	if (status != TI_OK) {
-		TRACE0(pMlme->hReport, REPORT_SEVERITY_ERROR, "MLME_SM: ERROR - failed getting next state \n");
 
 		return(TI_NOK);
 	}
 
-	TRACE3( pMlme->hReport, REPORT_SEVERITY_INFORMATION, "mlme_smEvent: <currentState = %d, event = %d> --> nextState = %d\n", *currentState, event, nextState);
 
 	status = fsm_Event(pMlme->pMlmeSm, currentState, event, (void *)pMlme);
 
@@ -672,7 +666,6 @@ static void mlme_stopAssocAndAuth(mlme_t *pMlme)
 	sendDeAuth   = TI_FALSE;
 	sendDisAssoc = TI_FALSE;
 
-	TRACE0(pMlme->hReport, REPORT_SEVERITY_INFORMATION, "mlme_stopAssocAndAuth: Auth/assoc stop without sending deauth/disassoc\n");
 
 	assoc_setDisAssocFlag(pMlme->hAssoc, sendDisAssoc);
 	assoc_stop(pMlme->hAssoc);

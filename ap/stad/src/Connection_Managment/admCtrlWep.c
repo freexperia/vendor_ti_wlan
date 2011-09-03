@@ -249,7 +249,6 @@ TI_STATUS admCtrlWep_setSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TI_UINT8 *
 
 		case RSN_AUTH_AUTO_SWITCH:
 			param.content.mlmeLegacyAuthType = AUTH_LEGACY_AUTO_SWITCH;
-			TRACE0(pAdmCtrl->hReport , REPORT_SEVERITY_INFORMATION, "WEP admCtrl mlme_setParam, RSN_AUTH_AUTO_SWITCH\n");
 			break;
 
 		default:

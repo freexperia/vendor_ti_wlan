@@ -87,7 +87,6 @@ static void calcCreditFromTimer(TI_HANDLE hTxCtrl, TI_BOOL bTwdInitOccured)
 	for(ac = 0 ; ac < MAX_NUM_OF_AC ; ac++) {
 		/* check if this queue is under admission ctrl operation */
 		if(pTxCtrl->mediumTime[ac] == 0) {
-			TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, ": ac = %d mediumTime = 0 \n", ac);
 
 			continue;
 		}
@@ -113,7 +112,6 @@ static void calcCreditFromTimer(TI_HANDLE hTxCtrl, TI_BOOL bTwdInitOccured)
 		if (pTxCtrl->credit[ac] > (TI_INT32)(pTxCtrl->mediumTime[ac]) )
 			pTxCtrl->credit[ac] = pTxCtrl->mediumTime[ac];
 
-		TRACE2(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, "credit = %d  | TotalUsedTime = %d\n", pTxCtrl->credit[ac], pTxCtrl->totalUsedTime[ac]/1000);
 
 		/* Check medium-usage threshold cross events */
 		/*********************************************/
@@ -146,7 +144,6 @@ static void calcCreditFromTimer(TI_HANDLE hTxCtrl, TI_BOOL bTwdInitOccured)
 			EvHandlerSendEvent(pTxCtrl->hEvHandler, IPC_EVENT_MEDIUM_TIME_CROSS,
 			                   (TI_UINT8 *)&mediumTimeCross, sizeof(OS_802_11_THRESHOLD_CROSS_INDICATION_PARAMS));
 
-			TRACE3(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, "crossed below low threshold !!! prevUsage = %d, currUsage = %d, lowCreditThreshold = %d\n",				prevUsage, currUsage, lowCreditThreshold);
 		}
 
 		/* crossing above the high threshold */
@@ -159,7 +156,6 @@ static void calcCreditFromTimer(TI_HANDLE hTxCtrl, TI_BOOL bTwdInitOccured)
 			EvHandlerSendEvent(pTxCtrl->hEvHandler, IPC_EVENT_MEDIUM_TIME_CROSS,
 			                   (TI_UINT8 *)&mediumTimeCross, sizeof(OS_802_11_THRESHOLD_CROSS_INDICATION_PARAMS));
 
-			TRACE3(pTxCtrl->hReport, REPORT_SEVERITY_INFORMATION, "crossed above high threshold !!! prevUsage = %d, currUsage = %d, highCreditThreshold = %d\n",				prevUsage, currUsage, highCreditThreshold);
 		}
 
 		/* reset totalUsedTime */
@@ -371,7 +367,6 @@ TI_STATUS txCtrlParams_getParam(TI_HANDLE hTxCtrl, paramInfo_t *pParamInfo)
         break;
 
 	default:
-		TRACE0(pTxCtrl->hReport, REPORT_SEVERITY_ERROR, ": PARAMETER NOT SUPPORTED\n");
 		return PARAM_NOT_SUPPORTED;
 		break;
 	}
@@ -406,8 +401,7 @@ TI_STATUS txCtrlParams_setParam(TI_HANDLE hTxCtrl, paramInfo_t *pParamInfo)
 			    pParamInfo->content.txDataMediumUsageThreshold.uHighThreshold;
 			pTxCtrl->lowMediumUsageThreshold[acID] =
 			    pParamInfo->content.txDataMediumUsageThreshold.uLowThreshold;
-		} else
-			TRACE1(pTxCtrl->hReport, REPORT_SEVERITY_ERROR, ": Wrong AC (AC=%d > 3)\n", acID);
+		}
 		break;
 
 	case TX_CTRL_GET_MEDIUM_USAGE_THRESHOLD:
@@ -419,7 +413,6 @@ TI_STATUS txCtrlParams_setParam(TI_HANDLE hTxCtrl, paramInfo_t *pParamInfo)
 		break;
 
 	case TX_CTRL_POLL_AP_PACKETS_FROM_AC:
-		TRACE0(pTxCtrl->hReport, REPORT_SEVERITY_ERROR, ": Poll-AP is not supported in this version!!\n");
 		return PARAM_NOT_SUPPORTED;
 
 	case TX_CTRL_RESET_COUNTERS_PARAM:
@@ -438,7 +431,6 @@ TI_STATUS txCtrlParams_setParam(TI_HANDLE hTxCtrl, paramInfo_t *pParamInfo)
 
 
 	default:
-		TRACE0(pTxCtrl->hReport, REPORT_SEVERITY_ERROR, ": PARAMETER NOT SUPPORTED\n");
 		return PARAM_NOT_SUPPORTED;
 	}
 

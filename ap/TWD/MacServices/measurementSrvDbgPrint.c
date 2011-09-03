@@ -60,8 +60,6 @@ void measurementSRVPrintRequest( TI_HANDLE hMeasurementSRV, TMeasurementRequest 
 	measurementSRV_t* pMeasurementSRV = (measurementSRV_t*)hMeasurementSRV;
 	TI_INT32 i;
 
-	TRACE0( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, "Measurement request:\n");
-	TRACE5( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, "band: %d, channel:%d, TX power level: %d, start time: %x-%x\n", pMsrRequest->band, pMsrRequest->channel, pMsrRequest->txPowerDbm, INT64_HIGHER(pMsrRequest->startTime), INT64_LOWER(pMsrRequest->startTime));
 	for ( i = 0; i < pMsrRequest->numberOfTypes; i++ ) {
 		measurementSRVPrintTypeRequest( hMeasurementSRV, &(pMsrRequest->msrTypes[ i ]));
 	}
@@ -82,8 +80,6 @@ void measurementSRVPrintTypeRequest( TI_HANDLE hMeasurementSRV, TMeasurementType
 {
 #ifdef TI_DBG
 	measurementSRV_t* pMeasurementSRV = (measurementSRV_t*)hMeasurementSRV;
-
-	TRACE4( pMeasurementSRV->hReport, REPORT_SEVERITY_INFORMATION, "Measurement type request: type: %d, duration:%d, scan mode: %d, reserved: %d", pMsrTypeRequest->msrType, pMsrTypeRequest->duration, pMsrTypeRequest->scanMode, pMsrTypeRequest->reserved);
 
 #endif /* TI_DBG */
 }

@@ -135,7 +135,6 @@ TI_STATUS MacServices_scanSRV_init (TI_HANDLE hMacServices,
 	/* create the timer */
 	pScanSRV->hScanSrvTimer = tmr_CreateTimer (pScanSRV->hTimer);
 	if (pScanSRV->hScanSrvTimer == NULL) {
-		TRACE0(pScanSRV->hReport, REPORT_SEVERITY_ERROR, "MacServices_scanSRV_init(): Failed to create hScanSrvTimer!\n");
 		return TI_NOK;
 	}
 
@@ -155,7 +154,6 @@ TI_STATUS MacServices_scanSRV_init (TI_HANDLE hMacServices,
 	/* init other stuff */
 	pScanSRV->currentNumberOfConsecutiveNoScanCompleteEvents = 0;
 
-	TRACE0( hReport, REPORT_SEVERITY_INIT, ".....Scan SRV configured successfully.\n");
 
 	return TI_OK;
 }
@@ -257,7 +255,6 @@ void MacServices_scanSRVCommandMailBoxCB(TI_HANDLE hScanSrv,TI_UINT16 MboxStatus
 	TCmdResponseCb CB_Func;
 	TI_HANDLE  CB_Handle;
 
-	TRACE1( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, " status %u\n",MboxStatus);
 
 	/* set response to TI_OK or TI_NOK */
 	responseStatus = ((MboxStatus > 0) ? TI_NOK : TI_OK);
@@ -275,7 +272,6 @@ void MacServices_scanSRVCommandMailBoxCB(TI_HANDLE hScanSrv,TI_UINT16 MboxStatus
 	}
 	/* if scan request failed */
 	if ( TI_OK != responseStatus ) {
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_ERROR, "Mail box returned error , quitting scan.\n");
 
 		/* send a scan complete event. This will do all necessary clean-up (timer, power manager, notifying scan complete) */
 		scanSRVSM_SMEvent( hScanSrv, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_SCAN_COMPLETE );
@@ -309,11 +305,9 @@ TI_STATUS MacServices_scanSRV_scan( TI_HANDLE hMacServices, TScanParams *scanPar
 	scanSRV_t *pScanSRV = (scanSRV_t*)((MacServices_t*)hMacServices)->hScanSRV;
 
 
-	TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Scan request received.\n");
 
 	/* sanity check - scan can only start if the scan SRV is idle */
 	if ( SCAN_SRV_STATE_IDLE != pScanSRV->SMState ) {
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_WARNING, "Scan request while scan is running!\n");
 		return TI_NOK;
 	}
 
@@ -392,7 +386,6 @@ TI_STATUS MacServices_scanSRV_stopScan( TI_HANDLE hMacServices, EScanResultTag e
 	scanSRV_t *pScanSRV = (scanSRV_t*)((MacServices_t*)hMacServices)->hScanSRV;
 	TI_INT32 stopScanStatus;
 
-	TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Stop scan request received.\n");
 
 	/* update the driver mode exit flag */
 	pScanSRV->bSendNullData = bSendNullData;
@@ -426,7 +419,6 @@ TI_STATUS MacServices_scanSRV_stopOnFWReset( TI_HANDLE hMacServices )
 {
 	scanSRV_t *pScanSRV = (scanSRV_t*)((MacServices_t*)hMacServices)->hScanSRV;
 
-	TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "FW reset notification received.\n");
 
 	/* mark the return status */
 	pScanSRV->returnStatus = TI_NOK;
@@ -448,18 +440,15 @@ void MacServices_scanSRV_powerSaveCB( TI_HANDLE hScanSRV, TI_UINT8 PSMode,TI_UIN
 {
 	scanSRV_t *pScanSRV = (scanSRV_t*)hScanSRV;
 
-	TRACE1( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "PS Call Back status %d .\n",psStatus);
 
 	/* if driver mode enter/exit succeedded */
 	if ( (ENTER_POWER_SAVE_SUCCESS == psStatus) || (EXIT_POWER_SAVE_SUCCESS == psStatus)) {
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "PS successful.\n");
 
 		/* send a PS_SUCCESS event */
 		scanSRVSM_SMEvent( (TI_HANDLE)pScanSRV, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_PS_SUCCESS );
 	}
 	/* driver mode entry failed, and scan is requested even on PS failure but we are entering PS and not Exiting */
 	else if ( (TI_TRUE == pScanSRV->bScanOnDriverModeFailure) && ( ENTER_POWER_SAVE_FAIL == psStatus)) {
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "PS enter failed, continune scan .\n");
 
 		/* send a PS_SUCCESS event */
 		scanSRVSM_SMEvent( (TI_HANDLE)pScanSRV, (scan_SRVSMStates_e*)&pScanSRV->SMState, SCAN_SRV_EVENT_PS_SUCCESS );
@@ -468,7 +457,6 @@ void MacServices_scanSRV_powerSaveCB( TI_HANDLE hScanSRV, TI_UINT8 PSMode,TI_UIN
 	else {
 		/* if we are trying to enter PS and fail to do so - return error on scan complete */
 		if ( ENTER_POWER_SAVE_FAIL == psStatus) {
-			TRACE0( pScanSRV->hReport, REPORT_SEVERITY_WARNING, "PS enter failed . quiting scan .\n");
 			/* Set the return status  */
 			pScanSRV->returnStatus = TI_NOK;
 		}
@@ -494,7 +482,6 @@ void MacServices_scanSRV_scanCompleteCB( TI_HANDLE hScanSRV, char* str, TI_UINT3
 	scanSRV_t *pScanSRV = (scanSRV_t*)hScanSRV;
 	scanCompleteResults_t   *pResult = (scanCompleteResults_t*)str;
 
-	TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Scan complete notification from TNET.\n");
 
 	/* nullify the consecutive no scan complete events counter  - only if this is a scan complete that
 	   does not happen afetr a stop scan (due to a timer expiry) */
@@ -510,7 +497,6 @@ void MacServices_scanSRV_scanCompleteCB( TI_HANDLE hScanSRV, char* str, TI_UINT3
 	if (TI_FALSE == pScanSRV->bSPSScan) {
 		/* normal scan - no result is available */
 		pScanSRV->bTSFError = TI_FALSE;
-		TRACE0( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "Normal scan completed.\n");
 	} else {
 		/* SPS scan - first byte indicates whether a TSF error (AP recovery) occured */
 		if ( 0 != (pResult->scheduledScanStatus >> 24)) {
@@ -522,7 +508,6 @@ void MacServices_scanSRV_scanCompleteCB( TI_HANDLE hScanSRV, char* str, TI_UINT3
 		/* next two bytes indicates on which channels scan was attempted */
 		pScanSRV->SPSScanResult = (TI_UINT16)(pResult->scheduledScanStatus >> 16) | 0xff;
 		pScanSRV->SPSScanResult = ENDIAN_HANDLE_WORD( pScanSRV->SPSScanResult );
-		TRACE1( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "SPS scan completed. TSF error: , SPS result: %x\n", pScanSRV->SPSScanResult);
 	}
 
 	/* send a SCAN_COMPLETE event  */
@@ -621,10 +606,8 @@ TI_UINT32 MacServices_scanSRVcalculateScanTimeout( TI_HANDLE hScanSRV, TScanPara
 		break;
 
 	default:
-		TRACE1( pScanSRV->hReport, REPORT_SEVERITY_ERROR, "Trying to calculate timeout for undefined scan type %d\n", scanParams->scanType);
 		break;
 	}
-	TRACE1( pScanSRV->hReport, REPORT_SEVERITY_INFORMATION, "scanSRVcalculateScanTimeout, timeout = %d\n", timeout);
 
 	return timeout;
 }

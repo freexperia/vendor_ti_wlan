@@ -309,10 +309,7 @@ TI_STATUS cmdBld_CmdIeConfigureTemplateFrame (TI_HANDLE         hCmdBld,
 
 	/* If the frame size is too big - we truncate the frame template */
 	if (uFrameSize > MAX_TEMPLATES_SIZE) {
-		EReportSeverity eReportSeverity = (pTemplate == NULL) ? REPORT_SEVERITY_WARNING : REPORT_SEVERITY_ERROR;
-
 		/* Report as error only if this is the actual template and not just a space holder */
-		TRACE3(pCmdBld->hReport, eReportSeverity, "cmdBld_CmdIeConfigureTemplateFrame: Frame size (=%d) of CmdType (=%d) is bigger than MAX_TEMPLATES_SIZE(=%d) !!!\n", uFrameSize, eTemplateType, MAX_TEMPLATES_SIZE);
 
 		/* Truncate length to the template size limit */
 		uFrameSize = MAX_TEMPLATES_SIZE;
@@ -410,9 +407,6 @@ TI_STATUS cmdBld_CmdIeSetKey (TI_HANDLE hCmdBld,
 	pCmd->AcSeqNum32[2] = 0;
 	pCmd->AcSeqNum32[3] = 0;
 
-	//TRACE6(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "Addr: %02x:%02x:%02x:%02x:%02x:%02x\n", pCmd->addr[0],pCmd->addr[1],pCmd->addr[2],pCmd->addr[3],pCmd->addr[4],pCmd->addr[5]);
-
-	//TRACE7(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "Action=%x,keySize=0x%x,type=%x, id=%x, AcSeqNum16[0]=%x, AcSeqNum32[0]=%x\n", pCmd->action,pCmd->keySize, pCmd->type,pCmd->id,dProfile,pCmd->AcSeqNum16[0],pCmd->AcSeqNum32[0] );
 
 	return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_SET_KEYS, (char *)pCmd, sizeof(*pCmd), fCb, hCb, NULL);
 }
@@ -483,7 +477,6 @@ TI_STATUS cmdBld_CmdIeStopScan (TI_HANDLE hCmdBld, void *fScanResponseCb, TI_HAN
 {
 	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CmdIeStopScan: -------------- \n");
 
 	return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_STOP_SCAN, 0, 0, fScanResponseCb, hCb, NULL);
 }
@@ -505,7 +498,6 @@ TI_STATUS cmdBld_CmdIeStopSPSScan (TI_HANDLE hCmdBld, void* fScanResponseCB, TI_
 {
 	TCmdBld *pCmdBld = (TCmdBld *)hCmdBld;
 
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CmdIeStopSPSScan: -------------- \n");
 
 	return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_STOP_SPS_SCAN, 0, 0, fScanResponseCB, hCb, NULL);
 }
@@ -517,7 +509,6 @@ TI_STATUS cmdBld_CmdIeSetSplitScanTimeOut (TI_HANDLE hCmdBld, TI_UINT32 uTimeOut
 	enhancedTriggerTO_t Cmd_enhancedTrigger;
 	enhancedTriggerTO_t *pCmd = &Cmd_enhancedTrigger;
 
-	TRACE1(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_CmdIeSetSplitScanTimeOut: uTimeOut=%d -------------- \n", uTimeOut);
 
 	pCmd->slicedScanTimeOut = uTimeOut;
 
@@ -1057,14 +1048,11 @@ TI_STATUS cmdBld_CmdIeTest (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb, TTestCm
 	TI_BOOL      bIsCBfuncNecessary = TI_TRUE;
 
 	if (NULL == pTestCmd) {
-		TRACE0(pCmdBld->hReport, REPORT_SEVERITY_ERROR, " pTestCmd_Buf = NULL!!!\n");
 		return TI_NOK;
 	}
 
 	if ( (TestCmdID_enum)pTestCmd->testCmdId < MAX_TEST_CMD_ID ) {
 		bIsCBfuncNecessary = TI_TRUE;
-	} else {
-		TRACE1(pCmdBld->hReport, REPORT_SEVERITY_WARNING, " Unsupported testCmdId (%d)\n", pTestCmd->testCmdId);
 	}
 
 	if (bIsCBfuncNecessary && fCb == NULL) {

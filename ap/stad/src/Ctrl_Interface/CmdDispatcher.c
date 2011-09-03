@@ -404,7 +404,6 @@ TI_STATUS cmdDispatch_SetParam (TI_HANDLE hCmdDispatch, void *param)
 		return TI_NOK;
 	}
 
-	TRACE2(pCmdDispatch->hReport, REPORT_SEVERITY_INFORMATION , "cmdDispatch_SetParam(): ParamType=0x%x, ModuleNumber=0x%x\n",							 pParam->paramType, moduleNumber);
 
 	return pCmdDispatch->paramAccessTable[moduleNumber - 1].set(pCmdDispatch->paramAccessTable[moduleNumber - 1].handle, pParam);
 }
@@ -445,7 +444,6 @@ TI_STATUS cmdDispatch_GetParam (TI_HANDLE hCmdDispatch, void *param)
 		return TI_NOK;
 	}
 
-	TRACE2(pCmdDispatch->hReport, REPORT_SEVERITY_INFORMATION , "cmdDispatch_GetParam(): ParamType=0x%x, ModuleNumber=0x%x\n",							 pParam->paramType, moduleNumber);
 
 	status = pCmdDispatch->paramAccessTable[moduleNumber - 1].get(pCmdDispatch->paramAccessTable[moduleNumber - 1].handle, pParam);
 
@@ -516,7 +514,6 @@ static TI_STATUS cmdDispatch_DebugFuncSet (TI_HANDLE hCmdDispatch, paramInfo_t *
 		               (void*)((TI_UINT32*)&pParam->content + 1));
 		break;
 	default:
-		TRACE1(pCmdDispatch->hReport, REPORT_SEVERITY_ERROR, "cmdDispatch_DebugFuncSet bad param=%X\n", pParam->paramType);
 		break;
 	}
 	return TI_OK;

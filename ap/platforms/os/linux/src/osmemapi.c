@@ -99,9 +99,6 @@ os_memoryAlloc(
 	struct os_mem_block *blk;
 	__u32 total_size = Size + sizeof(struct os_mem_block) + sizeof(__u32);
 
-#ifdef TI_MEM_ALLOC_TRACE
-	os_printf("MTT:%s:%d ::os_memoryAlloc(0x%p, %lu) : %lu\n",__FUNCTION__, __LINE__,OsContext,Size,total_size);
-#endif
 	/*
 		Memory optimization issue. Allocate up to 2 pages (8k) from the SLAB allocator (2^n),
 		    otherwise allocate from virtual pool.
@@ -169,9 +166,6 @@ os_memoryCAlloc(
 	void* pAllocatedMem;
 	TI_UINT32 MemSize;
 
-#ifdef TI_MEM_ALLOC_TRACE
-	os_printf("MTT:%s:%d ::os_memoryCAlloc(0x%p, %lu, %lu) : %lu\n",__FUNCTION__,__LINE__,OsContext,Number,Size,Number*Size);
-#endif
 	MemSize = Number * Size;
 
 	pAllocatedMem = os_memoryAlloc(OsContext, MemSize);
@@ -214,9 +208,6 @@ os_memoryFree(
 	struct os_mem_block *blk =
 	    (struct os_mem_block *)((char *)pMemPtr - sizeof(struct os_mem_block));
 
-#ifdef TI_MEM_ALLOC_TRACE
-	os_printf("MTT:%s:%d ::os_memoryFree(0x%p, 0x%p, %lu) : %d\n",__FUNCTION__,__LINE__,OsContext,pMemPtr,Size,-Size);
-#endif
 	if (blk->signature != MEM_BLOCK_START) {
 		printk("\n\n%s: memory block signature is incorrect - 0x%x\n\n\n",
 		       __FUNCTION__, blk->signature);

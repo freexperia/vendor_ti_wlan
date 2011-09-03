@@ -1003,7 +1003,6 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
 		/* check keyMngSuite validity */
 		switch (wpaData.KeyMngSuite[0]) {
 		case WPA_IE_KEY_MNG_NONE:
-			TRACE0(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "admCtrlWpa_evalSite: KeyMngSuite[0]=WPA_IE_KEY_MNG_NONE\n");
 			status = (pAdmCtrl->externalAuthMode <= RSN_EXT_AUTH_MODE_AUTO_SWITCH) ? TI_OK : TI_NOK;
 			break;
 		case WPA_IE_KEY_MNG_801_1X:
@@ -1011,11 +1010,9 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
 		case WPA_IE_KEY_MNG_CCKM:
 			/* CCKM is allowed only in 802.1x auth */
 #endif
-			TRACE0(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "admCtrlWpa_evalSite: KeyMngSuite[0]=WPA_IE_KEY_MNG_801_1X\n");
 			status = (pAdmCtrl->externalAuthMode == RSN_EXT_AUTH_MODE_WPA) ? TI_OK : TI_NOK;
 			break;
 		case WPA_IE_KEY_MNG_PSK_801_1X:
-			TRACE0(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "admCtrlWpa_evalSite: KeyMngSuite[0]=WPA_IE_KEY_MNG_PSK_801_1X\n");
 			status = ((pAdmCtrl->externalAuthMode == RSN_EXT_AUTH_MODE_WPAPSK) ||
 			          (wscMode && (pAdmCtrl->externalAuthMode == RSN_EXT_AUTH_MODE_WPA))) ? TI_OK : TI_NOK;
 			break;
@@ -1024,7 +1021,6 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
 			break;
 		}
 
-		TRACE2(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "admCtrlWpa_evalSite: pAdmCtrl->externalAuthMode = %d, Status = %d\n",pAdmCtrl->externalAuthMode,status);
 
 		if (status != TI_OK) {
 			return status;
@@ -1055,7 +1051,6 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
 		}
 
 		if ((encryptionStatus == TWD_CIPHER_TKIP) && (pRsnSiteParams->pHTCapabilities->tHdr[0] != TI_FALSE) && (pRsnSiteParams->pHTInfo->tHdr[0] != TI_FALSE)) {
-			TRACE0(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION,"Dismiss AP - HT with TKIP is not valid");
 			return TI_NOK; /* if the encyption is TKIP and the site does support HT(11n) the site can not be a candidate */
 		}
 
@@ -1070,10 +1065,8 @@ TI_STATUS admCtrlWpa_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSiteP
 		}
 
 	} else {
-		TRACE0(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "didn't find WPA IE\n");
 		if (wscMode == TIWLN_SIMPLE_CONFIG_OFF)
 			return TI_NOK;
-		TRACE0(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "metric is 1\n");
 		*pEvaluation = 1;
 		pAdmCtrl->broadcastSuite = TWD_CIPHER_NONE;
 		pAdmCtrl->unicastSuite = TWD_CIPHER_NONE;
@@ -1115,7 +1108,6 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
 	TI_UINT8           *curWpaIe;
 	TI_UINT8           curLength = WPA_IE_MIN_LENGTH;
 
-	TRACE0(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "Wpa_IE: DEBUG: admCtrlWpa_parseIe\n\n");
 
 	if ((pWpaData == NULL) || (pWpaIe == NULL)) {
 		return TI_NOK;
@@ -1125,7 +1117,6 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
 	    (wpaIePacket->elementid != WPA_IE_ID) ||
 	    (wpaIePacket->ouiType > WPA_OUI_MAX_TYPE) || (ENDIAN_HANDLE_WORD(wpaIePacket->version) > WPA_OUI_MAX_VERSION) ||
 	    (os_memoryCompare(pAdmCtrl->hOs, (TI_UINT8*)wpaIePacket->oui, wpaIeOuiIe, 3))) {
-		TRACE7(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "Wpa_ParseIe Error: length=0x%x, elementid=0x%x, ouiType=0x%x, version=0x%x, oui=0x%x, 0x%x, 0x%x\n", wpaIePacket->length,wpaIePacket->elementid, wpaIePacket->ouiType, wpaIePacket->version, wpaIePacket->oui[0], wpaIePacket->oui[1],wpaIePacket->oui[2]);
 
 		return TI_NOK;
 	}
@@ -1146,7 +1137,6 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
 	if (wpaIePacket->length >= WPA_IE_GROUP_SUITE_LENGTH) {
 		pWpaData->broadcastSuite = (ECipherSuite)admCtrlWpa_parseSuiteVal(pAdmCtrl, (TI_UINT8 *)wpaIePacket->groupSuite,pWpaData,TWD_CIPHER_WEP104);
 		curLength = WPA_IE_GROUP_SUITE_LENGTH;
-		TRACE2(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "Wpa_IE: GroupSuite%x, broadcast %x \n", wpaIePacket->groupSuite[3], pWpaData->broadcastSuite);
 	} else {
 		return TI_OK;
 	}
@@ -1161,7 +1151,6 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
 			ECipherSuite   curCipherSuite;
 
 			curCipherSuite = (ECipherSuite)admCtrlWpa_parseSuiteVal(pAdmCtrl, curWpaIe,pWpaData,TWD_CIPHER_WEP104);
-			TRACE2(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "Wpa_IE: pairwiseSuite %x , unicast %x \n", curWpaIe[3], curCipherSuite);
 
 			if ((curCipherSuite!=TWD_CIPHER_UNKNOWN) && (curCipherSuite<MAX_WPA_UNICAST_SUITES)) {
 				cipherSuite[curCipherSuite] =  TI_TRUE;
@@ -1171,7 +1160,6 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
 		for (index=MAX_WPA_UNICAST_SUITES-1; index>=0; index--) {
 			if (cipherSuite[index]) {
 				pWpaData->unicastSuite[unicastSuiteIndex] = (ECipherSuite)index;
-				TRACE1(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "Wpa_IE: unicast %x \n", pWpaData->unicastSuite[unicastSuiteIndex]);
 				unicastSuiteIndex++;
 			}
 		}
@@ -1205,7 +1193,6 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
 			{
 				curKeyMngSuite = (ERsnKeyMngSuite)admCtrlWpa_parseSuiteVal(pAdmCtrl, curWpaIe,pWpaData,WPA_IE_KEY_MNG_PSK_801_1X);
 			}
-			TRACE2(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "Wpa_IE: authKeyMng %x , keyMng %x \n", curWpaIe[3], curKeyMngSuite);
 
 			if ((curKeyMngSuite>maxKeyMngSuite) && (curKeyMngSuite!=WPA_IE_KEY_MNG_NA)
 			    && (curKeyMngSuite!=WPA_IE_KEY_MNG_CCKM)) {
@@ -1224,7 +1211,6 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
 		}
 		pWpaData->KeyMngSuite[0] = maxKeyMngSuite;
 		curLength += (index-1)*4;
-		TRACE1(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "Wpa_IE: keyMng %x \n", pWpaData->KeyMngSuite[0]);
 
 	} else {
 		return TI_OK;
@@ -1252,7 +1238,6 @@ TI_STATUS admCtrlWpa_parseIe(admCtrl_t *pAdmCtrl, TI_UINT8 *pWpaIe, wpaIeData_t 
 			pWpaData->replayCounters=0;
 			break;
 		}
-		TRACE3(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "Wpa_IE: capabilities %x, bcastForUnicatst %x, replayCounters %x\n", capabilities, pWpaData->bcastForUnicatst, pWpaData->replayCounters);
 
 	}
 

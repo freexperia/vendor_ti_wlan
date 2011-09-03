@@ -312,7 +312,6 @@ TI_STATUS admCtrlNone_evalSite(admCtrl_t *pAdmCtrl, TRsnData *pRsnData, TRsnSite
 		}
 	}
 
-	TRACE1(pAdmCtrl->hReport, REPORT_SEVERITY_INFORMATION, "admCtrlNone_evalSite:  pEvaluation=%d\n\n", *pEvaluation);
 
 	return TI_OK;
 

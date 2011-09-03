@@ -272,10 +272,8 @@ static void updateQueuesStates (TTxPortObj *pTxPort)
 
 #ifdef TI_DBG
 	pMuxStateNameStr = txPortMuxStateNameStr(pTxPort->queuesMuxState);
-	TRACE1(pTxPort->hReport, REPORT_SEVERITY_INFORMATION, ":  queuesMuxState = , TxSuspend = %d\n", pTxPort->txSuspended);
 
 	pPortActionNameStr = txPortActionNameStr (mgmtQueueAction);
-	TRACE2(pTxPort->hReport, REPORT_SEVERITY_INFORMATION, ":  PrevMgmtEnabled = %d,  PrevDataEnabled = %d, MgmtAction = , DataAction = \n", pTxPort->mgmtQueueEnabled, pTxPort->dataQueueEnabled);
 #endif /* TI_DBG */
 
 	/*

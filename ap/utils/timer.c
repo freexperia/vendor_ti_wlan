@@ -283,7 +283,6 @@ void tmr_UpdateDriverState (TI_HANDLE hTimerModule, TI_BOOL bOperState)
 
 	if (bOperState == pTimerModule->bOperState) {
 		context_LeaveCriticalSection (pTimerModule->hContext);
-		TRACE1(pTimerModule->hReport, REPORT_SEVERITY_ERROR, "tmr_UpdateDriverState(): New bOperState (%d) is as current!\n", bOperState);
 		return;
 	}
 
@@ -342,7 +341,6 @@ TI_HANDLE tmr_CreateTimer (TI_HANDLE hTimerModule)
 	/* Allocate OS-API timer, providing the common expiry callback with the current timer handle */
 	pTimerInfo->hOsTimerObj = os_timerCreate(pTimerModule->hOs, tmr_GetExpiry, (TI_HANDLE)pTimerInfo);
 	if (!pTimerInfo->hOsTimerObj) {
-		TRACE0(pTimerModule->hReport, REPORT_SEVERITY_CONSOLE ,"tmr_CreateTimer():  OS-API Timer allocation failed!!\n");
 		os_memoryFree (pTimerModule->hOs, pTimerInfo, sizeof(TTimerInfo));
 		WLAN_OS_REPORT (("tmr_CreateTimer():  OS-API Timer allocation failed!!\n"));
 		return NULL;

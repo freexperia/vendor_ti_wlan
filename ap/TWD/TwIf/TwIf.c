@@ -309,9 +309,6 @@ void twIf_Init (TI_HANDLE hTwIf,
 	/* Create the TxnDone queue. */
 	uNodeHeaderOffset = TI_FIELD_OFFSET(TTxnStruct, tTxnQNode);
 	pTwIf->hTxnDoneQueue = que_Create (pTwIf->hOs, pTwIf->hReport, TXN_DONE_QUE_SIZE, uNodeHeaderOffset);
-	if (pTwIf->hTxnDoneQueue == NULL) {
-		TRACE0(pTwIf->hReport, REPORT_SEVERITY_ERROR, "twIf_Init: TxnDone queue creation failed!\n");
-	}
 
 	/* Register to the context engine and get the client ID */
 	pTwIf->uContextId = context_RegisterClient (pTwIf->hContext,
@@ -324,7 +321,6 @@ void twIf_Init (TI_HANDLE hTwIf,
 	/* Allocate timer */
 	pTwIf->hPendRestartTimer = tmr_CreateTimer (hTimer);
 	if (pTwIf->hPendRestartTimer == NULL) {
-		TRACE0(pTwIf->hReport, REPORT_SEVERITY_ERROR, "twIf_Init: Failed to create PendRestartTimer!\n");
 		return;
 	}
 	pTwIf->bPendRestartTimerRunning = TI_FALSE;
@@ -415,7 +411,6 @@ void twIf_RegisterErrCb (TI_HANDLE hTwIf, void *fErrCb, TI_HANDLE hErrCb)
  */
 static void twIf_WriteElpReg (TTwIfObj *pTwIf, TI_UINT32 uValue)
 {
-	TRACE1(pTwIf->hReport, REPORT_SEVERITY_INFORMATION, "twIf_WriteElpReg:  ELP Txn data = 0x%x\n", uValue);
 
 	/* Send ELP (awake or sleep) transaction to TxnQ */
 	if (uValue == ELP_CTRL_REG_AWAKE) {
@@ -472,7 +467,6 @@ void twIf_SetPartition (TI_HANDLE hTwIf,
 	pPartitionRegTxn = (TPartitionRegTxn *) os_memoryAlloc (pTwIf->hOs, 7*sizeof(TPartitionRegTxn));
 	/* Sanity - Make sure allocation did not fail */
 	if (NULL == pPartitionRegTxn) {
-		TRACE0(pTwIf->hReport, REPORT_SEVERITY_FATAL_ERROR, "twIf_SetPartition() - Allocation for pPartitionRegTxn has failed! Return.\n");
 		return;
 	}
 	pTxnHdr       = &(pPartitionRegTxn->tHdr);
@@ -574,7 +568,6 @@ void twIf_Awake (TI_HANDLE hTwIf)
 
 #ifdef TI_DBG
 	pTwIf->uDbgCountAwake++;
-	TRACE1(pTwIf->hReport, REPORT_SEVERITY_INFORMATION, "twIf_Awake: uAwakeReqCount = %d\n", pTwIf->uAwakeReqCount);
 #endif
 }
 
@@ -603,7 +596,6 @@ void twIf_Sleep (TI_HANDLE hTwIf)
 
 #ifdef TI_DBG
 	pTwIf->uDbgCountSleep++;
-	TRACE1(pTwIf->hReport, REPORT_SEVERITY_INFORMATION, "twIf_Sleep: uAwakeReqCount = %d\n", pTwIf->uAwakeReqCount);
 #endif
 
 	/* If Awake not required and no pending transactions in TxnQ, issue Sleep event to SM */
@@ -629,7 +621,6 @@ void twIf_HwAvailable (TI_HANDLE hTwIf)
 {
 	TTwIfObj *pTwIf = (TTwIfObj*) hTwIf;
 
-	TRACE0(pTwIf->hReport, REPORT_SEVERITY_INFORMATION, "twIf_HwAvailable: HW is Available\n");
 
 	/* Issue HW_AVAILABLE event to the SM */
 	twIf_HandleSmEvent (pTwIf, SM_EVENT_HW_AVAILABLE);
@@ -704,7 +695,6 @@ static ETxnStatus twIf_SendTransaction (TTwIfObj *pTwIf, TTxnStruct *pTxn)
 
 	/* Verify that the Txn HW-Address is 4-bytes aligned */
 	if (pTxn->uHwAddr & 0x3) {
-		TRACE2(pTwIf->hReport, REPORT_SEVERITY_ERROR, "twIf_SendTransaction: Unaligned HwAddr! HwAddr=0x%x, Params=0x%x\n", pTxn->uHwAddr, pTxn->uTxnParams);
 		return TXN_STATUS_ERROR;
 	}
 
@@ -727,7 +717,6 @@ static ETxnStatus twIf_SendTransaction (TTwIfObj *pTwIf, TTxnStruct *pTxn)
 	}
 
 	COPY_WLAN_LONG(&data,&(pTxn->aBuf[0]));
-	TRACE8(pTwIf->hReport, REPORT_SEVERITY_INFORMATION, "twIf_SendTransaction: Status = %d, Params=0x%x, HwAddr=0x%x, Len0=%d, Len1=%d, Len2=%d, Len3=%d, Data=0x%x \n", eStatus, pTxn->uTxnParams, pTxn->uHwAddr, pTxn->aLen[0], pTxn->aLen[1], pTxn->aLen[2], pTxn->aLen[3],data);
 #endif
 
 	/* If Txn status is PENDING issue Start event to the SM */
@@ -749,7 +738,6 @@ static ETxnStatus twIf_SendTransaction (TTwIfObj *pTwIf, TTxnStruct *pTxn)
 
 		/* If Txn failed and error CB available, call it to initiate recovery */
 		if (eStatus == TXN_STATUS_ERROR) {
-			TRACE6(pTwIf->hReport, REPORT_SEVERITY_ERROR, "twIf_SendTransaction: Txn failed!!  Params=0x%x, HwAddr=0x%x, Len0=%d, Len1=%d, Len2=%d, Len3=%d\n", pTxn->uTxnParams, pTxn->uHwAddr, pTxn->aLen[0], pTxn->aLen[1], pTxn->aLen[2], pTxn->aLen[3]);
 
 			if (pTwIf->fErrCb) {
 				pTwIf->fErrCb (pTwIf->hErrCb, BUS_FAILURE);
@@ -809,7 +797,6 @@ static void twIf_HandleSmEvent (TTwIfObj *pTwIf, ESmEvent eEvent)
 		break;
 	}
 
-	TRACE3(pTwIf->hReport, REPORT_SEVERITY_INFORMATION, "twIf_HandleSmEvent: <currentState = %d, event = %d> --> nextState = %d\n", eState, eEvent, pTwIf->eState);
 }
 
 
@@ -833,13 +820,11 @@ static void twIf_TxnDoneCb (TI_HANDLE hTwIf, TTxnStruct *pTxn)
 
 #ifdef TI_DBG
 	pTwIf->uDbgCountTxnDoneCb++;
-	TRACE6(pTwIf->hReport, REPORT_SEVERITY_INFORMATION, "twIf_TxnDoneCb: Params=0x%x, HwAddr=0x%x, Len0=%d, Len1=%d, Len2=%d, Len3=%d\n", pTxn->uTxnParams, pTxn->uHwAddr, pTxn->aLen[0], pTxn->aLen[1], pTxn->aLen[2], pTxn->aLen[3]);
 #endif
 
 	/* In case of recovery flag, Call directly restart callback */
 	if (TXN_PARAM_GET_STATUS(pTxn) == TXN_PARAM_STATUS_RECOVERY) {
 		if (pTwIf->fRecoveryCb) {
-			TRACE0(pTwIf->hReport, REPORT_SEVERITY_INFORMATION, "twIf_TxnDoneCb: During Recovery\n");
 			pTwIf->bTxnDoneInRecovery = TI_TRUE;
 			/* Request schedule to continue handling in driver context (will call twIf_HandleTxnDone()) */
 			context_RequestSchedule (pTwIf->hContext, pTwIf->uContextId);
@@ -858,9 +843,6 @@ static void twIf_TxnDoneCb (TI_HANDLE hTwIf, TTxnStruct *pTxn)
 		/* In critical section, enqueue the completed transaction in the TxnDoneQ. */
 		context_EnterCriticalSection (pTwIf->hContext);
 		eStatus = que_Enqueue (pTwIf->hTxnDoneQueue, (TI_HANDLE)pTxn);
-		if (eStatus != TI_OK) {
-			TRACE3(pTwIf->hReport, REPORT_SEVERITY_ERROR, "twIf_TxnDoneCb(): Enqueue failed, pTxn=0x%x, HwAddr=0x%x, Len0=%d\n", pTxn, pTxn->uHwAddr, pTxn->aLen[0]);
-		}
 		context_LeaveCriticalSection (pTwIf->hContext);
 	} else {
 		context_EnterCriticalSection (pTwIf->hContext);
@@ -897,7 +879,6 @@ static void twIf_HandleTxnDone (TI_HANDLE hTwIf)
 
 	/* In case of recovery, call the recovery callback and exit */
 	if (pTwIf->bTxnDoneInRecovery) {
-		TRACE0(pTwIf->hReport, REPORT_SEVERITY_INFORMATION, "twIf_HandleTxnDone: call RecoveryCb\n");
 		pTwIf->bTxnDoneInRecovery = TI_FALSE;
 		if (pTwIf->bPendRestartTimerRunning) {
 			tmr_StopTimer (pTwIf->hPendRestartTimer);
@@ -923,11 +904,8 @@ static void twIf_HandleTxnDone (TI_HANDLE hTwIf)
 			}
 			context_LeaveCriticalSection (pTwIf->hContext);
 
-			TRACE4(pTwIf->hReport, REPORT_SEVERITY_INFORMATION, "twIf_HandleTxnDone: Completed-Txn: Params=0x%x, HwAddr=0x%x, Len0=%d, fTxnDoneCb=0x%x\n", pTxn->uTxnParams, pTxn->uHwAddr, pTxn->aLen[0], pTxn->fTxnDoneCb);
-
 			/* If Txn failed and error CB available, call it to initiate recovery */
 			if (TXN_PARAM_GET_STATUS(pTxn) == TXN_PARAM_STATUS_ERROR) {
-				TRACE6(pTwIf->hReport, REPORT_SEVERITY_ERROR, "twIf_HandleTxnDone: Txn failed!!  Params=0x%x, HwAddr=0x%x, Len0=%d, Len1=%d, Len2=%d, Len3=%d\n", pTxn->uTxnParams, pTxn->uHwAddr, pTxn->aLen[0], pTxn->aLen[1], pTxn->aLen[2], pTxn->aLen[3]);
 
 				if (pTwIf->fErrCb) {
 					pTwIf->fErrCb (pTwIf->hErrCb, BUS_FAILURE);
@@ -1013,7 +991,6 @@ static void twIf_PendRestratTimeout (TI_HANDLE hTwIf, TI_BOOL bTwdInitOccured)
 {
 	TTwIfObj *pTwIf = (TTwIfObj*)hTwIf;
 
-	TRACE0(pTwIf->hReport, REPORT_SEVERITY_ERROR, "twIf_PendRestratTimeout: restart timer expired!\n");
 
 	pTwIf->bPendRestartTimerRunning = TI_FALSE;
 

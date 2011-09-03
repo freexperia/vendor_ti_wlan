@@ -185,7 +185,6 @@ void RxQueue_Register_CB (TI_HANDLE hRxQueue, TI_UINT32 uCallBackID, void *CBFun
 {
 	TRxQueue* pRxQueue = (TRxQueue *)hRxQueue;
 
-	TRACE1(pRxQueue->hReport, REPORT_SEVERITY_INFORMATION , "RxQueue_Register_CB: CallBack ID = 0x%x\n", uCallBackID);
 
 	switch(uCallBackID) {
 	case TWD_INT_RECEIVE_PACKET:
@@ -194,7 +193,6 @@ void RxQueue_Register_CB (TI_HANDLE hRxQueue, TI_UINT32 uCallBackID, void *CBFun
 		break;
 
 	default:
-		TRACE0(pRxQueue->hReport, REPORT_SEVERITY_ERROR , "RxQueue_Register_CB: Illegal value\n");
 		break;
 	}
 }
@@ -218,7 +216,6 @@ void RxQueue_CloseBaSession(TI_HANDLE hRxQueue, TI_UINT8 uFrameTid)
 
 	/* TID illegal value ? */
 	if (uFrameTid >= MAX_NUM_OF_802_1d_TAGS) {
-		TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR , "RxQueue_CloseBaSession: BA event - DELBA frame with TID value too big, TID = %d\n", uFrameTid);
 
 		return;
 	}
@@ -279,7 +276,6 @@ static TI_STATUS RxQueue_PassPacket (TI_HANDLE hRxQueue, TI_STATUS tStatus, cons
 		pRxParams->status |= RX_DESC_STATUS_DRIVER_RX_Q_FAIL;
 	}
 
-	TRACE0(pRxQueue->hReport, REPORT_SEVERITY_INFORMATION , "RxQueue_PassPacket: call TWD_OWNER_RX_QUEUE CB. In std rxData_ReceivePacket()\n");
 
 
 	/* Set the packet to upper layer */
@@ -343,7 +339,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 	 * Note: in the DR TAG_CLASS_EAPOL packet handled as TAG_CLASS_QOS_DATA
 	 */
 	if (IS_QOS_FRAME(*(TI_UINT16*)pFrame) && (pRxParams->packet_class_tag != TAG_CLASS_QOS_DATA) && (pRxParams->packet_class_tag != TAG_CLASS_AMSDU)) {
-		TRACE1(pRxQueue->hReport, REPORT_SEVERITY_WARNING, "RxQueue_ReceivePacket: BAD CLASS TAG =0x%x from FW.\n", pRxParams->packet_class_tag);
 
 		/* Get AMSDU bit from frame */
 		if( uQosControl & DOT11_QOS_CONTROL_FIELD_A_MSDU_BITS) {
@@ -357,7 +352,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 	 * packet doesn't need reorder ?
 	 */
 	if ((pRxParams->packet_class_tag != TAG_CLASS_QOS_DATA) && (pRxParams->packet_class_tag != TAG_CLASS_BA_EVENT) && (pRxParams->packet_class_tag != TAG_CLASS_AMSDU)) {
-		TRACE0(pRxQueue->hReport, REPORT_SEVERITY_INFORMATION , "RxQueue_ReceivePacket: pass packet without reorder.\n");
 
 		RxQueue_PassPacket (pRxQueue, tStatus, pBuffer);
 
@@ -380,7 +374,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 
 		/* TID illegal value ? */
 		if (uFrameTid >= MAX_NUM_OF_802_1d_TAGS) {
-			TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR, "RxQueue_ReceivePacket: TID value too big, TID = %d. packet discarded!\n",uFrameTid);
 
 			RxQueue_PassPacket (pRxQueue, TI_NOK, pBuffer);
 
@@ -393,7 +386,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 		/* TID legal value */
 		/* packet TID BA not established ? */
 		if (pTidDataBase->aTidBaEstablished != TI_TRUE) {
-			TRACE0(pRxQueue->hReport, REPORT_SEVERITY_INFORMATION, "RxQueue_ReceivePacket: pass packet without reorder.\n");
 
 			RxQueue_PassPacket (pRxQueue, tStatus, pBuffer);
 
@@ -412,7 +404,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 
 		/* frame Sequence Number is the expected one ? */
 		if (uFrameSn == pTidDataBase->aTidExpectedSn) {
-			TRACE0(pRxQueue->hReport, REPORT_SEVERITY_INFORMATION, "RxQueue_ReceivePacket: frame Sequence Number == expected one Sequence Number.\n");
 
 			/* pass the packet */
 			RxQueue_PassPacket (pRxQueue, tStatus, pBuffer);
@@ -450,9 +441,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 		if (! BA_SESSION_IS_A_BIGGER_THAN_B (uFrameSn, pTidDataBase->aTidExpectedSn)) {
 			/* WLAN_OS_REPORT(("%s: ERROR - SN=%u is less than ESN=%u\n", __FUNCTION__, uFrameSn, pTidDataBase->aTidExpectedSn)); */
 
-			TRACE2(pRxQueue->hReport, REPORT_SEVERITY_ERROR,
-			       "RxQueue_ReceivePacket: frame SN=%u is less than ESN=%u\n",uFrameSn,pTidDataBase->aTidExpectedSn);
-
 			RxQueue_PassPacket (pRxQueue, TI_NOK, pBuffer);
 
 			return;
@@ -473,7 +461,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 				pTidDataBase->aPaketsQueue[uSaveInex].pPacket = (void *)pBuffer;
 				pTidDataBase->aPaketsQueue[uSaveInex].uFrameSn = uFrameSn;
 			} else {
-				TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR, "RxQueue_ReceivePacket: frame Sequence has allready saved. uFrameSn = %d\n",uFrameSn);
 
 				RxQueue_PassPacket (pRxQueue, TI_NOK, pBuffer);
 				return;
@@ -490,7 +477,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 			TI_UINT16 uNewWinStartSn = (uFrameSn + SEQ_NUM_WRAP - pTidDataBase->aTidWinSize + 1) & SEQ_NUM_MASK;
 			TI_UINT16 uSaveInex;
 
-			TRACE0(pRxQueue->hReport, REPORT_SEVERITY_INFORMATION, "RxQueue_ReceivePacket: frame Sequence Number higher then winEnd.\n");
 
 			/* increase the ArrayInex to the next */
 			pTidDataBase->aWinStartArrayInex++;
@@ -592,7 +578,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 		switch ((dot11_Fc_Sub_Type_e)(ufc & DOT11_FC_SUB_MASK)) {
 		case DOT11_FC_SUB_BAR:
 
-			TRACE0(pRxQueue->hReport, REPORT_SEVERITY_INFORMATION , "RxQueue_ReceivePacket: BA event - BAR frame.\n");
 
 			/* get pointer to the frame body */
 			pDataFrameBody = pFrame + sizeof(dot11_BarFrameHeader_t);
@@ -603,7 +588,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 
 			/* TID illegal value ? */
 			if (uFrameTid >= MAX_NUM_OF_802_1d_TAGS) {
-				TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR , "RxQueue_ReceivePacket: BA event - BAR frame with TID value too big, TID = %d.\n",uFrameTid);
 
 				RxQueue_PassPacket (pRxQueue, TI_NOK, pBuffer);
 
@@ -616,7 +600,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 			/* TID legal value */
 			/* packet TID BA not established ? */
 			if (pTidDataBase->aTidBaEstablished != TI_TRUE) {
-				TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR , "RxQueue_ReceivePacket: BA event - BAR frame for TID not established, TID = %d.\n",uFrameTid);
 
 				RxQueue_PassPacket (pRxQueue, TI_NOK, pBuffer);
 
@@ -665,7 +648,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 			switch(*pDataFrameBody) {
 			case DOT11_BA_ACTION_ADDBA:
 
-				TRACE0( pRxQueue->hReport, REPORT_SEVERITY_INFORMATION, "RxQueue_ReceivePacket: BA event - ADDBA frame.\n");
 
 				/* get TID field and winSize from ADDBA action frame */
 				pDataFrameBody = pDataFrameBody + 2;
@@ -674,7 +656,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 
 				/* TID illegal value ? */
 				if (uFrameTid >= MAX_NUM_OF_802_1d_TAGS) {
-					TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR , "RxQueue_ReceivePacket: BA event - ADDBA frame with TID value too big, TID = %d.\n",uFrameTid);
 
 					RxQueue_PassPacket (pRxQueue, TI_NOK, pBuffer);
 
@@ -687,7 +668,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 				/* TID legal value */
 				/* packet TID BA established ? */
 				if (pTidDataBase->aTidBaEstablished == TI_TRUE) {
-					TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR , "RxQueue_ReceivePacket: BA event - ADDBA frame for TID already established, TID = %d.\n",uFrameTid);
 
 					RxQueue_PassPacket (pRxQueue, TI_NOK, pBuffer);
 
@@ -718,7 +698,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 
 			case DOT11_BA_ACTION_DELBA:
 
-				TRACE0( pRxQueue->hReport, REPORT_SEVERITY_INFORMATION, "RxQueue_ReceivePacket: BA event - DELBA frame.\n");
 
 				/* get TID field and winSize from ADDBA action frame */
 				pDataFrameBody = pDataFrameBody + 2;
@@ -727,7 +706,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 
 				/* TID illegal value ? */
 				if (uFrameTid >= MAX_NUM_OF_802_1d_TAGS) {
-					TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR , "RxQueue_ReceivePacket: BA event - DELBA frame with TID value too big, TID = %d.\n",uFrameTid);
 
 					RxQueue_PassPacket (pRxQueue, TI_NOK, pBuffer);
 
@@ -740,7 +718,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 				/* TID legal value */
 				/* packet TID BA not established ? */
 				if (pTidDataBase->aTidBaEstablished != TI_TRUE) {
-					TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR , "RxQueue_ReceivePacket: BA event - DELBA frame for TID not established, TID = %d.\n",uFrameTid);
 
 					RxQueue_PassPacket (pRxQueue, TI_NOK, pBuffer);
 
@@ -751,7 +728,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 				break;
 
 			default:
-				TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR , "RxQueue_ReceivePacket: BA event Action field from BA action frame illegal. action = 0x%x\n",*pDataFrameBody);
 
 				RxQueue_PassPacket (pRxQueue, TI_NOK, pBuffer);
 
@@ -760,7 +736,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 			break;
 
 		default:
-			TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR , "RxQueue_ReceivePacket: BA event with Subtype illegal. Subtype = 0x%x\n",((ufc & DOT11_FC_SUB_MASK) >> 4));
 
 			RxQueue_PassPacket (pRxQueue, TI_NOK, pBuffer);
 
@@ -769,7 +744,6 @@ void RxQueue_ReceivePacket (TI_HANDLE hRxQueue, const void * pBuffer)
 
 	}
 
-	TRACE1(pRxQueue->hReport, REPORT_SEVERITY_ERROR, "RxQueue_ReceivePacket: unknow type tag. tag = %d\n", pRxParams->packet_class_tag);
 
 	RxQueue_PassPacket (pRxQueue, tStatus, pBuffer);
 

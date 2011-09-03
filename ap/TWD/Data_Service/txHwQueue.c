@@ -395,8 +395,6 @@ ETxHwQueStatus txHwQueue_AllocResources (TI_HANDLE hTxHwQueue, TTxCtrlBlk *pTxCt
 
 	/* If we need more blocks than available, return  STOP_CURRENT (stop current link and requeue packet). */
 	if (uNumBlksToAlloc > uAvailableLinkBlks) {
-		TRACE6(pTxHwQueue->hReport, REPORT_SEVERITY_INFORMATION, ": No link resources, Link=%d, ReqBlks=%d, FreeBlks=%d, UsedBlks=%d, uFwMax=%d, uAvailableLinkBlks=%d\n",
-		uHlid, uNumBlksToAlloc, pLinkInfo->uFwFree, pLinkInfo->uHostAlloc, pLinkInfo->uFwMax, uAvailableLinkBlks);
 		pLinkInfo->uNumBlksCausedBusy = uNumBlksToAlloc; /* used as prediction in free resources */
 		pLinkInfo->bBusy = TI_TRUE;
 		return TX_HW_LINK_STATUS_STOP_CURRENT;  /**** Exit! (we should stop link and requeue packet) ****/
@@ -412,7 +410,6 @@ ETxHwQueStatus txHwQueue_AllocResources (TI_HANDLE hTxHwQueue, TTxCtrlBlk *pTxCt
 
 	/* If we need more blocks than available, return  STOP_CURRENT (stop current queue and requeue packet). */
 	if (uNumBlksToAlloc > uAvailableBlks) {
-		TRACE6(pTxHwQueue->hReport, REPORT_SEVERITY_INFORMATION, ": No resources, Queue=%d, ReqBlks=%d, FreeBlks=%d, UsedBlks=%d, AvailBlks=%d, UsedPkts=%d\n", uQueueId, uNumBlksToAlloc, pTxHwQueue->uNumTotalBlksFree, pQueueInfo->uNumBlksUsed, uAvailableBlks, pTxHwQueue->uNumUsedDescriptors);
 		pQueueInfo->uNumBlksCausedBusy = uNumBlksToAlloc;
 		pQueueInfo->bQueueBusy = TI_TRUE;
 
@@ -476,7 +473,6 @@ ETxHwQueStatus txHwQueue_AllocResources (TI_HANDLE hTxHwQueue, TTxCtrlBlk *pTxCt
 	pTxHwQueue->uNumTotalBlksFree -= uNumBlksToAlloc;
 	pQueueInfo->uNumBlksUsed += uNumBlksToAlloc;
 
-	TRACE7(pTxHwQueue->hReport, REPORT_SEVERITY_INFORMATION, ": SUCCESS,  Link=%d, Queue=%d, Req-blks=%d , Free=%d, Used=%d, Reserved=%d, Accumulated=%d\n", uHlid, uQueueId, uNumBlksToAlloc, pTxHwQueue->uNumTotalBlksFree, pQueueInfo->uNumBlksUsed, pQueueInfo->uNumBlksReserved, pQueueInfo->uAllocatedBlksCntr);
 
 #ifdef AP_MODE_ENABLED
 
@@ -492,8 +488,6 @@ ETxHwQueStatus txHwQueue_AllocResources (TI_HANDLE hTxHwQueue, TTxCtrlBlk *pTxCt
 	/* If no resources for another similar packet, return STOP_NEXT (to stop current link). */
 	/* Note: Current packet transmission is continued */
 	if ( (uNumBlksToAlloc << 1) > uAvailableLinkBlks ) {
-		TRACE6(pTxHwQueue->hReport, REPORT_SEVERITY_INFORMATION, ": No link resources for next packet, Link=%d, ReqBlks=%d, FreeBlks=%d, UsedBlks=%d, uFwMax=%d, uAvailableLinkBlks=%d\n",
-		uHlid, uNumBlksToAlloc, pLinkInfo->uFwFree, pLinkInfo->uHostAlloc, pLinkInfo->uFwMax, uAvailableLinkBlks);
 		pLinkInfo->bBusy = TI_TRUE;
 		retStatus |= TX_HW_LINK_STATUS_STOP_NEXT;
 	}
@@ -502,7 +496,6 @@ ETxHwQueStatus txHwQueue_AllocResources (TI_HANDLE hTxHwQueue, TTxCtrlBlk *pTxCt
 	/* If no resources for another similar packet, return STOP_NEXT (to stop current queue). */
 	/* Note: Current packet transmission is continued */
 	if ( (uNumBlksToAlloc << 1) > uAvailableBlks ) {
-		TRACE6(pTxHwQueue->hReport, REPORT_SEVERITY_INFORMATION, ": No resources for next pkt, Queue=%d, ReqBlks=%d, FreeBlks=%d, UsedBlks=%d, AvailBlks=%d, UsedPkts=%d\n", uQueueId, uNumBlksToAlloc, pTxHwQueue->uNumTotalBlksFree, pQueueInfo->uNumBlksUsed, uAvailableBlks, pTxHwQueue->uNumUsedDescriptors);
 		pQueueInfo->uNumBlksCausedBusy = uNumBlksToAlloc;
 		pQueueInfo->bQueueBusy = TI_TRUE;
 		retStatus |= TX_HW_QUE_STATUS_STOP_NEXT;
@@ -546,11 +539,6 @@ static void txHwQueue_UpdateFreeBlocks (TTxHwQueue *pTxHwQueue, TI_UINT32 uQueue
 
 	numBlksToFree = pQueueInfo->uNumBlksUsed - newUsedBlks;
 
-#ifdef TI_DBG   /* Sanity check: make sure we don't free more than is allocated. */
-	if (numBlksToFree > pQueueInfo->uNumBlksUsed) {
-		TRACE5(pTxHwQueue->hReport, REPORT_SEVERITY_ERROR, ":  Try to free more blks than used: Queue %d, ToFree %d, Used %d, HostAlloc=0x%x, FwFree=0x%x\n", uQueueId, numBlksToFree, pQueueInfo->uNumBlksUsed, pQueueInfo->uAllocatedBlksCntr, uFreeBlocks);
-	}
-#endif
 
 	/* Update total free blocks and Queue used blocks with the freed blocks number. */
 	pTxHwQueue->uNumTotalBlksFree += numBlksToFree;
@@ -596,7 +584,6 @@ static void txHwQueue_UpdateFreeBlocks (TTxHwQueue *pTxHwQueue, TI_UINT32 uQueue
 			pTxHwQueue->uNumTotalBlksReserved += numBlksToFree; /* Add change to total reserved.*/
 	}
 
-	TRACE5(pTxHwQueue->hReport, REPORT_SEVERITY_INFORMATION, ":  Queue %d, ToFree %d, Used %d, HostAlloc=0x%x, FwFree=0x%x\n", uQueueId, numBlksToFree, pQueueInfo->uNumBlksUsed, pQueueInfo->uAllocatedBlksCntr, uFreeBlocks);
 }
 
 
@@ -641,11 +628,6 @@ ETxnStatus txHwQueue_UpdateFreeResources (TI_HANDLE hTxHwQueue, FwStatus_t *pFwS
 			uNewNumUsedDescriptors = 0x100 - (TI_UINT32)(pTxHwQueue->uFwTxResultsCntr - pTxHwQueue->uDrvTxPacketsCntr);
 		}
 
-#ifdef TI_DBG   /* Sanity check: make sure we don't free more descriptors than allocated. */
-		if (uNewNumUsedDescriptors >= pTxHwQueue->uNumUsedDescriptors) {
-			TRACE2(pTxHwQueue->hReport, REPORT_SEVERITY_ERROR, ":  Used descriptors number should decrease: UsedDesc %d, NewUsedDesc %d\n", pTxHwQueue->uNumUsedDescriptors, uNewNumUsedDescriptors);
-		}
-#endif
 
 		/* Update number of packets left in FW (for descriptors allocation check). */
 		pTxHwQueue->uNumUsedDescriptors = uNewNumUsedDescriptors;
@@ -694,14 +676,12 @@ ETxnStatus txHwQueue_UpdateFreeResources (TI_HANDLE hTxHwQueue, FwStatus_t *pFwS
 			if (pLinkInfo->bBusy) {
 				/* Link was stopped and now, there are resources, set the link's backpressure bit to indicate NOT-BUSY */
 				if (uAvailableLinkBlks > pLinkInfo->uNumBlksCausedBusy) {
-					TRACE6(pTxHwQueue->hReport, REPORT_SEVERITY_INFORMATION, ": Link Available, Link=%d, ReqBlks=%d, FwFree=%d, HostAlloc=%d, AvailBlks=%d, FwMax=%d\n", uHlid, pLinkInfo->uNumBlksCausedBusy, pLinkInfo->uFwFree, pLinkInfo->uHostAlloc, uAvailableLinkBlks, pLinkInfo->uFwMax);
 					SET_LINK_BACKPRESSURE(&uLinkBackpressure, uHlid); /* Start link. */
 					pLinkInfo->bBusy = TI_FALSE;
 				}
 			} else {
 				/* Link was not busy and now, there are no resources(FwMax was changed), set the link's backpressure bit to indicate BUSY */
 				if (pLinkInfo->uLastAllocNumBlks > uAvailableLinkBlks) {
-					TRACE6(pTxHwQueue->hReport, REPORT_SEVERITY_INFORMATION, ": Link NOT Available, Link=%d, ReqBlks=%d, FwFree=%d, HostAlloc=%d, AvailBlks=%d, FwMax=%d\n", uHlid, pLinkInfo->uNumBlksCausedBusy, pLinkInfo->uFwFree, pLinkInfo->uHostAlloc, uAvailableLinkBlks, pLinkInfo->uFwMax);
 					RESET_LINK_BACKPRESSURE(&uLinkBackpressure, uHlid); /* Stop link. */
 					pLinkInfo->uNumBlksCausedBusy = uAvailableLinkBlks;
 					pLinkInfo->bBusy = TI_TRUE;
@@ -733,7 +713,6 @@ ETxnStatus txHwQueue_UpdateFreeResources (TI_HANDLE hTxHwQueue, FwStatus_t *pFwS
 			/* If the required blocks and a descriptor are available,
 			     set the queue's backpressure bit to indicate NOT-busy! */
 			if (pQueueInfo->uNumBlksCausedBusy <= uAvailableBlks) {
-				TRACE6(pTxHwQueue->hReport, REPORT_SEVERITY_INFORMATION, ": Queue Available, Queue=%d, ReqBlks=%d, FreeBlks=%d, UsedBlks=%d, AvailBlks=%d, UsedPkts=%d\n", uQueueId, pQueueInfo->uNumBlksCausedBusy, pTxHwQueue->uNumTotalBlksFree, pQueueInfo->uNumBlksUsed, uAvailableBlks, pTxHwQueue->uNumUsedDescriptors);
 				SET_QUEUE_BACKPRESSURE(&uBackpressure, uQueueId); /* Start queue. */
 				pQueueInfo->bQueueBusy = TI_FALSE;
 			}
@@ -848,7 +827,6 @@ void txHwQueue_RegisterCb (TI_HANDLE hTxHwQueue, TI_UINT32 uCallBackId, void *fC
 		break;
 
 	default:
-		TRACE1(pTxHwQueue->hReport, REPORT_SEVERITY_ERROR, " - Illegal parameter = %d\n", uCallBackId);
 		return;
 	}
 }

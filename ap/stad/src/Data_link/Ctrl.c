@@ -150,7 +150,6 @@ void ctrlData_init (TStadHandlesList *pStadHandles,
 	pCtrlData->retriesUpdateCBObj  = retriesUpdateCBObj;
 #endif
 
-	TRACE0(pCtrlData->hReport, REPORT_SEVERITY_INIT, ".....Ctrl Data configured successfully ...\n");
 }
 
 
@@ -212,7 +211,6 @@ TI_STATUS ctrlData_SetDefaults (TI_HANDLE hCtrlData, ctrlDataInitParams_t *ctrlD
 	pCtrlData->ctrlDataTrafficIntensityThresholds.uLowThreshold = ctrlDataInitParams->ctrlDataTrafficThreshold.uLowThreshold;
 	pCtrlData->ctrlDataTrafficIntensityThresholds.TestInterval = ctrlDataInitParams->ctrlDataTrafficThreshold.TestInterval;
 
-	TRACE4(pCtrlData->hReport, REPORT_SEVERITY_INFORMATION, "\nTraffic Intensity parameters:\nEvents enabled = %d\nuHighThreshold = %d\nuLowThreshold = %d\nTestInterval = %d\n\n", pCtrlData->ctrlDataTrafficIntensityEventsEnabled, pCtrlData->ctrlDataTrafficIntensityThresholds.uHighThreshold, pCtrlData->ctrlDataTrafficIntensityThresholds.uLowThreshold, pCtrlData->ctrlDataTrafficIntensityThresholds.TestInterval);
 
 	/* Register the traffic intensity events with the traffic monitor */
 	ctrlData_RegisterTrafficIntensityEvents (pCtrlData);
@@ -316,7 +314,6 @@ TI_STATUS ctrlData_getParam(TI_HANDLE hCtrlData, paramInfo_t *pParamInfo)
 {
 	ctrlData_t *pCtrlData = (ctrlData_t *)hCtrlData;
 
-	TRACE1(pCtrlData->hReport, REPORT_SEVERITY_INFORMATION, "ctrlData_getParam() : param=0x%x \n", pParamInfo->paramType);
 
 	switch (pParamInfo->paramType) {
 	case CTRL_DATA_CURRENT_BSSID_PARAM:
@@ -361,7 +358,6 @@ TI_STATUS ctrlData_getParam(TI_HANDLE hCtrlData, paramInfo_t *pParamInfo)
 		break;
 
 	default:
-		TRACE0(pCtrlData->hReport, REPORT_SEVERITY_ERROR, " ctrlData_getParam() : PARAMETER NOT SUPPORTED \n");
 		return (PARAM_NOT_SUPPORTED);
 	}
 
@@ -448,7 +444,6 @@ static void ctrlData_setTxRatePolicies(ctrlData_t *pCtrlData)
 		*/
 
 
-		TRACE2(pCtrlData->hReport, REPORT_SEVERITY_INFORMATION, "ctrlData_setTxRatePolicies: AC %d, rate-policy 0x%x", ac, uEnabledHwRatesMask);
 
 		/* Note that Long/Short retries are pre-set during configuration stage */
 
@@ -470,7 +465,6 @@ static void ctrlData_setTxRatePolicies(ctrlData_t *pCtrlData)
 	fwPolicyID++;
 
 	/* Download policies to the FW. Num of policies is 8 - one for each AC for every class */
-	TRACE1(pCtrlData->hReport, REPORT_SEVERITY_INFORMATION, "ctrlData_setTxRatePolicies: num of Rate policies: %d\n", fwPolicyID);
 
 	pCtrlData->ctrlDataTxRatePolicy.numOfRateClasses = fwPolicyID;
 	param.paramType = TWD_TX_RATE_CLASS_PARAM_ID;
@@ -565,7 +559,6 @@ TI_STATUS ctrlData_setParam(TI_HANDLE hCtrlData, paramInfo_t *pParamInfo)
 	ctrlData_t *pCtrlData = (ctrlData_t *)hCtrlData;
 	TTwdParamInfo param;
 
-	TRACE1(pCtrlData->hReport, REPORT_SEVERITY_INFORMATION, "ctrlData_setParam() : param=0x%x \n", pParamInfo->paramType);
 
 	switch (pParamInfo->paramType) {
 	case CTRL_DATA_RATE_CONTROL_ENABLE_PARAM:
@@ -710,7 +703,6 @@ TI_STATUS ctrlData_setParam(TI_HANDLE hCtrlData, paramInfo_t *pParamInfo)
 	break;
 
 	default:
-		TRACE0(pCtrlData->hReport, REPORT_SEVERITY_ERROR, " ctrlData_setParam() : PARAMETER NOT SUPPORTED \n");
 		return (PARAM_NOT_SUPPORTED);
 	}
 
@@ -767,7 +759,6 @@ static void selectRateTable(TI_HANDLE hCtrlData, TI_UINT32 rateMask)
 	case DOT11_DUAL_MODE:
 	case DOT11_MAX_MODE:
 	case DOT11_N_MODE:
-		TRACE0(pCtrlData->hReport, REPORT_SEVERITY_ERROR, " uCurrPolicyEnabledRatesMask not configured !!!");
 		break;
 	}
 
@@ -815,7 +806,6 @@ TI_STATUS ctrlData_stop(TI_HANDLE hCtrlData)
 	              sizeof(pCtrlData->tsrsParameters));
 #endif
 
-	TRACE0(pCtrlData->hReport, REPORT_SEVERITY_INFORMATION, " ctrlData_stop() : Link control algorithms stoped \n");
 
 	return TI_OK;
 }
@@ -882,12 +872,10 @@ void ctrlData_ToggleTrafficIntensityNotification (TI_HANDLE hCtrlData, TI_BOOL e
 		for (idx=0; idx < CTRL_DATA_TRAFFIC_INTENSITY_MAX_EVENTS; idx++) {
 			TrafficMonitor_StartEventNotif (pCtrlData->hTrafficMonitor,pCtrlData->ctrlDataTrafficThresholdEvents[idx]);
 		}
-		TRACE0(pCtrlData->hReport, REPORT_SEVERITY_INFORMATION, "ctrlData_ToggleTrafficIntensityNotification (TI_TRUE)\n");
 	} else {
 		for (idx=0; idx < CTRL_DATA_TRAFFIC_INTENSITY_MAX_EVENTS; idx++) {
 			TrafficMonitor_StopEventNotif (pCtrlData->hTrafficMonitor,pCtrlData->ctrlDataTrafficThresholdEvents[idx]);
 		}
-		TRACE0(pCtrlData->hReport, REPORT_SEVERITY_INFORMATION, "ctrlData_ToggleTrafficIntensityNotification (TI_FALSE)\n");
 	}
 	pCtrlData->ctrlDataTrafficIntensityEventsEnabled = enabledFlag;
 
@@ -909,7 +897,6 @@ static void ctrlData_UnregisterTrafficIntensityEvents (TI_HANDLE hCtrlData)
 		TrafficMonitor_UnregEvent (pCtrlData->hTrafficMonitor,pCtrlData->ctrlDataTrafficThresholdEvents[idx]);
 	}
 
-	TRACE0(pCtrlData->hReport, REPORT_SEVERITY_INFORMATION, "ctrlData_UnregisterTrafficIntensityEvents: Unregistered all events\n");
 
 }
 
@@ -938,7 +925,6 @@ static void ctrlData_RegisterTrafficIntensityEvents (TI_HANDLE hCtrlData)
 	pCtrlData->ctrlDataTrafficThresholdEvents[0] = TrafficMonitor_RegEvent(pCtrlData->hTrafficMonitor,&TrafficAlertRegParm,TI_FALSE);
 
 	if (pCtrlData->ctrlDataTrafficThresholdEvents[0] == NULL) {
-		TRACE0(pCtrlData->hReport, REPORT_SEVERITY_ERROR, " ctrlData_RegisterTrafficIntensityEvents() : Failed to register high treshold event (TRAFF_UP) \n");
 		return;
 	}
 
@@ -950,7 +936,6 @@ static void ctrlData_RegisterTrafficIntensityEvents (TI_HANDLE hCtrlData)
 	pCtrlData->ctrlDataTrafficThresholdEvents[1] = TrafficMonitor_RegEvent(pCtrlData->hTrafficMonitor,&TrafficAlertRegParm,TI_FALSE);
 
 	if (pCtrlData->ctrlDataTrafficThresholdEvents[1] == NULL) {
-		TRACE0(pCtrlData->hReport, REPORT_SEVERITY_ERROR, " ctrlData_RegisterTrafficIntensityEvents() : Failed to register high treshold event (TRAFF_DOWN) \n");
 		return;
 	}
 
@@ -960,9 +945,6 @@ static void ctrlData_RegisterTrafficIntensityEvents (TI_HANDLE hCtrlData)
 	                                        pCtrlData->ctrlDataTrafficThresholdEvents[1],
 	                                        TI_TRUE);
 
-	if (status != TI_OK) {
-		TRACE1(pCtrlData->hReport, REPORT_SEVERITY_ERROR , "ctrlData_RegisterTrafficIntensityEvents: TrafficMonitor_SetRstCondition returned status = %d\n",status);
-	}
 
 	/* Register low threshold "direction up" event */
 	TrafficAlertRegParm.Cookie =  CTRL_DATA_TRAFFIC_INTENSITY_LOW_CROSSED_ABOVE;
@@ -972,7 +954,6 @@ static void ctrlData_RegisterTrafficIntensityEvents (TI_HANDLE hCtrlData)
 	pCtrlData->ctrlDataTrafficThresholdEvents[2] = TrafficMonitor_RegEvent(pCtrlData->hTrafficMonitor,&TrafficAlertRegParm,TI_FALSE);
 
 	if (pCtrlData->ctrlDataTrafficThresholdEvents[2] == NULL) {
-		TRACE0(pCtrlData->hReport, REPORT_SEVERITY_ERROR, " ctrlData_RegisterTrafficIntensityEvents() : Failed to register low treshold event (TRAFF_UP) \n");
 		return;
 	}
 
@@ -984,7 +965,6 @@ static void ctrlData_RegisterTrafficIntensityEvents (TI_HANDLE hCtrlData)
 	pCtrlData->ctrlDataTrafficThresholdEvents[3] = TrafficMonitor_RegEvent(pCtrlData->hTrafficMonitor,&TrafficAlertRegParm,TI_FALSE);
 
 	if (pCtrlData->ctrlDataTrafficThresholdEvents[3] == NULL) {
-		TRACE0(pCtrlData->hReport, REPORT_SEVERITY_ERROR, " ctrlData_RegisterTrafficIntensityEvents() : Failed to register low treshold event (TRAFF_DOWN) \n");
 		return;
 	}
 
@@ -993,12 +973,6 @@ static void ctrlData_RegisterTrafficIntensityEvents (TI_HANDLE hCtrlData)
 	                                        pCtrlData->ctrlDataTrafficThresholdEvents[2],
 	                                        pCtrlData->ctrlDataTrafficThresholdEvents[3],
 	                                        TI_TRUE);
-
-	if (status != TI_OK) {
-		TRACE1(pCtrlData->hReport, REPORT_SEVERITY_ERROR , "ctrlData_RegisterTrafficIntensityEvents: TrafficMonitor_SetRstCondition returned status = %d\n",status);
-	}
-
-	TRACE0(pCtrlData->hReport, REPORT_SEVERITY_INFORMATION, " ctrlData_RegisterTrafficIntensityEvents() : finished registering all events \n");
 
 }
 
@@ -1040,7 +1014,6 @@ static void ctrlData_TrafficThresholdCrossed(TI_HANDLE Context,TI_UINT32 Cookie)
 		EvHandlerSendEvent(pCtrlData->hEvHandler, IPC_EVENT_TRAFFIC_INTENSITY_THRESHOLD_CROSSED, (TI_UINT8 *)&crossInfo,sizeof(trafficIntensityThresholdCross_t));
 		break;
 	default:
-		TRACE0(pCtrlData->hReport, REPORT_SEVERITY_ERROR, " ctrlData_TrafficThresholdCrossed() : Unknown cookie received from traffic monitor !!! \n");
 		break;
 	}
 
@@ -1215,8 +1188,6 @@ static void SetTxRatePolicyToFw(TI_HANDLE hCtrlData, TTxRatePolicy *pTxRatePolic
 	param.paramType = TWD_TX_RATE_CLASS_PARAM_ID;
 	param.content.pTxRatePlicy = pTxRatePolicy;
 
-	TRACE3(pCtrlData->hReport, REPORT_SEVERITY_INFORMATION,"%s: Setting TX rate policy to FW index=%u, rates bitmap=0x%x\n",
-	       __FUNCTION__, pTxRatePolicy->ratePolicyIndex, pTxRatePolicy->ratePolicy.txEnabledRates);
 
 	TWD_SetParam (pCtrlData->hTWD, &param);
 }

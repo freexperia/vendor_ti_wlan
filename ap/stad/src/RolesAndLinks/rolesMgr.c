@@ -161,15 +161,12 @@ TI_STATUS rolesMgr_SetDefaults (TI_HANDLE hRolesMgr, TRolesMgrInitParams *pInitP
  */
 TI_STATUS rolesMgr_setParam(TI_HANDLE hRolesMgr, paramInfo_t *pParam)
 {
-	tRolesMgr *pRolesMgr = (tRolesMgr *)hRolesMgr;
 	TI_STATUS   status = TI_OK;
 
 	if (pParam == NULL) {
-		TRACE0(pRolesMgr->hReport, REPORT_SEVERITY_ERROR , " rolesMgr_setParam(): pParam is NULL!\n");
 		return TI_NOK;
 	}
 
-	TRACE1(pRolesMgr->hReport,REPORT_SEVERITY_INFORMATION , "rolesMgr_setParam() %X \n", pParam->paramType);
 
 	switch (pParam->paramType) {
 	case 0: {
@@ -178,7 +175,6 @@ TI_STATUS rolesMgr_setParam(TI_HANDLE hRolesMgr, paramInfo_t *pParam)
 	break;
 
 	default:
-		TRACE1(pRolesMgr->hReport, REPORT_SEVERITY_ERROR, "rolesMgr_setParam bad param=  %X\n", pParam->paramType);
 		break;
 	}
 

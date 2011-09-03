@@ -185,7 +185,6 @@ void scanCncnOsSm_ActionStartGScan (TI_HANDLE hScanCncn)
 	tParam.paramType = SITE_MGR_DESIRED_DOT11_MODE_PARAM;
 	siteMgr_getParam (pScanCncn->hSiteManager, &tParam);
 	if ((DOT11_G_MODE != tParam.content.siteMgrDot11Mode) && (DOT11_DUAL_MODE != tParam.content.siteMgrDot11Mode)) {
-		TRACE0(pScanCncn->hReport , REPORT_SEVERITY_INFORMATION , "scanCncnOsSm_ActionStartGScan: STA does not work on 2.4 GHz, continuing to 5.0 GHz scan\n");
 		genSM_Event (pScanCncn->hOSScanSm, SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE, hScanCncn);
 		return;
 	}
@@ -243,11 +242,9 @@ void scanCncnOsSm_ActionStartGScan (TI_HANDLE hScanCncn)
 
 		/* if scan failed, send scan complete event to the SM */
 		if (SCAN_CRS_SCAN_RUNNING != eResult) {
-			TRACE0(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnOsSm_ActionStartGScan: scan failed on 2.4 GHz, continuing to 5.0 GHz scan\n");
 			genSM_Event (pScanCncn->hOSScanSm, SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE, hScanCncn);
 		}
 	} else {
-		TRACE0(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnOsSm_ActionStartGScan: no valid cahnnels on 2.4 GHz, continuing to 5.0 GHz scan\n");
 		/* no channels to scan, send a scan complete event */
 		genSM_Event (pScanCncn->hOSScanSm, SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE, hScanCncn);
 	}
@@ -274,7 +271,6 @@ void scanCncnOsSm_ActionStartAScan (TI_HANDLE hScanCncn)
 	tParam.paramType = SITE_MGR_DESIRED_DOT11_MODE_PARAM;
 	siteMgr_getParam (pScanCncn->hSiteManager, &tParam);
 	if ((DOT11_A_MODE != tParam.content.siteMgrDot11Mode) && (DOT11_DUAL_MODE != tParam.content.siteMgrDot11Mode)) {
-		TRACE0(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnOsSm_ActionStartAScan: STA does not work on 5.0 GHz, quitting\n");
 		genSM_Event (pScanCncn->hOSScanSm, SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE, hScanCncn);
 		return;
 	}
@@ -332,11 +328,9 @@ void scanCncnOsSm_ActionStartAScan (TI_HANDLE hScanCncn)
 
 		/* if scan failed, send scan complete event to the SM */
 		if (SCAN_CRS_SCAN_RUNNING != eResult) {
-			TRACE0(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnOsSm_ActionStartAScan: scan failed on 5.0 GHz, quitting\n");
 			genSM_Event (pScanCncn->hOSScanSm, SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE, hScanCncn);
 		}
 	} else {
-		TRACE0(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnOsSm_ActionStartGScan: no valid cahnnels on 5.0 GHz, quitting\n");
 		/* no channels to scan, send a scan complete event */
 		genSM_Event (pScanCncn->hOSScanSm, SCAN_CNCN_OS_SM_EVENT_SCAN_COMPLETE, hScanCncn);
 	}
@@ -485,8 +479,5 @@ TI_UINT32 scanCncnOsSm_FillAllAvailableChannels (TI_HANDLE hScanCncn, ERadioBand
  */
 void scanCncnOsSm_ActionUnexpected (TI_HANDLE hScanCncn)
 {
-	TScanCncn       *pScanCncn = (TScanCncn*)hScanCncn;
-
-	TRACE0(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnOsSm_ActionUnexpected: Unexpeted action for current state\n");
 }
 

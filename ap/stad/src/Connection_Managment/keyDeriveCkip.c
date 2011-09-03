@@ -117,7 +117,6 @@ TI_STATUS keyDeriveCkip_derive(struct _keyDerive_t *pKeyDerive, encodedKeyMateri
 
 	if (pEncodedKey->keyLen != KEY_DERIVE_CKIP_ENC_LEN) {
 		if ((pEncodedKey->keyLen != KEY_DERIVE_CKIP_5_LEN) && (pEncodedKey->keyLen != KEY_DERIVE_CKIP_13_LEN)) {
-			TRACE1(pKeyDerive->hReport, REPORT_SEVERITY_ERROR, "KEY_DERIVE_CKIP: ERROR: wrong key length %d !!!\n", pEncodedKey->keyLen);
 			return TI_NOK;
 		}
 

@@ -181,7 +181,6 @@ TI_STATUS fwDbg_WriteAddr (TI_HANDLE hFwDebug,
 
 	/* check if length is large than default threshold */
 	if (Length > DMA_SIZE_BUF) {
-		TRACE1(pFwDebug->hOs, REPORT_SEVERITY_ERROR, "fwDbg_WriteAddr : Buffer Length too large -- %d",Length);
 		return TXN_STATUS_ERROR;
 	}
 
@@ -229,7 +228,6 @@ TI_STATUS fwDbg_ReadAddr (TI_HANDLE hFwDebug,
 	pTxn = &pFwDebug->tTxn;
 	/* check if length is large than default threshold */
 	if (Length > DMA_SIZE_BUF) {
-		TRACE1(pFwDebug->hOs, REPORT_SEVERITY_ERROR, "fwDbg_ReadAddr : Buffer Length too large -- %d",Length);
 		return TXN_STATUS_ERROR;
 	}
 

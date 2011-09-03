@@ -950,7 +950,6 @@ TI_STATUS apConn_preAuthenticate(TI_HANDLE hAPConnection, bssList_t *listAPs)
 		return TI_NOK;
 	}
 
-	TRACE0(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_reserveResources \n");
 #endif
 
 	for (listIndex=0, apListIndex=0; listIndex<listAPs->numOfEntries; listIndex++) {
@@ -960,8 +959,6 @@ TI_STATUS apConn_preAuthenticate(TI_HANDLE hAPConnection, bssList_t *listAPs)
 		/* search in the buffer pointer to the beginning of the
 		    RSN IE according to the IE ID */
 		if (!mlmeParser_ParseIeBuffer (pAPConnection->hMlme, listAPs->BSSList[listIndex].pBuffer, listAPs->BSSList[listIndex].bufferLength, RSN_IE_ID, &pRsnIEs, NULL, 0)) {
-			TRACE0(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_preAuthenticate, no RSN IE was found \n");
-			TRACE_INFO_HEX(pAPConnection->hReport, listAPs->BSSList[listIndex].pBuffer, listAPs->BSSList[listIndex].bufferLength);
 			continue;
 		}
 
@@ -981,7 +978,6 @@ TI_STATUS apConn_preAuthenticate(TI_HANDLE hAPConnection, bssList_t *listAPs)
 		    RSN IE according to the IE ID */
 
 		if (!mlmeParser_ParseIeBuffer (pAPConnection->hMlme, pCurrentAP->pBuffer, pCurrentAP->bufferLength, RSN_IE_ID, &pRsnIEs, NULL, 0)) {
-			TRACE6(pAPConnection->hReport, REPORT_SEVERITY_ERROR, "apConn_preAuthenticate, no RSN IE was found in the current BSS, BSSID=0x%x-0x%x-0x%x-0x%x-0x%x-0x%x \n", pCurrentAP->BSSID[0], pCurrentAP->BSSID[1], pCurrentAP->BSSID[2], pCurrentAP->BSSID[3], pCurrentAP->BSSID[4], pCurrentAP->BSSID[5]);
 			report_PrintDump (pCurrentAP->pBuffer, pCurrentAP->bufferLength);
 			apList.bssidList[apListIndex].pRsnIEs = NULL;
 			apList.bssidList[apListIndex].rsnIeLen = 0;
@@ -1168,7 +1164,6 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
 
 	AP_CONN_VALIDATE_HANDLE(hAPConnection);
 
-	TRACE4(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_reportRoamingEvent, type=%d, cur_state=%d, roamingEnabled=%d, roamEventCallb=%p  \n", roamingEventType, pAPConnection->currentState, pAPConnection->roamingEnabled, pAPConnection->roamEventCallb);
 
 	pAPConnection->assocRoamingTrigger = roamingEventType;
 
@@ -1185,10 +1180,8 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
 			/* This is required for Rogue AP test,
 			    When Rogue AP due to invalid User name, deauth with reason 0 arrives before the Rogue AP,
 			    and this XCC test fails.*/
-			TRACE0(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_reportRoamingEvent, Ignore DeAuth with reason 0 \n");
 			return TI_OK;
 		}
-		TRACE1(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_reportRoamingEvent, DeAuth with reason %d \n", pAPConnection->APDisconnect.uStatusCode);
 
 		if (pAPConnection->APDisconnect.uStatusCode == STATUS_CODE_802_1X_AUTHENTICATION_FAILED) {
 #ifdef XCC_MODULE_INCLUDED
@@ -1203,7 +1196,6 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
 			param.paramType = SITE_MGR_CURRENT_BSSID_PARAM;
 			siteMgr_getParam(pAPConnection->hSiteMgr, &param);
 
-			TRACE1(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "current station is banned from the roaming candidates list for %d Ms\n", RSN_AUTH_FAILURE_TIMEOUT);
 
 			rsn_banSite(pAPConnection->hPrivacy, param.content.siteMgrDesiredBSSID, RSN_SITE_BAN_LEVEL_FULL, RSN_AUTH_FAILURE_TIMEOUT);
 		}
@@ -1215,7 +1207,6 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
 	    ((pAPConnection->isRssiTriggerMaskedOut)   && (roamingEventType == ROAMING_TRIGGER_LOW_QUALITY)) ||
 	    ((pAPConnection->isSnrTriggerMaskedOut)    && (roamingEventType == ROAMING_TRIGGER_LOW_SNR)) ||
 	    ((pAPConnection->islowRateTriggerMaskedOut)&& (roamingEventType == ROAMING_TRIGGER_LOW_TX_RATE))) {
-		TRACE0(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_reportRoamingEvent, trigger ignored \n");
 		return TI_OK;
 	}
 
@@ -1235,7 +1226,6 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
 		/* 'Any SSID' configured, meaning Roaming Manager is not allowed to perform roaming,
 		    or Roaming Manager is not registered for roaming events;
 		    unless this is trigger to change parameters of background scan, disconnect the link */
-		TRACE1(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "Disconnecting link due to roaming event: ev = %d\n", roamingEventType);
 
 		/*  Handle IBSS case TBD to remove
 		    Handle also the case where A first connection is in progress, and
@@ -1262,13 +1252,11 @@ TI_STATUS apConn_reportRoamingEvent(TI_HANDLE hAPConnection,
 	/* 4. Check if we are in the middle of switching channel */
 	if (pAPConnection->currentState == AP_CONNECT_STATE_SWITCHING_CHANNEL) {
 		/* Trigger received in the middle of switch channel, continue without reporting Roaming Manager */
-		TRACE1(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "Roaming event during switch channel: ev = %d\n", roamingEventType);
 		return TI_OK;
 	}
 
 	/* 5. Report Roaming Manager */
 	if ((pAPConnection->roamingEnabled == TI_TRUE) && (pAPConnection->roamEventCallb != NULL)) {
-		TRACE1(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "Roaming event raised: ev = %d\n", roamingEventType);
 		if (roamingEventType == ROAMING_TRIGGER_LOW_QUALITY) {
 			EvHandlerSendEvent(pAPConnection->hEvHandler, IPC_EVENT_LOW_RSSI, NULL,0);
 		}
@@ -1555,8 +1543,6 @@ static TI_STATUS apConn_smEvent(TI_UINT8 *currState, TI_UINT8 event, void* data)
 */
 static void apConn_smNop(void *pData)
 {
-	apConn_t *hReport = ((apConn_t *)pData)->hReport;
-	TRACE0(hReport, REPORT_SEVERITY_INFORMATION, "apConn_smNop\n");
 }
 
 
@@ -1580,7 +1566,6 @@ static void apConn_smNop(void *pData)
 */
 void apConn_smUnexpected(void *pData)
 {
-	TRACE0(((apConn_t *)pData)->hReport, REPORT_SEVERITY_INFORMATION, "apConn_smUnexpected\n");
 }
 
 
@@ -1699,7 +1684,6 @@ static void apConn_smConnectedToNewAP(void *pData)
 	}
 
 	/* Raise event of Roaming Completion */
-	TRACE0(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "EvHandlerSendEvent -ROAMING_COMPLETE\n");
 	EvHandlerSendEvent(pAPConnection->hEvHandler, IPC_EVENT_ROAMING_COMPLETE, NULL, 0);
 }
 
@@ -1728,7 +1712,6 @@ static void apConn_smStopConnection(void *pData)
 	DisconnectType_e disConnType;
 	pAPConnection = (apConn_t *)pData;
 
-	TRACE2(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, "apConn_smStopConnection, calls conn_stop, removeKeys=%d, sendDeauthPacket=%d \n", pAPConnection->removeKeys, pAPConnection->sendDeauthPacket);
 
 	/* Erase vendor specific info-element if was defined for last AP Assoc request */
 	pAPConnection->vsIElength = 0;
@@ -1917,7 +1900,6 @@ static void apConn_calcNewTsf(apConn_t *hAPConnection, TI_UINT8 *tsfTimeStamp, T
 	tsfLsdw = *((TI_UINT32*)&tsfTimeStamp[0]);
 	tsfMsdw = *((TI_UINT32*)&tsfTimeStamp[4]);
 
-	TRACE2(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, " TSF time LSDW reversed=%x, TSF time MSDW reversed=%x\n", tsfLsdw, tsfMsdw);
 
 	deltaTimeStamp = deltaTimeStamp*1000;/* from mSec to uSec*/
 	/* Before adding, save remainder */
@@ -1949,7 +1931,6 @@ static void apConn_calcNewTsf(apConn_t *hAPConnection, TI_UINT8 *tsfTimeStamp, T
 	newTsfTimestamp[6] = (tsfMsdw & 0x00ff0000) >> 16;
 	newTsfTimestamp[7] = (tsfMsdw & 0xff000000) >> 24;
 
-	TRACE11(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, " NEW TSF time: reversedTsfTimeStamp= 0x%x, New deltaTimeStamp= 0x%x, \n remainder=0x%x, new tsfTimeStamp=%x-%x-%x-%x-%x-%x-%x-%x\n", newOsTimeStamp, deltaTimeStamp, remainder, newTsfTimestamp[0], newTsfTimestamp[1], newTsfTimestamp[2], newTsfTimestamp[3], newTsfTimestamp[4], newTsfTimestamp[5], newTsfTimestamp[6], newTsfTimestamp[7]);
 
 	os_memoryCopy(pAPConnection->hOs, tsfTimeStamp, newTsfTimestamp, TIME_STAMP_LEN);
 }
@@ -1999,7 +1980,6 @@ static void apConn_smInvokeConnectionToNewAp(void *data)
 
 		if (apPrivacySupported ||
 		    (!param.content.rsnMixedMode && staPrivacySupported)) {
-			TRACE2(pAPConnection->hReport, REPORT_SEVERITY_WARNING, ": failed privacy comparison %d vs. %d\n", staPrivacySupported, apPrivacySupported);
 			apConn_smEvent(&(pAPConnection->currentState), AP_CONNECT_EVENT_FINISHED_NOT_OK, pAPConnection);
 			return;
 		}
@@ -2008,7 +1988,6 @@ static void apConn_smInvokeConnectionToNewAp(void *data)
 	/* Update data info of desired AP; in case of first attempt to roam,
 	   store previous primary site info */
 	if (siteMgr_overwritePrimarySite(pAPConnection->hSiteMgr, pAPConnection->newAP, pAPConnection->firstAttempt2Roam) != TI_OK) {
-		TRACE0(pAPConnection->hReport, REPORT_SEVERITY_WARNING, ": failed to ovewrite Primary Site\n");
 		apConn_smEvent(&(pAPConnection->currentState), AP_CONNECT_EVENT_FINISHED_NOT_OK, pAPConnection);
 		return;
 	}
@@ -2032,7 +2011,6 @@ static void apConn_smInvokeConnectionToNewAp(void *data)
 	}
 #endif
 
-	TRACE2(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, ": calls conn_start, removeKeys=%d, renegotiateTSPEC=%d\n", pAPConnection->removeKeys, renegotiateTspec);
 
 	/* Start Connection state machine */
 	conn_start(pAPConnection->hConnSm,
@@ -2278,7 +2256,6 @@ static TI_STATUS apConn_qosMngrReportResultCallb (TI_HANDLE hApConn, trafficAdmR
 static void apConn_reportConnStatusToSME (apConn_t *pAPConnection)
 {
 
-	TRACE3(pAPConnection->hReport, REPORT_SEVERITY_INFORMATION, " roamingTrigger = %d, APDisconnectStatusCode = %d, bNonRoamingDisAssocReason = %d\n", pAPConnection->roamReason, pAPConnection->APDisconnect.uStatusCode, 		pAPConnection->bNonRoamingDisAssocReason);
 
 	/* Check if an outside reason caused the disconnection. */
 	if (pAPConnection->bNonRoamingDisAssocReason) {

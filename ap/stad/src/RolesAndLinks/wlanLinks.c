@@ -144,7 +144,6 @@ TI_STATUS wlanLinks_AllocateNew(TI_HANDLE hwlanLinks, TWlanLinkInfo *pLinkInfo, 
 	TWlanLinkInfo  *pLinks;
 
 	if (!pWlanLinks->nFree) {
-		TRACE1(pWlanLinks->hReport, REPORT_SEVERITY_ERROR ," %s: Failed to allocate new link - WlanLinks DB is Full!\n", __FUNCTION__);
 		*pHlid = WLANLINKS_INVALID_HLID;
 		return TI_NOK;
 	}
@@ -157,7 +156,6 @@ TI_STATUS wlanLinks_AllocateNew(TI_HANDLE hwlanLinks, TWlanLinkInfo *pLinkInfo, 
 
 	/* This shouldn't happen, just if the DB is inconsistent*/
 	if (i == WLANLINKS_MAX_LINKS) {
-		TRACE1(pWlanLinks->hReport, REPORT_SEVERITY_WARNING ," %s: Failed to allocate new link - inconsistency in WlanLinks DB!\n", __FUNCTION__);
 		*pHlid = WLANLINKS_INVALID_HLID;
 		return TI_NOK;
 	}
@@ -186,14 +184,10 @@ TI_STATUS wlanLinks_UpdateLinkInfo(TI_HANDLE hwlanLinks, TWlanLinkInfo *pLinkInf
 	TWlanLinkInfo  *pLinks = pWlanLinks->aLinks;
 
 	if (uHlid >= WLANLINKS_MAX_LINKS) {
-		TRACE2(pWlanLinks->hReport, REPORT_SEVERITY_ERROR ," %s: Failed to update link entry - Invalid uHlid - %u!\n",
-		       __FUNCTION__, uHlid);
 		return TI_NOK;
 	}
 
 	if (pLinks[uHlid].eState == WLANLINK_STATE_FREE) {
-		TRACE2(pWlanLinks->hReport, REPORT_SEVERITY_ERROR ," %s: Failed to update link entry - the link %u doesn't exist!\n",
-		       __FUNCTION__, uHlid);
 		return TI_NOK;
 	}
 
@@ -212,19 +206,16 @@ TI_STATUS wlanLinks_FreeLink(TI_HANDLE hwlanLinks, TI_UINT32 uHlid)
 	TWlanLinkInfo  *link;
 
 	if (uHlid >= WLANLINKS_MAX_LINKS) {
-		TRACE2(pWlanLinks->hReport, REPORT_SEVERITY_WARNING ," %s: Failed to free link entry - Invalid uHlid %d!\n", __FUNCTION__, uHlid);
 		return TI_NOK;
 	}
 
 	if (pWlanLinks->nFree == WLANLINKS_MAX_LINKS) {
-		TRACE2(pWlanLinks->hReport, REPORT_SEVERITY_WARNING ," %s: Failed to free link entry %u - WlanLinks DB inconsistency detected!\n", __FUNCTION__, uHlid);
 		return TI_NOK;
 	}
 
 	link = &pWlanLinks->aLinks[uHlid];
 
 	if (link->eState == WLANLINK_STATE_FREE) {
-		TRACE2(pWlanLinks->hReport, REPORT_SEVERITY_WARNING ," %s: Failed to free link entry %u - the entry is already free!\n", __FUNCTION__, uHlid);
 		return TI_NOK;
 	}
 
@@ -265,14 +256,10 @@ TI_STATUS wlanLinks_GetPeerDescr(TI_HANDLE hwlanLinks, TI_UINT32 uHlid, TWlanLin
 	TWlanLinks *pWlanLinks = (TWlanLinks *)hwlanLinks;
 
 	if (uHlid >= WLANLINKS_MAX_LINKS) {
-		TRACE2(pWlanLinks->hReport, REPORT_SEVERITY_WARNING ," %s: Failed to get Peer Description for HLID %u - Invalid uHlid!\n",
-		       __FUNCTION__, uHlid);
 		return TI_NOK;
 	}
 
 	if (!pPeerDescr) {
-		TRACE2(pWlanLinks->hReport, REPORT_SEVERITY_WARNING ," %s: Failed to get Peer Description for HLID %u - Input pointer is NULL!\n",
-		       __FUNCTION__, uHlid);
 		return TI_NOK;
 	}
 

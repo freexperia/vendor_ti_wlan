@@ -66,14 +66,12 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 	TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
 	TI_UINT32   uCurrentTimeStamp;
 
-	TRACE1(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnApp_SetParam: recevived request of type 0x%x\n", pParam->paramType);
 
 	switch (pParam->paramType) {
 	case SCAN_CNCN_START_APP_SCAN:
 
 		/* verify that scan is not currently running */
 		if (pScanCncn->eCurrentRunningAppScanClient != SCAN_SCC_NO_CLIENT) {
-			TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnApp_SetParam: trying to start app one-shot scan when client %d is currently running!\n", pScanCncn->eCurrentRunningAppScanClient);
 			/* Scan was not started successfully, send a scan complete event to the user */
 			return TI_NOK;
 		}
@@ -100,7 +98,6 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 	case SCAN_CNCN_START_PERIODIC_SCAN:
 		/* verify that scan is not currently running */
 		if (SCAN_SCC_NO_CLIENT != pScanCncn->eCurrentRunningAppScanClient) {
-			TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnApp_SetParam: trying to start app periodic scan when client %d is currently running!\n", pScanCncn->eCurrentRunningAppScanClient);
 			/* Scan was not started successfully, send a scan complete event to the user */
 			return TI_NOK;
 		}
@@ -111,7 +108,6 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 		/* start the scan */
 		if (SCAN_CRS_SCAN_RUNNING !=
 		    scanCncn_StartPeriodicScan (hScanCncn, SCAN_SCC_APP_PERIODIC, pParam->content.pPeriodicScanParams)) {
-			TRACE0(pScanCncn->hReport, REPORT_SEVERITY_CONSOLE , "Scan was not started. Verify scan parametrs or SME mode\n");
 			WLAN_OS_REPORT (("Scan was not started. Verify scan parametrs or SME mode\n"));
 
 			/* Scan was not started successfully, mark that no app scan is running */
@@ -130,7 +126,6 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 	case SCAN_CNCN_BSSID_LIST_SCAN_PARAM:
 		/* check if OID scans are enabled in the registry */
 		if (0 == pScanCncn->tInitParams.uMinimumDurationBetweenOsScans) {
-			TRACE0(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnApp_SetParam: received OS scan request when OS scans are disabled, quitting...\n");
 			return TI_NOK;
 		}
 
@@ -138,13 +133,11 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 		uCurrentTimeStamp = os_timeStampMs (pScanCncn->hOS);
 		if ( (uCurrentTimeStamp - pScanCncn->uOSScanLastTimeStamp) <
 		     (pScanCncn->tInitParams.uMinimumDurationBetweenOsScans * 1000) ) { /*converted to ms */
-			TRACE3(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnApp_SetParam: last OID scan performed at: %d, now is: %d, min duration is: %d, too early for another scan!\n", pScanCncn->uOSScanLastTimeStamp, uCurrentTimeStamp, pScanCncn->tInitParams.uMinimumDurationBetweenOsScans);
 			return TI_NOK;
 		}
 
 		/* check that no other scan is currently running */
 		if (SCAN_SCC_NO_CLIENT != pScanCncn->eCurrentRunningAppScanClient) {
-			TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnApp_SetParam: received OS scan request when client %d is currently running!\n", pScanCncn->eCurrentRunningAppScanClient);
 			return TI_NOK;
 		}
 
@@ -154,7 +147,6 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 		/* mark that an OID scan process has started */
 		pScanCncn->bOSScanRunning = TI_TRUE;
 		pScanCncn->uOSScanLastTimeStamp = uCurrentTimeStamp;
-		TRACE0(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnApp_SetParam: starting OID scan process...\n");
 
 		if(0 != pParam->content.pScanParams->desiredSsid.len) {
 			pScanCncn->tOsScanParams.desiredSsid.len = pParam->content.pScanParams->desiredSsid.len;
@@ -172,7 +164,6 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 		break;
 
 	default:
-		TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnApp_SetParam: unrecognized param type :%d\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 	}
 
@@ -194,7 +185,6 @@ TI_STATUS scanCncnApp_GetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 {
 	TScanCncn   *pScanCncn = (TScanCncn*)hScanCncn;
 
-	TRACE1(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncnApp_GetParam: received request of type %d\n", pParam->paramType);
 
 	switch (pParam->paramType) {
 	case SCAN_CNCN_BSSID_LIST_SIZE_PARAM:
@@ -210,7 +200,6 @@ TI_STATUS scanCncnApp_GetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
 		break;
 
 	default:
-		TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnApp_GetParam: unrecognized param type :%d\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 	}
 
@@ -242,13 +231,11 @@ void scanCncn_AppScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
 	case SCAN_CRS_RECEIVED_FRAME:
 		/* Save the result in the app scan result table */
 		if (TI_OK != scanResultTable_UpdateEntry (pScanCncn->hScanResultTable, frameInfo->bssId, frameInfo)) {
-			TRACE0(pScanCncn->hReport, REPORT_SEVERITY_WARNING , "scanCncn_AppScanResultCB, scanResultTable_UpdateEntry() failed\n");
 		}
 		break;
 
 	case SCAN_CRS_SCAN_COMPLETE_OK:
 
-		TRACE1(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_AppScanResultCB, received scan complete with status :%d\n", status);
 
 		/* if OS scan is running */
 		if (TI_TRUE == pScanCncn->bOSScanRunning) {
@@ -271,7 +258,6 @@ void scanCncn_AppScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
 
 	case SCAN_CRS_SCAN_STOPPED:
 
-		TRACE1(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_AppScanResultCB, received scan complete with status :%d\n", status);
 
 		/* if OS scan is running */
 		if (TI_TRUE == pScanCncn->bOSScanRunning) {
@@ -298,7 +284,6 @@ void scanCncn_AppScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
 	case SCAN_CRS_SCAN_ABORTED_HIGHER_PRIORITY:
 	case SCAN_CRS_SCAN_ABORTED_FW_RESET:
 
-		TRACE1(pScanCncn->hReport, REPORT_SEVERITY_INFORMATION , "scanCncn_AppScanResultCB, received scan complete with status :%d\n", status);
 
 		/* if OS scan is running */
 		if (TI_TRUE == pScanCncn->bOSScanRunning) {
@@ -321,7 +306,6 @@ void scanCncn_AppScanResultCB (TI_HANDLE hScanCncn, EScanCncnResultStatus status
 
 	case SCAN_CRS_NUM_OF_RES_STATUS:
 	default:
-		TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncn_AppScanResultCB, received erroneuos scan result with status :%d\n", status);
 		break;
 	}
 }

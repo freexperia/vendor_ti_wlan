@@ -259,7 +259,6 @@ ETxnStatus txResult_TxCmpltIntrCb (TI_HANDLE hTxResult, FwStatus_t *pFwStatus)
 	pTxResult->uInterruptsCounter++;
 
 	if (pTxResult->eState != TX_RESULT_STATE_IDLE) {
-		TRACE1(pTxResult->hReport, REPORT_SEVERITY_INFORMATION, ": called in eState %d, so exit\n", pTxResult->eState);
 		return TXN_STATUS_COMPLETE;
 	}
 #endif
@@ -268,7 +267,6 @@ ETxnStatus txResult_TxCmpltIntrCb (TI_HANDLE hTxResult, FwStatus_t *pFwStatus)
 	uTempCounters = ENDIAN_HANDLE_LONG(pFwStatus->counters);
 	pFwStatusCounters = (FwStatCntrs_t *)&uTempCounters;
 	if (pFwStatusCounters->txResultsCntr == (TI_UINT8)pTxResult->uHostResultsCounter) {
-		TRACE0(pTxResult->hReport, REPORT_SEVERITY_INFORMATION, ": No new Tx results\n");
 		return TXN_STATUS_COMPLETE;
 	}
 
@@ -304,7 +302,6 @@ static void txResult_StateMachine (TI_HANDLE hTxResult)
 
 	/* Loop while processing is completed in current context (sync), or until fully completed */
 	while (eTwifStatus == TXN_STATUS_COMPLETE) {
-		TRACE2(pTxResult->hReport, REPORT_SEVERITY_INFORMATION, ": eState = %d, eTwifStatus = %d\n", pTxResult->eState, eTwifStatus);
 
 		switch(pTxResult->eState) {
 		case TX_RESULT_STATE_IDLE:
@@ -322,14 +319,10 @@ static void txResult_StateMachine (TI_HANDLE hTxResult)
 			return;  /*********  Exit after all processing is finished  **********/
 
 		default:
-			TRACE1(pTxResult->hReport, REPORT_SEVERITY_ERROR, ": Unknown eState = %d\n", pTxResult->eState);
 			return;
 		}
 	}
 
-	if (eTwifStatus == TXN_STATUS_ERROR) {
-		TRACE2(pTxResult->hReport, REPORT_SEVERITY_ERROR, ": returning ERROR in eState %d, eTwifStatus=%d !!!\n", pTxResult->eState, eTwifStatus);
-	}
 }
 
 
@@ -364,7 +357,6 @@ static void txResult_HandleNewResults (TTxResultObj *pTxResult)
 #ifdef TI_DBG
 	/* Verify there are new entries (was already checked in txResult_TxCmpltIntrCb) */
 	if (uNumNewResults == 0) {
-		TRACE2(pTxResult->hReport, REPORT_SEVERITY_WARNING, ": No New Results although indicated by FwStatus!!  HostCount=%d, FwCount=%d\n", pTxResult->uHostResultsCounter, uFwResultsCounter);
 		return;
 	}
 #endif
@@ -374,7 +366,6 @@ static void txResult_HandleNewResults (TTxResultObj *pTxResult)
 	pTxn->uHwAddr = pTxResult->uTxResultHostCounterAddr;
 	twIf_Transact(pTxResult->hTwIf, pTxn);
 
-	TRACE3(pTxResult->hReport, REPORT_SEVERITY_INFORMATION, ": NumResults=%d, OriginalHostCount=%d, FwCount=%d\n", uNumNewResults, pTxResult->uHostResultsCounter, uFwResultsCounter);
 
 	/* Loop over all new Tx-results and call Tx-complete callback with current entry pointer. */
 	/* NOTE: THIS SHOULD COME LAST because it may lead to driver-stop process!! */
@@ -383,7 +374,6 @@ static void txResult_HandleNewResults (TTxResultObj *pTxResult)
 		pCurrentResult = &(pTxResult->tResultsInfoReadTxn.tTxResultInfo.TxResultQueue[uTableIndex]);
 		pTxResult->uHostResultsCounter++;
 
-		TRACE1(pTxResult->hReport, REPORT_SEVERITY_INFORMATION , ": call upper layer CB, Status = %d\n", pCurrentResult->status);
 
 		pTxResult->fSendPacketCompleteCb (pTxResult->hSendPacketCompleteHndl, pCurrentResult);
 	}
@@ -407,7 +397,6 @@ void txResult_RegisterCb (TI_HANDLE hTxResult, TI_UINT32 uCallBackId, void *CBFu
 		break;
 
 	default:
-		TRACE0(pTxResult->hReport, REPORT_SEVERITY_ERROR, ": Illegal value\n");
 		return;
 	}
 }

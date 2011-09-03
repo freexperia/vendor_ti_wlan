@@ -113,7 +113,6 @@ TI_STATUS keyDeriveAes_derive(struct _keyDerive_t *pKeyDerive, encodedKeyMateria
 	/* Note: Reduce 2 bytes from the size of keyMaterialAes_t in the following check,
 	         because it is added as padding at the end due to the OS_PACKED removal. */
 	if ( pEncodedKey->keyLen < (sizeof(keyMaterialAes_t) - 2) ) {
-		TRACE1(pKeyDerive->hReport, REPORT_SEVERITY_ERROR, "KEY_DERIVE_AES: ERROR: wrong key length %d !!!\n",						pEncodedKey->keyLen);
 		return TI_NOK;
 	}
 

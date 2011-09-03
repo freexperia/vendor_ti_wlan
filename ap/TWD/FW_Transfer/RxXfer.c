@@ -299,7 +299,6 @@ void rxXfer_Register_CB (TI_HANDLE hRxXfer, TI_UINT32 CallBackID, void *CBFunc, 
 {
 	TRxXfer *pRxXfer = (TRxXfer *)hRxXfer;
 
-	TRACE1(pRxXfer->hReport, REPORT_SEVERITY_INFORMATION , "rxXfer_Register_CB (Value = 0x%x)\n", CallBackID);
 
 	switch(CallBackID) {
 	case TWD_INT_REQUEST_FOR_BUFFER:
@@ -308,7 +307,6 @@ void rxXfer_Register_CB (TI_HANDLE hRxXfer, TI_UINT32 CallBackID, void *CBFunc, 
 		break;
 
 	default:
-		TRACE0(pRxXfer->hReport, REPORT_SEVERITY_ERROR, "rxXfer_Register_CB - Illegal value\n");
 		return;
 	}
 }
@@ -351,7 +349,6 @@ static void rxXfer_ForwardPacket (TRxXfer *pRxXfer, TTxnStruct *pTxn)
 		/* If the length in the RxInfo is different than in the short descriptor, set error status */
 		if (pTxn->aLen[uBufNum] != uLenFromRxInfo) {
 
-			TRACE3(pRxXfer->hReport, REPORT_SEVERITY_ERROR , "rxXfer_ForwardPacket: Bad Length!! RxInfoLength=%d, ShortDescLen=%d, RxInfoStatus=0x%x\n", uLenFromRxInfo, pTxn->aLen[uBufNum], pRxInfo->status);
 
 #ifdef DEBUG_GPIO
 			debug_gpio_set_dataout();
@@ -366,8 +363,6 @@ static void rxXfer_ForwardPacket (TRxXfer *pRxXfer, TTxnStruct *pTxn)
 			if (pRxXfer->fErrCb) {
 				pRxXfer->fErrCb (pRxXfer->hErrCb, RX_XFER_FAILURE);
 			}
-		} else {
-			TRACE2(pRxXfer->hReport, REPORT_SEVERITY_INFORMATION , "rxXfer_ForwardPacket: RxInfoLength=%d, RxInfoStatus=0x%x\n", uLenFromRxInfo, pRxInfo->status);
 		}
 		pRxXfer->tDbgStat.uCountPktsForward++;
 #endif
@@ -407,16 +402,13 @@ ETxnStatus rxXfer_RxEvent (TI_HANDLE hRxXfer, FwStatus_t *pFwStatus)
 	FwStatCntrs_t  *pFwStatusCounters;
 	TI_UINT32       i;
 	TI_STATUS   rc;
-	CL_TRACE_START_L2();
 
 	uTempCounters = ENDIAN_HANDLE_LONG (pFwStatus->counters);
 	pFwStatusCounters = (FwStatCntrs_t*)(&uTempCounters);
 
-	TRACE2(pRxXfer->hReport, REPORT_SEVERITY_INFORMATION , "rxXfer_RxEvent: NewFwCntr=%d, OldFwCntr=%d\n", pFwStatusCounters->fwRxCntr, pRxXfer->uFwRxCntr);
 
 	/* If no new Rx packets - exit */
 	if ((pFwStatusCounters->fwRxCntr % NUM_RX_PKT_DESC) == (pRxXfer->uFwRxCntr % NUM_RX_PKT_DESC)) {
-		CL_TRACE_END_L2("tiwlan_drv.ko", "CONTEXT", "RX", "");
 		return TXN_STATUS_COMPLETE;
 	}
 
@@ -433,7 +425,6 @@ ETxnStatus rxXfer_RxEvent (TI_HANDLE hRxXfer, FwStatus_t *pFwStatus)
 	/* Handle all new Rx packets */
 	rc = rxXfer_Handle (pRxXfer);
 
-	CL_TRACE_END_L2("tiwlan_drv.ko", "CONTEXT", "RX", "");
 	return TXN_STATUS_COMPLETE;
 }
 
@@ -468,13 +459,10 @@ static TI_STATUS rxXfer_Handle(TI_HANDLE hRxXfer)
 	ETxnStatus       eTxnStatus;
 	ERxBufferStatus  eBufStatus;
 	PacketClassTag_e eRxPacketType;
-	CL_TRACE_START_L2();
 
 
 	/* If no Txn structures available exit!! (fatal error - not expected to happen) */
 	if (pRxXfer->uAvailableTxn == 0 ) {
-		TRACE0(pRxXfer->hReport, REPORT_SEVERITY_ERROR, "rxXfer_Handle: No available Txn structures left!\n");
-		CL_TRACE_END_L2("tiwlan_drv.ko", "CONTEXT", "RX", "");
 		return TI_NOK;
 	}
 
@@ -512,7 +500,6 @@ static TI_STATUS rxXfer_Handle(TI_HANDLE hRxXfer)
 				             (TI_UINT32)NULL,
 				             eRxPacketType);
 
-				TRACE6(pRxXfer->hReport, REPORT_SEVERITY_INFORMATION , "rxXfer_Handle: Index=%d, RxDesc=0x%x, DrvCntr=%d, FwCntr=%d, BufStatus=%d, BuffSize=%d\n", uDrvIndex, uRxDesc, pRxXfer->uDrvRxCntr, pRxXfer->uFwRxCntr, eBufStatus, uBuffSize);
 
 				/* If buffer allocated, add it to current Txn (up to 4 packets aggregation) */
 				if (eBufStatus == RX_BUF_ALLOC_COMPLETE) {
@@ -588,8 +575,6 @@ static TI_STATUS rxXfer_Handle(TI_HANDLE hRxXfer)
 			} else if (eTxnStatus == TXN_STATUS_PENDING) {
 				/* Decrease the number of available txn structures */
 				pRxXfer->uAvailableTxn--;
-			} else {
-				TRACE3(pRxXfer->hReport, REPORT_SEVERITY_ERROR , "rxXfer_Handle: Status=%d, DrvCntr=%d, RxDesc=0x%x\n", eTxnStatus, pRxXfer->uDrvRxCntr, uRxDesc);
 			}
 
 #ifdef TI_DBG
@@ -621,7 +606,6 @@ static TI_STATUS rxXfer_Handle(TI_HANDLE hRxXfer)
 
 		/* Can't process more packets so exit */
 		if (bExit) {
-			CL_TRACE_END_L2("tiwlan_drv.ko", "CONTEXT", "RX", "");
 			return TI_OK;
 		}
 
@@ -668,7 +652,6 @@ static ETxnStatus rxXfer_IssueTxn (TI_HANDLE hRxXfer, TI_UINT32 uRxDesc,TI_UINT3
 	pRxXfer->aCounterTxn[uIndex].uCounter = ENDIAN_HANDLE_LONG(pRxXfer->uDrvRxCntr);
 	twIf_Transact(pRxXfer->hTwIf, pTxn);
 
-	TRACE5(pRxXfer->hReport, REPORT_SEVERITY_INFORMATION , "rxXfer_IssueTxn: Counter-Txn: HwAddr=0x%x, Len0=%d, Data0=%d, DrvCount=%d, TxnParams=0x%x\n", pTxn->uHwAddr, pTxn->aLen[0], *(TI_UINT32 *)(pTxn->aBuf[0]), pRxXfer->uDrvRxCntr, pTxn->uTxnParams);
 
 	/* Return the status of the packet(s) transaction - COMPLETE, PENDING or ERROR */
 	return eStatus;
@@ -708,7 +691,6 @@ void rxXfer_SetRxDirectAccessParams (TI_HANDLE hRxXfer, TDmaParams *pDmaParams)
 static void rxXfer_TxnDoneCb (TI_HANDLE hRxXfer, TTxnStruct *pTxn)
 {
 	TRxXfer *pRxXfer = (TRxXfer *)hRxXfer;
-	CL_TRACE_START_L2();
 
         /* Increase the number of available txn structures */
 	pRxXfer->uAvailableTxn++;
@@ -722,7 +704,6 @@ static void rxXfer_TxnDoneCb (TI_HANDLE hRxXfer, TTxnStruct *pTxn)
 		rxXfer_Handle (hRxXfer);
 	}
 
-	CL_TRACE_END_L2("tiwlan_drv.ko", "INHERIT", "RX", "");
 }
 
 

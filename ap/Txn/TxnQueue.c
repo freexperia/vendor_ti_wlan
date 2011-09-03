@@ -212,9 +212,6 @@ void txnQ_Init (TI_HANDLE hTxnQ, TI_HANDLE hOs, TI_HANDLE hReport, TI_HANDLE hCo
 	/* Create the TxnDone queue. */
 	uNodeHeaderOffset = TI_FIELD_OFFSET(TTxnStruct, tTxnQNode);
 	pTxnQ->hTxnDoneQueue = que_Create (pTxnQ->hOs, pTxnQ->hReport, TXN_DONE_QUE_SIZE, uNodeHeaderOffset);
-	if (pTxnQ->hTxnDoneQueue == NULL) {
-		TRACE0(pTxnQ->hReport, REPORT_SEVERITY_ERROR, ": TxnDone queue creation failed!\n");
-	}
 
 	busDrv_Init (pTxnQ->hBusDrv, hReport);
 }
@@ -228,7 +225,6 @@ TI_STATUS txnQ_ConnectBus (TI_HANDLE  hTxnQ,
 {
 	TTxnQObj *pTxnQ = (TTxnQObj*) hTxnQ;
 
-	TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_ConnectBus()\n");
 
 	pTxnQ->fConnectCb = fConnectCb;
 	pTxnQ->hConnectCb = hConnectCb;
@@ -254,7 +250,6 @@ TI_STATUS txnQ_Open (TI_HANDLE       hTxnQ,
 	TI_UINT32     i;
 
 	if (uFuncId >= MAX_FUNCTIONS  ||  uNumPrios > MAX_PRIORITY) {
-		TRACE2(pTxnQ->hReport, REPORT_SEVERITY_ERROR, ": Invalid Params!  uFuncId = %d, uNumPrios = %d\n", uFuncId, uNumPrios);
 		return TI_NOK;
 	}
 
@@ -271,7 +266,6 @@ TI_STATUS txnQ_Open (TI_HANDLE       hTxnQ,
 	for (i = 0; i < uNumPrios; i++) {
 		pTxnQ->aTxnQueues[uFuncId][i] = que_Create (pTxnQ->hOs, pTxnQ->hReport, TXN_QUE_SIZE, uNodeHeaderOffset);
 		if (pTxnQ->aTxnQueues[uFuncId][i] == NULL) {
-			TRACE0(pTxnQ->hReport, REPORT_SEVERITY_ERROR, ": Queues creation failed!\n");
 			context_LeaveCriticalSection (pTxnQ->hContext);
 			return TI_NOK;
 		}
@@ -287,7 +281,6 @@ TI_STATUS txnQ_Open (TI_HANDLE       hTxnQ,
 
 	context_LeaveCriticalSection (pTxnQ->hContext);
 
-	TRACE2(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, ": Function %d registered successfully, uNumPrios = %d\n", uFuncId, uNumPrios);
 
 	return TI_OK;
 }
@@ -326,14 +319,12 @@ void txnQ_Close (TI_HANDLE  hTxnQ, TI_UINT32 uFuncId)
 
 	context_LeaveCriticalSection (pTxnQ->hContext);
 
-	TRACE1(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, ": Function %d Unregistered\n", uFuncId);
 }
 
 ETxnStatus txnQ_Restart (TI_HANDLE hTxnQ, TI_UINT32 uFuncId)
 {
 	TTxnQObj *pTxnQ = (TTxnQObj*) hTxnQ;
 
-	TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_Restart()\n");
 
 	context_EnterCriticalSection (pTxnQ->hContext);
 
@@ -344,7 +335,6 @@ ETxnStatus txnQ_Restart (TI_HANDLE hTxnQ, TI_UINT32 uFuncId)
 
 			context_LeaveCriticalSection (pTxnQ->hContext);
 
-			TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_Restart(): pCurrTxn pending\n");
 
 			/* Return PENDING to indicate that the restart will be completed later (in TxnDone) */
 			return TXN_STATUS_PENDING;
@@ -364,12 +354,6 @@ void txnQ_Run (TI_HANDLE hTxnQ, TI_UINT32 uFuncId)
 {
 	TTxnQObj *pTxnQ = (TTxnQObj*) hTxnQ;
 
-#ifdef TI_DBG
-	TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_Run()\n");
-	if (pTxnQ->aFuncInfo[uFuncId].eState != FUNC_STATE_STOPPED) {
-		TRACE2(pTxnQ->hReport, REPORT_SEVERITY_WARNING, "txnQ_Run(): Called while func %d state is %d!\n", uFuncId, pTxnQ->aFuncInfo[uFuncId].eState);
-	}
-#endif
 
 	/* Enable function's queues */
 	pTxnQ->aFuncInfo[uFuncId].eState = FUNC_STATE_RUNNING;
@@ -382,12 +366,6 @@ void txnQ_Stop (TI_HANDLE hTxnQ, TI_UINT32 uFuncId)
 {
 	TTxnQObj *pTxnQ = (TTxnQObj*) hTxnQ;
 
-#ifdef TI_DBG
-	TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_Stop()\n");
-	if (pTxnQ->aFuncInfo[uFuncId].eState != FUNC_STATE_RUNNING) {
-		TRACE2(pTxnQ->hReport, REPORT_SEVERITY_ERROR, "txnQ_Stop(): Called while func %d state is %d!\n", uFuncId, pTxnQ->aFuncInfo[uFuncId].eState);
-	}
-#endif
 
 	/* Enable function's queues */
 	pTxnQ->aFuncInfo[uFuncId].eState = FUNC_STATE_STOPPED;
@@ -401,7 +379,6 @@ ETxnStatus txnQ_Transact (TI_HANDLE hTxnQ, TTxnStruct *pTxn)
 
 	if (TXN_PARAM_GET_SINGLE_STEP(pTxn)) {
 		pTxnQ->aFuncInfo[uFuncId].pSingleStep = pTxn;
-		TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_Transact(): Single step Txn\n");
 	} else {
 		TI_STATUS eStatus;
 		TI_HANDLE hQueue = pTxnQ->aTxnQueues[uFuncId][TXN_PARAM_GET_PRIORITY(pTxn)];
@@ -409,10 +386,8 @@ ETxnStatus txnQ_Transact (TI_HANDLE hTxnQ, TTxnStruct *pTxn)
 		eStatus = que_Enqueue (hQueue, (TI_HANDLE)pTxn);
 		context_LeaveCriticalSection (pTxnQ->hContext);
 		if (eStatus != TI_OK) {
-			TRACE3(pTxnQ->hReport, REPORT_SEVERITY_ERROR, "txnQ_Transact(): Enqueue failed, pTxn=0x%x, HwAddr=0x%x, Len0=%d\n", pTxn, pTxn->uHwAddr, pTxn->aLen[0]);
 			return TXN_STATUS_ERROR;
 		}
-		TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_Transact(): Regular Txn\n");
 	}
 
 	/* Send queued transactions as possible */
@@ -462,16 +437,8 @@ static void txnQ_TxnDoneCb (TI_HANDLE hTxnQ, void *hTxn)
 	TTxnStruct *pTxn    = (TTxnStruct *)hTxn;
 	TI_UINT32   uFuncId = TXN_PARAM_GET_FUNC_ID(pTxn);
 
-#ifdef TI_DBG
-	TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_TxnDoneCb()\n");
-	if (pTxn != pTxnQ->pCurrTxn) {
-		TRACE2(pTxnQ->hReport, REPORT_SEVERITY_ERROR, "txnQ_TxnDoneCb(): CB returned pTxn 0x%x  while pCurrTxn is 0x%x !!\n", pTxn, pTxnQ->pCurrTxn);
-	}
-#endif
-
 	/* If the function of the completed Txn is waiting for restart */
 	if (pTxnQ->aFuncInfo[uFuncId].eState == FUNC_STATE_RESTART) {
-		TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_TxnDoneCb(): Handling restart\n");
 
 		/* First, Clear the restarted function queues  */
 		txnQ_ClearQueues (hTxnQ, uFuncId);
@@ -487,9 +454,6 @@ static void txnQ_TxnDoneCb (TI_HANDLE hTxnQ, void *hTxn)
 
 		context_EnterCriticalSection (pTxnQ->hContext);
 		eStatus = que_Enqueue (pTxnQ->hTxnDoneQueue, (TI_HANDLE)pTxn);
-		if (eStatus != TI_OK) {
-			TRACE3(pTxnQ->hReport, REPORT_SEVERITY_ERROR, "txnQ_TxnDoneCb(): Enqueue failed, pTxn=0x%x, HwAddr=0x%x, Len0=%d\n", pTxn, pTxn->uHwAddr, pTxn->aLen[0]);
-		}
 		context_LeaveCriticalSection (pTxnQ->hContext);
 	}
 
@@ -521,13 +485,11 @@ static ETxnStatus txnQ_RunScheduler (TTxnQObj *pTxnQ, TTxnStruct *pInputTxn)
 	TI_BOOL bFirstIteration;
 	ETxnStatus eStatus = TXN_STATUS_NONE;
 
-	TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_RunScheduler()\n");
 
 	context_EnterCriticalSection (pTxnQ->hContext);
 
 	/* If the scheduler is currently busy, set bSchedulerPend flag and exit */
 	if (pTxnQ->bSchedulerBusy) {
-		TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_RunScheduler(): Scheduler is busy\n");
 		pTxnQ->bSchedulerPend = TI_TRUE;
 		context_LeaveCriticalSection (pTxnQ->hContext);
 		return TXN_STATUS_PENDING;
@@ -551,7 +513,6 @@ static ETxnStatus txnQ_RunScheduler (TTxnQObj *pTxnQ, TTxnStruct *pInputTxn)
 		}
 		/* This is for handling pending calls when the scheduler was busy (see above) */
 		else {
-			TRACE0(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_RunScheduler(): Handle pending scheduler call\n");
 			txnQ_Scheduler (pTxnQ, NULL);
 		}
 
@@ -594,7 +555,6 @@ static ETxnStatus txnQ_Scheduler (TTxnQObj *pTxnQ, TTxnStruct *pInputTxn)
 
 	/* if a previous transaction is in progress, return PENDING */
 	if (pTxnQ->pCurrTxn) {
-		TRACE1(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_Scheduler(): pCurrTxn isn't null (0x%x) so exit\n", pTxnQ->pCurrTxn);
 		return TXN_STATUS_PENDING;
 	}
 
@@ -622,7 +582,6 @@ static ETxnStatus txnQ_Scheduler (TTxnQObj *pTxnQ, TTxnStruct *pInputTxn)
 			eInputTxnStatus = eStatus;
 		}
 
-		TRACE3(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_Scheduler(): Txn 0x%x sent, status = %d, eInputTxnStatus = %d\n", pSelectedTxn, eStatus, eInputTxnStatus);
 
 		/* If transaction completed */
 		if (eStatus != TXN_STATUS_PENDING) {
@@ -634,9 +593,6 @@ static ETxnStatus txnQ_Scheduler (TTxnQObj *pTxnQ, TTxnStruct *pInputTxn)
 
 				context_EnterCriticalSection (pTxnQ->hContext);
 				eStatus = que_Enqueue (pTxnQ->hTxnDoneQueue, (TI_HANDLE)pSelectedTxn);
-				if (eStatus != TI_OK) {
-					TRACE3(pTxnQ->hReport, REPORT_SEVERITY_ERROR, "txnQ_Scheduler(): Enqueue failed, pTxn=0x%x, HwAddr=0x%x, Len0=%d\n", pSelectedTxn, pSelectedTxn->uHwAddr, pSelectedTxn->aLen[0]);
-				}
 				context_LeaveCriticalSection (pTxnQ->hContext);
 			}
 		}
@@ -663,7 +619,6 @@ static ETxnStatus txnQ_Scheduler (TTxnQObj *pTxnQ, TTxnStruct *pInputTxn)
 			return eInputTxnStatus;
 		}
 
-		TRACE1(pTxnQ->hReport, REPORT_SEVERITY_INFORMATION, "txnQ_Scheduler(): Calling TxnDone for Txn 0x%x\n", pCompletedTxn);
 
 		uFuncId         = TXN_PARAM_GET_FUNC_ID(pCompletedTxn);
 		fTxnQueueDoneCb = pTxnQ->aFuncInfo[uFuncId].fTxnQueueDoneCb;
@@ -699,10 +654,6 @@ static TTxnStruct *txnQ_SelectTxn (TTxnQObj *pTxnQ)
 		if (pSelectedTxn != NULL) {
 			/* If aggregation ended, reset the aggregation-queue pointer */
 			if (TXN_PARAM_GET_AGGREGATE(pSelectedTxn) == TXN_AGGREGATE_OFF) {
-				if ((TXN_PARAM_GET_FIXED_ADDR(pSelectedTxn) != TXN_FIXED_ADDR) ||
-				    (TXN_PARAM_GET_DIRECTION(pSelectedTxn)  != TXN_DIRECTION_WRITE)) {
-					TRACE2(pTxnQ->hReport, REPORT_SEVERITY_ERROR, "txnQ_SelectTxn: Mixed transaction during aggregation, HwAddr=0x%x, TxnParams=0x%x\n", pSelectedTxn->uHwAddr, pSelectedTxn->uTxnParams);
-				}
 				pTxnQ->pAggregQueue = NULL;
 			}
 			return pSelectedTxn;

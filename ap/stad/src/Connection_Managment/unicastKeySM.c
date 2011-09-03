@@ -134,13 +134,11 @@ TI_STATUS unicastKey_unload(struct _unicastKey_t *pUnicastKey)
 
 	status = keyDerive_unload(pUnicastKey->pKeyDerive);
 	if (status != TI_OK) {
-		TRACE0(pUnicastKey->hReport, REPORT_SEVERITY_CONSOLE,"BCAST_KEY_SM: Error in unloading key derivation module\n");
 		WLAN_OS_REPORT(("BCAST_KEY_SM: Error in unloading key derivation module\n"));
 	}
 
 	status = fsm_Unload(pUnicastKey->hOs, pUnicastKey->pUcastKeySm);
 	if (status != TI_OK) {
-		TRACE0(pUnicastKey->hReport, REPORT_SEVERITY_CONSOLE,"BCAST_KEY_SM: Error in unloading state machine\n");
 		WLAN_OS_REPORT(("BCAST_KEY_SM: Error in unloading state machine\n"));
 	}
 
@@ -205,7 +203,6 @@ TI_STATUS unicastKey_config(struct _unicastKey_t *pUnicastKey,
 
 TI_STATUS unicastKeySmUnexpected(struct _unicastKey_t *pUnicastKey)
 {
-	TRACE0(pUnicastKey->hReport, REPORT_SEVERITY_ERROR, "UNICAST_KEY_SM: ERROR: UnExpected Event\n");
 
 	return(TI_NOK);
 }

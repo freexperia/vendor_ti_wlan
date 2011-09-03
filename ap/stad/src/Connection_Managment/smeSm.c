@@ -179,10 +179,8 @@ void smeSm_Start (TI_HANDLE hSme)
 
 	/* set SCR group according to connection mode */
 	if (CONNECT_MODE_AUTO == pSme->eConnectMode) {
-		TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "smeSm_Start: changing SCR group to DRV scan\n");
 		scr_setGroup (pSme->hScr, SCR_GID_DRV_SCAN);
 	} else {
-		TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "smeSm_Start: changing SCR group to APP scan\n");
 		scr_setGroup (pSme->hScr, SCR_GID_APP_SCAN);
 	}
 
@@ -251,7 +249,6 @@ void smeSm_PreConnect (TI_HANDLE hSme)
 		if (CONNECT_MODE_AUTO == pSme->eConnectMode) {
 			/* automatic mode - start scanning */
 			if (TI_OK != sme_StartScan (hSme)) {
-				TRACE0(pSme->hReport, REPORT_SEVERITY_ERROR , "smeSm_PreConnect: unable to start scan, stopping the SME\n");
 				pSme->bRadioOn = TI_FALSE;
 				genSM_Event (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
 			}
@@ -267,7 +264,6 @@ void smeSm_PreConnect (TI_HANDLE hSme)
 				/* makr whether we need to stop the attempt connection in manual mode */
 				pSme->bConnectRequired = TI_FALSE;
 
-				TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "smeSm_PreConnect: No candidate available, sending connect failure\n");
 				/* manual mode and no connection candidate is available - connection failed */
 				genSM_Event (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
 			}
@@ -304,7 +300,6 @@ void smeSm_PreConnect (TI_HANDLE hSme)
 				channelValidity = pParam->content.channelCapabilityRet.channelValidity;
 				os_memoryFree(pSme->hOS, pParam, sizeof(paramInfo_t));
 				if (!channelValidity) {
-					TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "IBSS SELECT FAILURE  - No channel !!!\n\n");
 
 					genSM_Event (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
 
@@ -314,17 +309,13 @@ void smeSm_PreConnect (TI_HANDLE hSme)
 				pSme->pCandidate = (TSiteEntry *)addSelfSite(pSme->hSiteMgr);
 
 				if (pSme->pCandidate == NULL) {
-					TRACE0(pSme->hReport, REPORT_SEVERITY_ERROR , "IBSS SELECT FAILURE  - could not open self site !!!\n\n");
+
 
 					genSM_Event (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
 
 					return;
 				}
 
-#ifdef REPORT_LOG
-				TRACE6(pSme->hReport, REPORT_SEVERITY_CONSOLE,"%%%%%%%%%%%%%%	SELF SELECT SUCCESS, bssid: %X-%X-%X-%X-%X-%X	%%%%%%%%%%%%%%\n\n", pSme->pCandidate->bssid[0], pSme->pCandidate->bssid[1], pSme->pCandidate->bssid[2], pSme->pCandidate->bssid[3], pSme->pCandidate->bssid[4], pSme->pCandidate->bssid[5]);
-				WLAN_OS_REPORT (("%%%%%%%%%%%%%%	SELF SELECT SUCCESS, bssid: %02x.%02x.%02x.%02x.%02x.%02x %%%%%%%%%%%%%%\n\n", pSme->pCandidate->bssid[0], pSme->pCandidate->bssid[1], pSme->pCandidate->bssid[2], pSme->pCandidate->bssid[3], pSme->pCandidate->bssid[4], pSme->pCandidate->bssid[5]));
-#endif
 				/* a connection candidate is available, send a connect event */
 				genSM_Event (pSme->hSmeSm, SME_SM_EVENT_CONNECT, hSme);
 			}
@@ -350,7 +341,6 @@ void smeSm_Connect (TI_HANDLE hSme)
 
 	/* Sanity check - if no connection candidate was found so far */
 	if (NULL == pSme->pCandidate) {
-		TRACE0(pSme->hReport, REPORT_SEVERITY_ERROR , "smeSm_Connect: No candidate available, sending connect failure\n");
 		genSM_Event (pSme->hSmeSm, SME_SM_EVENT_CONNECT_FAILURE, hSme);
 	} else {
 		pParam = (paramInfo_t *)os_memoryAlloc(pSme->hOS, sizeof(paramInfo_t));
@@ -378,9 +368,6 @@ void smeSm_Connect (TI_HANDLE hSme)
 
 		/* start the connection process */
 		tStatus = conn_start (pSme->hConn, CONN_TYPE_FIRST_CONN, sme_ReportConnStatus, hSme, TI_FALSE, TI_FALSE);
-		if (TI_OK != tStatus) {
-			TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "smeSm_Connect: conn_start returned status %d\n", tStatus);
-		}
 	}
 }
 
@@ -436,9 +423,6 @@ void smeSm_Disconnect (TI_HANDLE hSme)
 		/* In IBSS disconnect is done directly with the connection SM */
 		tStatus = conn_stop(pSme->hConn, DISCONNECT_DE_AUTH, STATUS_UNSPECIFIED,
 		                    TI_TRUE, sme_ReportConnStatus, hSme);
-		if (tStatus != TI_OK) {
-			TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "smeSm_Disconnect: conn_stop retruned %d\n", tStatus);
-		}
 	}
 }
 
@@ -510,9 +494,6 @@ void smeSm_StopConnect (TI_HANDLE hSme)
 	tStatus = conn_stop (pSme->hConn, DISCONNECT_DE_AUTH, STATUS_UNSPECIFIED,
 	                     TI_TRUE, sme_ReportConnStatus, hSme);
 
-	if (TI_OK != tStatus) {
-		TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "smeSm_StopConnect: conn_stop returned status %d\n", tStatus);
-	}
 }
 
 /**
@@ -532,9 +513,6 @@ void smeSm_ConnWhenConnecting (TI_HANDLE hSme)
 
 	/* start the connection process */
 	tStatus = conn_start (pSme->hConn, CONN_TYPE_FIRST_CONN, sme_ReportConnStatus, hSme, TI_FALSE, TI_FALSE);
-	if (TI_OK != tStatus) {
-		TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "smeSm_ConnWhenConnecting: conn_start returned status %d\n", tStatus);
-	}
 }
 
 /**
@@ -548,9 +526,6 @@ void smeSm_ConnWhenConnecting (TI_HANDLE hSme)
  */
 void smeSm_ActionUnexpected (TI_HANDLE hSme)
 {
-	TSme        *pSme = (TSme*)hSme;
-
-	TRACE0(pSme->hReport, REPORT_SEVERITY_ERROR , "smeSm_ActionUnexpected called\n");
 }
 
 /**
@@ -562,9 +537,6 @@ void smeSm_ActionUnexpected (TI_HANDLE hSme)
  */
 void smeSm_NopAction (TI_HANDLE hSme)
 {
-	TSme        *pSme = (TSme*)hSme;
-
-	TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "smeSm_NopAction called\n");
 }
 
 void smeSm_CheckStartConditions (TI_HANDLE hSme)
@@ -697,7 +669,6 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
 	}
 	/* Country code exists and scan is performed on this band - take country expiry timr into account */
 	else if (TI_TRUE == bCountryValid) {
-		TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_StartScan: performing active scan to find desired SSID\n");
 
 		/* we already know that at least on one band we know the country IE, so we scan for our SSID */
 		pSme->tScanParams.tDesiredSsid[ 0 ].eVisability = SCAN_SSID_VISABILITY_HIDDEN;
@@ -733,7 +704,6 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
 	}
 	/* no scanned band has a counrty code - meaning all scan is passive (to find country) */
 	else {
-		TRACE0(pSme->hReport, REPORT_SEVERITY_INFORMATION , "sme_StartScan: performing passive scan to find country IE\n");
 		pSme->tScanParams.eBssType = BSS_INFRASTRUCTURE; /* only an AP would transmit a country IE */
 		pSme->tScanParams.uSsidNum = 0;
 		pSme->tScanParams.uSsidListFilterEnabled = 1;
@@ -745,7 +715,6 @@ TI_STATUS sme_StartScan (TI_HANDLE hSme)
 	/* Finally(!!!), start the scan */
 	tStatus = scanCncn_StartPeriodicScan (pSme->hScanCncn, SCAN_SCC_DRIVER, &(pSme->tScanParams));
 	if (SCAN_CRS_SCAN_RUNNING != tStatus) {
-		TRACE1(pSme->hReport, REPORT_SEVERITY_ERROR , "sme_StartScan: scan concentrator returned status %d\n", tStatus);
 		return TI_NOK;
 	}
 

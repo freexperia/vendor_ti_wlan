@@ -284,11 +284,9 @@ TI_STATUS conn_infraSMEvent(TI_UINT8 *currentState, TI_UINT8 event, TI_HANDLE hC
 	status = fsm_GetNextState(pConn->infra_pFsm, *currentState, event, &nextState);
 
 	if (status != TI_OK) {
-		TRACE0(pConn->hReport, REPORT_SEVERITY_SM, "State machine error, failed getting next state\n");
 		return(TI_NOK);
 	}
 
-	TRACE3( pConn->hReport, REPORT_SEVERITY_INFORMATION, "conn_infraSMEvent: <currentState = %d, event = %d> --> nextState = %d\n", *currentState, event, nextState);
 
 	status = fsm_Event(pConn->infra_pFsm, currentState, event, (void *)pConn);
 
@@ -303,13 +301,9 @@ TI_STATUS conn_infraSMEvent(TI_UINT8 *currentState, TI_UINT8 event, TI_HANDLE hC
 static TI_STATUS ScrWait_to_JoinWait(void *pData)
 {
 	TI_STATUS status;
-	conn_t *pConn = (conn_t *)pData;
 
 	status = siteMgr_join(((conn_t *)pData)->hSiteMgr );
 	/* If the Join command was failed we report the SME that connection failure so it could exit connecting state */
-	if (status != TI_OK) {
-		TRACE0(pConn->hReport, REPORT_SEVERITY_ERROR, "Join command has failed!\n");
-	}
 	return status;
 }
 
@@ -339,7 +333,6 @@ static TI_STATUS JoinWait_to_mlmeWait(void *pData)
 	pParam->content.rxDataPortStatus = OPEN_NOTIFY;
 	status = rxData_setParam(pConn->hRxData, pParam);
 	if (status != TI_OK) {
-		TRACE1( pConn->hReport, REPORT_SEVERITY_FATAL_ERROR, "JoinWait_to_mlmeWait: rxData_setParam return 0x%x.\n", status);
 		os_memoryFree(pConn->hOs, pParam, sizeof(paramInfo_t));
 		return status;
 	}
@@ -359,9 +352,6 @@ static TI_STATUS JoinWait_to_mlmeWait(void *pData)
 
 	status = mlme_setParam(pConn->hMlmeSm, pParam);
 
-	if (status != TI_OK) {
-		TRACE1( pConn->hReport, REPORT_SEVERITY_FATAL_ERROR, "JoinWait_to_mlmeWait: mlme_setParam return 0x%x.\n", status);
-	}
 	os_memoryFree(pConn->hOs, pParam, sizeof(paramInfo_t));
 	return mlme_start(pConn->hMlmeSm);
 }
@@ -595,19 +585,16 @@ static TI_STATUS rsnWait_to_configHW(void *pData)
 
 	status = qosMngr_connect(pConn->hQosMngr);
 	if (status != TI_OK) {
-		TRACE2(pConn->hReport, REPORT_SEVERITY_ERROR, "Infra Conn status=%d, have to return (%d)\n",status,__LINE__);
 		return status;
 	}
 
 	status = measurementMgr_connected(pConn->hMeasurementMgr);
 	if (status != TI_OK) {
-		TRACE2(pConn->hReport, REPORT_SEVERITY_ERROR, "Infra Conn status=%d, have to return (%d)\n",status,__LINE__);
 		return status;
 	}
 
 	status = TrafficMonitor_Start(pConn->hTrafficMonitor);
 	if (status != TI_OK) {
-		TRACE2(pConn->hReport, REPORT_SEVERITY_ERROR, "Infra Conn status=%d, have to return (%d)\n",status,__LINE__);
 		return status;
 	}
 
@@ -619,7 +606,6 @@ static TI_STATUS rsnWait_to_configHW(void *pData)
 
 	PowerMgr_startPS(pConn->hPwrMngr);
 
-	TRACE1(pConn->hReport, REPORT_SEVERITY_INFORMATION, "rsnWait_to_configHW: setStaStatus %d\n",STA_STATE_CONNECTED);
 	TWD_CmdSetStaState(pConn->hTWD, STA_STATE_CONNECTED, conn_ConfigHwFinishCb, pData);
 
 	return TI_OK;
@@ -630,7 +616,6 @@ int conn_ConfigHwFinishCb(TI_HANDLE pData)
 {
 	conn_t *pConn = (conn_t *)pData;
 
-	TRACE0(pConn->hReport, REPORT_SEVERITY_INFORMATION, "conn_MboxFlushFinishCb: called \n");
 	return conn_infraSMEvent(&pConn->state, CONN_INFRA_HW_CONFIGURED, pConn);
 }
 
@@ -664,10 +649,8 @@ static TI_STATUS configHW_to_connected(void *pData)
 
 	SoftGemini_SetPSmode(pConn->hSoftGemini);
 #ifdef REPORT_LOG
-	TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE, "************ NEW CONNECTION ************\n");
 	WLAN_OS_REPORT(("************ NEW CONNECTION ************\n"));
 	siteMgr_printPrimarySiteDesc(pConn->hSiteMgr);
-	TRACE0(pConn->hReport, REPORT_SEVERITY_CONSOLE, "****************************************\n");
 	WLAN_OS_REPORT(("****************************************\n"));
 #endif
 
@@ -680,7 +663,6 @@ static TI_STATUS actionUnexpected(void *pData)
 #ifdef TI_DBG
 	conn_t *pConn = (conn_t *)pData;
 
-	TRACE0(pConn->hReport, REPORT_SEVERITY_SM, "State machine error, unexpected Event\n\n");
 #endif /*TI_DBG*/
 
 	return TI_OK;
@@ -699,7 +681,6 @@ static TI_STATUS connInfra_ScrWait(void *pData)
 	EScePendReason          scrPendReason[ SCR_RESOURCE_NUM_OF_RESOURCES ];
 	EScrResourceId          uResourceIndex;
 
-	TRACE0( pConn->hReport, REPORT_SEVERITY_INFORMATION, "Infra Connnect SM: Requesting SCR.\n");
 
 	/* request the SCR for both resources, and act according to return status */
 	for (uResourceIndex = SCR_RESOURCE_SERVING_CHANNEL;
@@ -713,7 +694,6 @@ static TI_STATUS connInfra_ScrWait(void *pData)
 		/* sanity check */
 		if ((scrReplyStatus[ uResourceIndex ] > SCR_CRS_PEND) ||
 		    (scrReplyStatus[ uResourceIndex ] < SCR_CRS_RUN)) {
-			TRACE2(pConn->hReport, REPORT_SEVERITY_ERROR , "Idle_to_ScrWait: SCR for resource %d returned status %d\n", uResourceIndex, scrReplyStatus[ uResourceIndex ]);
 			return TI_NOK;
 		}
 	}
@@ -723,7 +703,6 @@ static TI_STATUS connInfra_ScrWait(void *pData)
 	if ((SCR_CRS_RUN == scrReplyStatus[ SCR_RESOURCE_SERVING_CHANNEL ]) &&
 	    (SCR_CRS_RUN == scrReplyStatus[ SCR_RESOURCE_PERIODIC_SCAN ])) {
 		/* send an SCR SUCCESS event to the SM */
-		TRACE0( pConn->hReport, REPORT_SEVERITY_INFORMATION, "Infra Conn: SCR acquired.\n");
 		conn_infraSMEvent(&pConn->state, CONN_INFRA_SCR_SUCC, (TI_HANDLE) pConn);
 	} else {
 		/* mark which resource is pending (or both) */
@@ -731,7 +710,6 @@ static TI_STATUS connInfra_ScrWait(void *pData)
 		     uResourceIndex < SCR_RESOURCE_NUM_OF_RESOURCES;
 		     uResourceIndex++) {
 			if (SCR_CRS_PEND == scrReplyStatus[ uResourceIndex ]) {
-				TRACE2( pConn->hReport, REPORT_SEVERITY_INFORMATION, "Infra Conn: SCR pending for resource %d with pend reason: %d, stay in wait SCR state.\n", uResourceIndex, scrPendReason);
 				pConn->bScrAcquired[ uResourceIndex ] = TI_FALSE;
 			} else {
 				pConn->bScrAcquired[ uResourceIndex ] = TI_TRUE;
@@ -748,12 +726,10 @@ void InfraConnSM_ScrCB( TI_HANDLE hConn, EScrClientRequestStatus requestStatus,
 {
 	conn_t *pConn = (conn_t *)hConn;
 
-	TRACE2( pConn->hReport, REPORT_SEVERITY_INFORMATION, "InfraConnSM_ScrCB called by SCR for resource %d. Status is: %d.\n", eResource, requestStatus);
 
 	/* act according to the request staus */
 	switch ( requestStatus ) {
 	case SCR_CRS_RUN:
-		TRACE0( pConn->hReport, REPORT_SEVERITY_INFORMATION, "Infra Conn: SCR acquired.\n");
 		/* mark that the SCR was acquired for this resource */
 		pConn->bScrAcquired[ eResource ] = TI_TRUE;
 
@@ -767,11 +743,9 @@ void InfraConnSM_ScrCB( TI_HANDLE hConn, EScrClientRequestStatus requestStatus,
 
 	case SCR_CRS_FW_RESET:
 		/* Ignore FW reset, the MLME SM will handle re-try of the conn */
-		TRACE0( pConn->hReport, REPORT_SEVERITY_INFORMATION, "Infra Conn: Recovery occured.\n");
 		break;
 
 	default:
-		TRACE3( pConn->hReport, REPORT_SEVERITY_ERROR, "Illegal SCR request status:%d, pend reason:%d, resource: %d.\n", requestStatus, pendReason, eResource);
 		break;
 	}
 }
@@ -783,7 +757,6 @@ static TI_STATUS ScrWait_to_idle(void *pData)
 	conn_t          *pConn = (conn_t *)pData;
 	EScrResourceId  uResourceIndex;
 
-	TRACE0( pConn->hReport, REPORT_SEVERITY_INFORMATION, "Infra Connnect SM: Stop event while in SCR wait, moving to IDLE.\n");
 
 	/* free both SCR resources */
 	for (uResourceIndex = SCR_RESOURCE_SERVING_CHANNEL;
@@ -975,7 +948,6 @@ TI_STATUS connInfra_JoinCmpltNotification(TI_HANDLE hconn)
 {
 	conn_t *pConn = (conn_t *)hconn;
 
-	TRACE0(pConn->hReport, REPORT_SEVERITY_INFORMATION, "connInfra_JoinCmpltNotification: has been called\n");
 
 	if (pConn->currentConnType == CONNECTION_INFRA ) {
 		conn_infraSMEvent(&pConn->state, CONN_INFRA_JOIN_CMD_CMPLT, pConn);

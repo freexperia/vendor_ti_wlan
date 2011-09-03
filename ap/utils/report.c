@@ -417,7 +417,6 @@ TI_STATUS report_SetParam (TI_HANDLE hReport, TReportParamInfo *pParam)
 		break;
 
 	default:
-		TRACE1(hReport, REPORT_SEVERITY_ERROR, "Set param, Params is not supported, %d\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 	}
 
@@ -443,7 +442,6 @@ TI_STATUS report_GetParam (TI_HANDLE hReport, TReportParamInfo *pParam)
 		break;
 
 	default:
-		TRACE1(hReport, REPORT_SEVERITY_ERROR, "Get param, Params is not supported, %d\n", pParam->paramType);
 		return PARAM_NOT_SUPPORTED;
 	}
 

@@ -153,7 +153,6 @@ TI_STATUS cmdBld_ItrIeSg (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb, void* pCb
 	ACXBluetoothWlanCoParamsStruct  AcxElm_BluetoothWlanEnable;
 	ACXBluetoothWlanCoParamsStruct* pCfg = &AcxElm_BluetoothWlanEnable;
 
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_ItrIeSg \n");
 
 	/* Set information element header */
 	pCfg->EleHdr.id = ACX_SG_CFG;
@@ -178,7 +177,6 @@ TI_STATUS cmdBld_ItrIeRateParams (TI_HANDLE hCmdBld, void *fCb, TI_HANDLE hCb, v
 	AcxRateMangeParams  RateParams;
 	AcxRateMangeParams* pCfg = &RateParams;
 
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_ItrIeRateParams \n");
 
 	/* Set information element header */
 	pCfg->EleHdr.id = ACX_GET_RATE_MAMAGEMENT_PARAMS;
@@ -203,7 +201,6 @@ TI_STATUS cmdBld_ItrIePowerConsumptionstat(TI_HANDLE hCmdBld, void *fCb, TI_HAND
 	ACXPowerConsumptionTimeStat_t  AcxPowerConsumptionStat;
 	ACXPowerConsumptionTimeStat_t* pCfg = &AcxPowerConsumptionStat;
 
-	TRACE0(pCmdBld->hReport, REPORT_SEVERITY_INFORMATION, "cmdBld_ItrIePowerConsumptionstat \n");
 
 	/* Set information element header */
 	pCfg->EleHdr.id = ACX_PWR_CONSUMPTION_STATISTICS;
@@ -360,7 +357,6 @@ TI_STATUS cmdBld_ItrIeDataFilterStatistics (TI_HANDLE  hCmdBld,
 	pCfg->EleHdr.id  = ACX_GET_DATA_FILTER_STATISTICS;
 	pCfg->EleHdr.len = sizeof(*pCfg) - sizeof(EleHdrStruct);
 
-	TRACE_INFO_HEX(pCmdBld->hReport, (TI_UINT8 *) pCfg, sizeof(ACXDataFilteringStatistics_t));
 
 	/* Send the interrogation command */
 	return cmdQueue_SendCommand (pCmdBld->hCmdQueue, CMD_INTERROGATE, pCfg, sizeof(*pCfg), fCb, hCb, pCb);

@@ -450,7 +450,6 @@ void cmdHndlr_Complete (TI_HANDLE hCmdHndlr)
 		return;
 	}
 
-	TRACE0(pCmdHndlr->hReport, REPORT_SEVERITY_ERROR, "cmdHndlr_Complete(): pCurrCmd is NULL!\n");
 }
 
 

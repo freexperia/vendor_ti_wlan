@@ -252,7 +252,6 @@ void txMgmtQ_Init (TStadHandlesList *pStadHandles)
 
 			/* If any Queues' allocation failed, print error, free TxMgmtQueue module and exit */
 			if (pLinkQ->aQueues[uQueId] == NULL) {
-				TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_CONSOLE , "Failed to create queue for link %d\n", uHlid);
 				WLAN_OS_REPORT(("Failed to create queue for link %d\n", uHlid));
 				os_memoryFree (pTxMgmtQ->hOs, pTxMgmtQ, sizeof(TTxMgmtQ));
 				return;
@@ -271,7 +270,6 @@ void txMgmtQ_Init (TStadHandlesList *pStadHandles)
 	                       "TX_MGMT",
 	                       sizeof("TX_MGMT"));
 
-	TRACE0(pTxMgmtQ->hReport, REPORT_SEVERITY_INIT, ".....Tx Mgmt Queue configured successfully\n");
 }
 
 
@@ -305,7 +303,6 @@ TI_STATUS txMgmtQ_Destroy (TI_HANDLE hTxMgmtQ)
 
 		for (uQueId = 0 ; uQueId < NUM_OF_MGMT_QUEUES ; uQueId++) {
 			if (que_Destroy(pLinkQ->aQueues[uQueId]) != TI_OK) {
-				TRACE2(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, "txMgmtQueue_unLoad: fail to free Mgmt Queue number: %d in link %d\n",uQueId, uHlid);
 				eStatus = TI_NOK;
 			}
 		}
@@ -695,8 +692,7 @@ void txMgmtQ_SetConnState (TI_HANDLE hTxMgmtQ, ETxConnState eTxConnState)
 		mgmtQueuesSM(pTxMgmtQ, uHlid, SM_EVENT_OPEN);
 		break;
 
-	default:
-		TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, ": Unknown eTxConnState = %d\n", eTxConnState);
+	default: {}
 	}
 }
 
@@ -718,7 +714,6 @@ void txMgmtQ_SetLinkType (TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid, EWlanLinkType eLi
 	pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid];
 	pLinkQ->eType = eLinkType;
 
-	TRACE3(pTxMgmtQ->hReport, REPORT_SEVERITY_INFORMATION, "%s: link %d, LinkType %d\n", __FUNCTION__, uHlid, pLinkQ->eType);
 
 	/* save global link id */
 	if (pLinkQ->eType == WLANLINK_TYPE_GLOBAL) {
@@ -747,7 +742,6 @@ TI_STATUS txMgmtQ_SetLinkState (TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid, ETxConnStat
 	pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid]; /* Link queues */
 	pLinkQ->eTxConnState = eTxConnState;
 
-	TRACE4(pTxMgmtQ->hReport, REPORT_SEVERITY_INFORMATION,"%s: link %d, LinkState %d, ConnState %d\n", __FUNCTION__, uHlid, pLinkQ->eState, pLinkQ->eTxConnState);
 
 	/* Call the SM with the current event. */
 	switch (eTxConnState) {
@@ -764,8 +758,7 @@ TI_STATUS txMgmtQ_SetLinkState (TI_HANDLE hTxMgmtQ, TI_UINT32 uHlid, ETxConnStat
 		mgmtQueuesSM(pTxMgmtQ, uHlid, SM_EVENT_OPEN);
 		break;
 
-	default:
-		TRACE2(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, ": Unknown eTxConnState = %d, for link %d\n", eTxConnState, uHlid);
+	default: {}
 	}
 
 	return TI_OK;
@@ -836,9 +829,6 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 		 * EAPOL packets are also permitted (expected in MGMT or CLOSE state), so enable the
 		 *   EAPOL queue and run the scheduler (to send packets from EAPOL queue if waiting).
 		 */
-		if ( (ePrevState != SM_STATE_CLOSE) && (ePrevState != SM_STATE_MGMT) ) {
-			TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_WARNING, "mgmtQueuesSM: Got SmEvent=EAPOL when eState=%d\n", ePrevState);
-		}
 		pLinkQ->eState = SM_STATE_EAPOL;
 		pLinkQ->aQenabled[QUEUE_TYPE_MGMT]  = TI_TRUE;
 		pLinkQ->aQenabled[QUEUE_TYPE_EAPOL] = TI_TRUE;
@@ -850,9 +840,6 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 		 * All packets are now permitted (expected in EAPOL state), so if the mgmt-queues
 		 *   are empty disable them and enable the data queues.
 		 */
-		if (ePrevState != SM_STATE_EAPOL) {
-			TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_WARNING, "mgmtQueuesSM: Got SmEvent=OPEN when eState=%d\n", ePrevState);
-		}
 		if ( ARE_LINK_MGMT_QUEUES_EMPTY(pLinkQ->aQueues) ) {
 			pLinkQ->eState = SM_STATE_OPEN_DATA;
 			pLinkQ->aQenabled[QUEUE_TYPE_MGMT]  = TI_FALSE;
@@ -873,9 +860,6 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 			pLinkQ->aQenabled[QUEUE_TYPE_MGMT]  = TI_FALSE;
 			pLinkQ->aQenabled[QUEUE_TYPE_EAPOL] = TI_FALSE;
 			eSmAction = SM_ACTION_ENABLE_DATA;
-		} else {
-			/* This may happen so it's just a warning and not an error. */
-			TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_WARNING, "mgmtQueuesSM: Got SmEvent=QUEUES_EMPTY when eState=%d\n", ePrevState);
 		}
 		break;
 
@@ -902,18 +886,12 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 			eSmAction = SM_ACTION_RUN_SCHEDULER;
 		}
 
-		else {
-			/* This may happen so it's just a warning and not an error. */
-			TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_WARNING, "mgmtQueuesSM: Got SmEvent=QUEUES_NOT_EMPTY when eState=%d\n", ePrevState);
-		}
 		break;
 
 	default:
-		TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, "mgmtQueuesSM: Unknown SmEvent = %d\n", eSmEvent);
 		break;
 	}
 
-	TRACE6( pTxMgmtQ->hReport, REPORT_SEVERITY_INFORMATION, "mgmtQueuesSM: <currentState = %d, event = %d> --> nextState = %d, action = %d, MgmtQueEnbl=%d, EapolQueEnbl=%d\n", ePrevState, eSmEvent, pLinkQ->eState, eSmAction, pLinkQ->aQenabled[0], pLinkQ->aQenabled[1]);
 
 	/*
 	 * Execute the required action.
@@ -943,7 +921,6 @@ static void mgmtQueuesSM (TTxMgmtQ *pTxMgmtQ, TI_UINT32 uHlid, ESmEvent eSmEvent
 		txMgmtQ_EnableLink (pTxMgmtQ, uHlid);
 		break;
 	default:
-		TRACE1(pTxMgmtQ->hReport, REPORT_SEVERITY_ERROR, ": Unknown SmAction = %d\n", eSmAction);
 		break;
 	}
 }
@@ -1149,7 +1126,6 @@ void TxMgmtQ_SetEncryptFlag(TI_HANDLE hTxMgmtQ, TI_UINT32  uHlid,int flag)
 	TTxMgmtQ *pTxMgmtQ = (TTxMgmtQ *)hTxMgmtQ;
 	TMgmtLinkQ *pLinkQ;
 
-	TRACE3(pTxMgmtQ->hReport, REPORT_SEVERITY_INFORMATION, "%s: MGMT Encrypt flag %d , Hlid %d \n", __FUNCTION__,flag, uHlid);
 
 	pLinkQ = &pTxMgmtQ->aMgmtLinkQ[uHlid]; /* Link queues */
 	pLinkQ->bEncrypt = flag;

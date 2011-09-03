@@ -351,7 +351,6 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
 
 		/* will be config only after select */
 		if(verifyAndConfigQosParams(hQosMngr,&(pQosMngr->acParams[acID].acQosParams)) != TI_OK) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_SetDefault: failed on verifyAndConfigQosParams\n");
 		}
 
 		/*
@@ -397,7 +396,6 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
 
 
 
-	TRACE0(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_config : QoS configuration complete!");
 
 	return TI_OK;
 }
@@ -528,7 +526,6 @@ TI_STATUS qosMngr_disconnect (TI_HANDLE hQosMngr, TI_BOOL bDisconnect)
 	 */
 	status = verifyAndConfigTrafficParams(hQosMngr,&(pQosMngr->acParams[QOS_AC_BE].QtrafficParams));
 	if (status != TI_OK) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setSite:failed to init NON_QOS Queue Traffic parameters!!!\n\n");
 		return status;
 	}
 
@@ -538,7 +535,6 @@ TI_STATUS qosMngr_disconnect (TI_HANDLE hQosMngr, TI_BOOL bDisconnect)
 
 	status = verifyAndConfigQosParams(hQosMngr,&(pQosMngr->acParams[QOS_AC_BE].acQosParams));
 	if (status != TI_OK) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setSite:failed to init NON_QOS AC QoS parameters!!!\n\n");
 		return status;
 	}
 
@@ -571,7 +567,6 @@ TI_STATUS qosMngr_disconnect (TI_HANDLE hQosMngr, TI_BOOL bDisconnect)
 	/* Mark that no Qos Null template is currently set into firmware */
 	pQosMngr->QosNullDataTemplateUserPriority = 0xFF;
 
-	TRACE0(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_disconnect : QoS disconnect complete!");
 
 #ifdef XCC_MODULE_INCLUDED
 	measurementMgr_stopTsMetrics(pQosMngr->hMeasurementMngr);
@@ -604,7 +599,6 @@ TI_STATUS qosMngr_connect(TI_HANDLE hQosMngr)
 	TI_UINT8   acID,UPSDCnt=0;
 
 	if (pQosMngr->isConnected == TI_TRUE) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_connect : Already connected !!!\n");
 		return TI_OK;
 	}
 
@@ -633,7 +627,6 @@ TI_STATUS qosMngr_connect(TI_HANDLE hQosMngr)
 				buildQosNullDataTemplate(pQosMngr->hSiteMgr, &templateStruct,pQosMngr->QosNullDataTemplateUserPriority);
 				TWD_CmdTemplate (pQosMngr->hTWD, &templateStruct, NULL, NULL);
 
-				TRACE2(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "setWmeSiteParams: Setting QOS Null data for UserPriority %d (belongs to AC %d)\n", WMEQosAcToTid[acID], acID);
 
 				break; /* Only need to set ONE template, so after setting it, we can exit the loop */
 			}
@@ -643,7 +636,6 @@ TI_STATUS qosMngr_connect(TI_HANDLE hQosMngr)
 
 	/* If MAX_NUM_OF_AC (4) ACs were found as UPSD, but we still haven't configured any UP in the Qos Null data template, it must mean all ACs require admission - not valid*/
 	if ((pQosMngr->QosNullDataTemplateUserPriority == 0xFF) && (UPSDCnt == MAX_NUM_OF_AC)) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_connect : QOS Null Data template not set since all ACs require admission !!!\n");
 	}
 
 	return TI_OK;
@@ -758,7 +750,6 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 	if(pQosMngr == NULL)
 		return TI_NOK;
 
-	TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_getParams: %x\n", pParamInfo->paramType);
 
 	switch(pParamInfo->paramType) {
 	case QOS_PACKET_BURST_ENABLE:
@@ -784,7 +775,6 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 		pParamInfo->content.TspecConfigure.videoTspecConfigure = (TI_UINT8)pQosMngr->videoTspecConfigured;
 
 
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_getParams: QOS_MNGR_VOICE_RE_NEGOTIATE_TSPEC=%d\n", pQosMngr->voiceTspecConfigured);
 
 		if (pQosMngr->voiceTspecConfigured == TI_TRUE) {
 			OS_802_11_QOS_TSPEC_PARAMS *pTspecParams;
@@ -834,16 +824,12 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 		case TI_OK:
 			return TI_OK;
 		case NOT_CONNECTED:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Not connected to an AP...\n");
 			break;
 		case NO_QOS_AP:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "AP does not support QOS...\n");
 			break;
 		case TI_NOK:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Invalid parameter...\n");
 			break;
 		default:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Unknown return value...\n");
 			break;
 		}
 		return TI_NOK;
@@ -851,17 +837,14 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 	case QOS_MNGR_OS_TSPEC_PARAMS:
 
 		if( pParamInfo->content.qosTspecParameters.uUserPriority > MAX_USER_PRIORITY ) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getTspecParams: userPriority > 7 -> Ignore !!!\n");
 			return TI_NOK;
 		}
 
 		if(pQosMngr->isConnected == TI_FALSE) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getTspecParams: Not connected - Ignoring request !!!\n");
 			return NOT_CONNECTED;
 		}
 
 		if(pQosMngr->activeProtocol == QOS_NONE) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getTspecParams: Not connected to QOS AP - Ignoring reqeust !!!\n");
 			return NO_QOS_AP;
 		}
 
@@ -869,13 +852,11 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 
 		/* check if signaling is already in process*/
 		if(pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].trafficAdmState == AC_WAIT_ADMISSION) {
-			TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_requestAdmission: AC = %d , TSPEC Signaling is in progress -> Ignoring request !!!\n",acID);
 			return TRAFIC_ADM_PENDING;
 		}
 
 		/* check if UP is admitted or not */
 		if(pQosMngr->resourceMgmtTable.currentTspecInfo[acID].userPriority != pParamInfo->content.qosTspecParameters.uUserPriority) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getTspecParams: user priority is not admitted. -> Ignore !!!\n");
 			return USER_PRIORITY_NOT_ADMITTED;
 		}
 
@@ -893,15 +874,12 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 		acID = (EAcTrfcType) pParamInfo->content.qosApQosParams.uAC;
 
 		if(acID > QOS_HIGHEST_AC_INDEX) {
-			TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setParams :Error  trying to set invalid acId: %d param\n",pParamInfo->content.qosApQosParams.uAC);
 			return (PARAM_VALUE_NOT_VALID);
 		}
 		if(pQosMngr->isConnected == TI_FALSE) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Not connected to an AP...\n");
 			return NOT_CONNECTED;
 		}
 		if(pQosMngr->activeProtocol == QOS_NONE) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "AP does not support QOS...\n");
 			return NO_QOS_AP;
 		}
 
@@ -924,7 +902,6 @@ TI_STATUS qosMngr_getParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 
 
 	default:
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getParams Error: unknown paramType 0x%x!\n",pParamInfo->paramType);
 		return (PARAM_NOT_SUPPORTED);
 
 	}
@@ -957,11 +934,9 @@ TI_STATUS qosMngr_setParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 		return TI_NOK;
 
 	if(pParamInfo == NULL) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setParams :Error trying to set NULL params!\n");
 		return TI_NOK;
 	}
 
-	TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setParams: %x\n", pParamInfo->paramType);
 
 	switch(pParamInfo->paramType) {
 
@@ -1022,13 +997,11 @@ TI_STATUS qosMngr_setParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 
 	case QOS_MNGR_SET_OS_PARAMS:
 		if((EAcTrfcType)pParamInfo->content.qosOsParams.acID > QOS_HIGHEST_AC_INDEX) {
-			TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setParams :Error  trying to set invalid acId: %d param\n",pParamInfo->content.qosOsParams.acID);
 
 			return (PARAM_VALUE_NOT_VALID);
 		}
 
 		if(((PSScheme_e)pParamInfo->content.qosOsParams.PSDeliveryProtocol != PS_SCHEME_LEGACY) && ((PSScheme_e)pParamInfo->content.qosOsParams.PSDeliveryProtocol != PS_SCHEME_UPSD_TRIGGER)) {
-			TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setParams :Error trying to set invalid PSDeliveryProtocol: %d param\n",pParamInfo->content.qosOsParams.PSDeliveryProtocol);
 
 			return (PARAM_VALUE_NOT_VALID);
 		}
@@ -1038,7 +1011,6 @@ TI_STATUS qosMngr_setParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 
 		if( (pParamInfo->content.qosOsParams.PSDeliveryProtocol != pQosMngr->acParams[acID].desiredWmeAcPsMode) &&
 		    (pQosMngr->isConnected == TI_TRUE) ) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setParams :Error  trying to set new PS protocol while connected");
 
 			return (PARAM_VALUE_NOT_VALID);
 		}
@@ -1078,28 +1050,21 @@ TI_STATUS qosMngr_setParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 			return TI_OK;
 
 		case TRAFIC_ADM_PENDING:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Driver is still waiting for a response of previous request...\n");
 			break;
 		case AC_ALREADY_IN_USE:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Other user priority from the same AC has already used a TSPEC...\n");
 			break;
 		case NOT_CONNECTED:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Not connected to an AP...\n");
 			break;
 		case NO_QOS_AP:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "AP does not support QOS...\n");
 			break;
 		case TI_NOK:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Invalid parameter...\n");
 			break;
 		default:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Unknown return value...\n");
 			break;
 		}
 		return TI_NOK;
 
 	case QOS_MNGR_RESEND_TSPEC_REQUEST:
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setParams: QOS_MNGR_RESEND_TSPEC_REQUEST\n");
 		pQosMngr->TSPECNegotiationResultCallb = (qosMngrCallb_t)pParamInfo->content.qosRenegotiateTspecRequest.callback;
 		pQosMngr->TSPECNegotiationResultModule = pParamInfo->content.qosRenegotiateTspecRequest.handler;
 		status = qosMngr_requestAdmission(hQosMngr,  &pQosMngr->tspecRenegotiationParams[USER_PRIORITY_6]);
@@ -1115,23 +1080,18 @@ TI_STATUS qosMngr_setParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 		case TI_OK:
 			return TI_OK;
 		case NOT_CONNECTED:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Not connected to an AP...\n");
 			break;
 		case NO_QOS_AP:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "AP does not support QOS...\n");
 			break;
 		case TI_NOK:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Invalid parameter...\n");
 			break;
 		default:
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Unknown return value...\n");
 			break;
 		}
 		return TI_NOK;
 
 	case QOS_SET_RX_TIME_OUT:
 		if (pParamInfo->content.rxTimeOut.UPSD == 0) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, " :Error trying to set invalid zero timeout for UPSD \n");
 			return PARAM_VALUE_NOT_VALID;
 
 		}
@@ -1152,11 +1112,9 @@ TI_STATUS qosMngr_setParams(TI_HANDLE  hQosMngr,paramInfo_t *pParamInfo)
 		else
 			pQosMngr->performTSPECRenegotiation = TI_FALSE;
 
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setParams: QOS_MNGR_VOICE_RE_NEGOTIATE_TSPEC=%d\n", pQosMngr->performTSPECRenegotiation);
 		break;
 
 	default:
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getParams Error: unknown paramType 0x%x!\n",pParamInfo->paramType);
 		return (PARAM_NOT_SUPPORTED);
 	}
 
@@ -1186,14 +1144,12 @@ static TI_STATUS verifyAndConfigTrafficParams(qosMngr_t *pQosMngr, TQueueTraffic
 	TQueueTrafficParams   queueTrafficParams;
 
 	if(pQtrafficParams->queueID > MAX_NUM_OF_AC - 1) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigTrafficParams :Error  trying to set invalid queueID: %d param",pQtrafficParams->queueID);
 
 		return (PARAM_VALUE_NOT_VALID);
 	}
 
 
 	if(pQtrafficParams->channelType > MAX_CHANNEL_TYPE) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigTrafficParams :Error  trying to set invalid channelType: %d param",pQtrafficParams->channelType);
 
 		return (PARAM_VALUE_NOT_VALID);
 
@@ -1201,20 +1157,17 @@ static TI_STATUS verifyAndConfigTrafficParams(qosMngr_t *pQosMngr, TQueueTraffic
 
 	/* TBD */
 	if(pQtrafficParams->tsid > AC_PARAMS_MAX_TSID) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigTrafficParams :Error  trying to set invalid tsid: %d param",pQtrafficParams->tsid);
 
 		return (PARAM_VALUE_NOT_VALID);
 
 	}
 
 	if(pQtrafficParams->psScheme > MAX_PS_SCHEME) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigTrafficParams :Error  trying to set invalid psScheme: %d param",pQtrafficParams->psScheme);
 
 		return (PARAM_VALUE_NOT_VALID);
 	}
 
 	if(pQtrafficParams->ackPolicy > MAX_ACK_POLICY) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigTrafficParams :Error  trying to set invalid ackPolicy: %d param",pQtrafficParams->ackPolicy);
 
 		return (PARAM_VALUE_NOT_VALID);
 	}
@@ -1248,28 +1201,23 @@ static TI_STATUS  verifyAndConfigQosParams(qosMngr_t *pQosMngr,TAcQosParams *pAc
 	TAcQosParams          acQosParams;
 
 	if(pAcQosParams->ac >  MAX_NUM_OF_AC - 1 ) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigQosParams :Error  trying to set invalid ac : %d param",pAcQosParams->ac);
 		return (PARAM_VALUE_NOT_VALID);
 	}
 	/*  verification is unnecessary due to limited range of pAcQosParams->aifsn data type (TI_UINT8)
 	if(pAcQosParams->aifsn >  QOS_AIFS_MAX )
 	{
-	    TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigQosParams :Error  trying to set invalid aifsn : %d param",pAcQosParams->aifsn);
 	    return (PARAM_VALUE_NOT_VALID);
 	}
 	*/
 	if(pAcQosParams->cwMax >  QOS_CWMAX_MAX ) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigQosParams :Error  trying to set invalid cwMax : %d param",pAcQosParams->cwMax);
 		return (PARAM_VALUE_NOT_VALID);
 	}
 
 	if(pAcQosParams->cwMin >  QOS_CWMIN_MAX ) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigQosParams :Error  trying to set invalid cwMax : %d param",pAcQosParams->cwMax);
 		return (PARAM_VALUE_NOT_VALID);
 	}
 
 	if(pAcQosParams->txopLimit >  QOS_TX_OP_LIMIT_MAX ) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "verifyAndConfigQosParams :Error  trying to set invalid txopLimit : %d param",pAcQosParams->txopLimit);
 		return (PARAM_VALUE_NOT_VALID);
 	}
 
@@ -1333,7 +1281,6 @@ TI_STATUS qosMngr_selectActiveProtocol(TI_HANDLE  hQosMngr)
 	} else {
 		pQosMngr->activeProtocol = QOS_NONE;
 	}
-	TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, " qosMngr_selectActiveProtocol() : pQosMngr->activeProtocol %d\n",pQosMngr->activeProtocol);
 
 	return TI_OK;
 }
@@ -1417,7 +1364,6 @@ TI_STATUS qosMngr_getQosCapabiltyInfeElement(TI_HANDLE  hQosMngr, TI_UINT8 *pQos
 
 			dot11_QOS_CAPABILITY_IE->QosInfoField |= (((pQosMngr->desiredMaxSpLen) & MAX_SP_LENGTH_MASK) << MAX_SP_LENGTH_SHIFT);
 
-			TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "dot11_QOS_CAPABILITY_IE->QosInfoField = 0x%x\n",dot11_QOS_CAPABILITY_IE->QosInfoField);
 		}
 
 		*pLen = dot11_QOS_CAPABILITY_IE->hdr[1] + sizeof(dot11_eleHdr_t);
@@ -1425,7 +1371,6 @@ TI_STATUS qosMngr_getQosCapabiltyInfeElement(TI_HANDLE  hQosMngr, TI_UINT8 *pQos
 #ifdef XCC_MODULE_INCLUDED
 		/* If required, add XCC info-elements to the association request packets */
 		if (pQosMngr->performTSPECRenegotiation == TI_TRUE) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_getQosCapabiltyInfeElement: performing TSPEC renegotiation\n");
 
 			status = XCCMngr_getXCCQosIElements(pQosMngr->hXCCMgr, (pQosIe+(*pLen)), &extraIeLen);
 		}
@@ -1560,7 +1505,6 @@ void qosMngr_checkTspecRenegResults(TI_HANDLE hQosMngr, assocRsp_t *assocRsp)
 	TI_UINT32 acCount;
 #endif
 
-	TRACE2(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_checkTspecRenegResults: performTSPECRenegotiation = %d, tspecParams received= %x\n",		pQosMngr->performTSPECRenegotiation, assocRsp->tspecVoiceParameters);
 
 	if (pQosMngr->performTSPECRenegotiation != TI_TRUE) {
 		/* If no re-negotiation was requested, no parsing shall be done */
@@ -1603,7 +1547,6 @@ void qosMngr_checkTspecRenegResults(TI_HANDLE hQosMngr, assocRsp_t *assocRsp)
 		qosMngr_setAdmissionInfo(pQosMngr, tspecInfo.AC, &tspecInfo, STATUS_TRAFFIC_ADM_REQUEST_ACCEPT);
 	} else if (pQosMngr->tspecRenegotiationParams[USER_PRIORITY_4].uUserPriority != MAX_USER_PRIORITY) {
 		/* Signal TSPEC was not re-negotiated although requested to - ERROR */
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setSite: Signal TSPEC was not re-negotiated while voice was \n");
 		qosMngr_setAdmissionInfo(pQosMngr, USER_PRIORITY_4,
 		                         &pQosMngr->resourceMgmtTable.candidateTspecInfo[USER_PRIORITY_4],
 		                         STATUS_TRAFFIC_ADM_REQUEST_REJECT);
@@ -1647,21 +1590,18 @@ TI_STATUS qosMngr_setSite(TI_HANDLE hQosMngr, assocRsp_t *assocRsp)
 		status = verifyWmeIeParams(pQosMngr, (TI_UINT8 *)assocRsp->WMEParams);
 		if(status != TI_OK) {
 			pQosMngr->activeProtocol = QOS_NONE;
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setSite: setting active protocol QOS_WME params with non QOS_WME IE params frame, setting active protocol back to NONE \n");
 			return TI_NOK;
 		}
 
 		status = setWmeSiteParams(pQosMngr, (TI_UINT8 *)assocRsp->WMEParams);
 		if (status != TI_OK) {
 			pQosMngr->activeProtocol = QOS_NONE;
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "Warning: qosMngr_setSite-> failed to set AC QOS_WME parameters!!! , setting active protocol back to NONE\n");
 			return TI_NOK;
 		}
 		/* update siteMgr with recevied params */
 		status = siteMgr_setWMEParamsSite(pQosMngr->hSiteMgr, assocRsp->WMEParams);
 		if (status != TI_OK) {
 			pQosMngr->activeProtocol = QOS_NONE;
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setSite:failed to init QOS_WME parameters!!! , setting active protocol back to NONE\n\n");
 			return TI_NOK;
 		}
 
@@ -1679,7 +1619,6 @@ TI_STATUS qosMngr_setSite(TI_HANDLE hQosMngr, assocRsp_t *assocRsp)
 			/* verify the parameters and update the hal */
 			status = verifyAndConfigQosParams(hQosMngr,&(pQosMngr->acParams[QOS_AC_BE].acQosParams));
 			if (status != TI_OK) {
-				TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "qosMngr_setSite:failed to init NON_QOS parameters!!!\n\n");
 				return TI_NOK;
 			}
 		}
@@ -1687,7 +1626,6 @@ TI_STATUS qosMngr_setSite(TI_HANDLE hQosMngr, assocRsp_t *assocRsp)
 		break;
 
 	default:
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "Warning: qosMngr_setSite NO active protocls To set \n");
 		break;
 	}
 
@@ -1730,14 +1668,12 @@ void qosMngr_updateIEinfo(TI_HANDLE hQosMngr, TI_UINT8 *pQosIeParams, EQosProtoc
 			return;
 
 		if(pQosIeParams == NULL) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "Warning: updateIEinfo -> trying to update QOS_WME parameters with NULL site parameters!!!\n");
 			return ;
 		}
 
 		/* verify QOS protocol received in update IE */
 		status = verifyWmeIeParams(pQosMngr,pQosIeParams);
 		if(status != TI_OK) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "Warning: updateIEinfo ->upadting active protocl QOS_WME params with non QOS_WME IE params frame !!!\n");
 			return ;
 		}
 		pWMEparams = (dot11_WME_PARAM_t *)pQosIeParams;
@@ -1745,14 +1681,12 @@ void qosMngr_updateIEinfo(TI_HANDLE hQosMngr, TI_UINT8 *pQosIeParams, EQosProtoc
 		/* update AC params */
 		status = updateACParams(pQosMngr,&(pWMEparams->WME_ACParameteres));
 		if(status != TI_OK) {
-			TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "updateIEinfo-> failed to update AC QOS_WME parameters!!!\n\n");
 			return ;
 		}
 		break;
 
 
 	default:
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "updateIEinfo-> trying to update qos paramters without active protocol !!!");
 		break;
 	}
 }
@@ -1803,7 +1737,6 @@ static TI_STATUS setWmeSiteParams(qosMngr_t *pQosMngr, TI_UINT8 *pQosIeParams)
 	TI_UINT8               acID;
 
 	if (pQosIeParams == NULL) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "setWmeSiteParams: pQosIeParams is NULL !");
 		return TI_NOK;
 	}
 
@@ -1949,7 +1882,6 @@ static TI_STATUS verifyWmeIeParams(qosMngr_t *pQosMngr,TI_UINT8 *pQosIeParams)
 	dot11_WME_IE_t  *pWMERecvIe = (dot11_WME_IE_t  *)pQosIeParams;
 
 	if(pQosIeParams == NULL) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, ": pQosIeParams is NULL!! \n");
 		return TI_NOK;
 	}
 
@@ -1961,13 +1893,10 @@ static TI_STATUS verifyWmeIeParams(qosMngr_t *pQosMngr,TI_UINT8 *pQosIeParams)
 	   (WMEie.OUI[1] != pWMERecvIe->OUI[1]) ||
 	   (WMEie.OUI[2] != pWMERecvIe->OUI[2]) ||
 	   (WMEie.OUIType != pWMERecvIe->OUIType)) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_WARNING, ": QosIeParams mismatch (ID or OUI)!! \n");
 		return TI_NOK;
 	}
 
 
-	if(WMEie.version != pWMERecvIe->version)
-		TRACE2(pQosMngr->hReport, REPORT_SEVERITY_WARNING, ": Driver QOS_WME version: %d, Site QOS_WME version: %d\n", WMEie.version, pWMERecvIe->version);
 
 	return TI_OK;
 }
@@ -1995,31 +1924,26 @@ static TI_STATUS qosMngr_SetPsRxStreaming (qosMngr_t *pQosMngr, TPsRxStreaming *
 
 	/* Verify STA is connected to AP */
 	if (pQosMngr->isConnected == TI_FALSE) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_SetPsRxStreaming: Not connected - Ignoring request !!!\n");
 		return NOT_CONNECTED;
 	}
 
 	/* Verify that the AP supports QOS_WME */
 	if (pQosMngr->activeProtocol != QOS_WME) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_SetPsRxStreaming: Not connected to a QOS AP - Ignoring request !!!\n");
 		return NO_QOS_AP;
 	}
 
 	/* Check TID validity */
 	if (uCurrTid > MAX_USER_PRIORITY) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "TID = %d > 7 !!!\n", uCurrTid);
 		return PARAM_VALUE_NOT_VALID;
 	}
 
 	/* Verify that the AC is admitted */
 	if (pQosMngr->resourceMgmtTable.currentTspecInfo[uAcId].trafficAdmState != AC_ADMITTED) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_SetPsRxStreaming: AC = %d is not admitted -> Ignoring request !!!\n", uAcId);
 		return USER_PRIORITY_NOT_ADMITTED;
 	}
 
 	/* Verify that a disabled TID is not beeing disabled again */
 	if (!pNewParams->bEnabled && !pCurrTidParams->bEnabled) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_SetPsRxStreaming: TID %d is already disabled -> Ignoring request !!!\n", uCurrTid);
 		return PARAM_VALUE_NOT_VALID;
 	}
 
@@ -2027,7 +1951,6 @@ static TI_STATUS qosMngr_SetPsRxStreaming (qosMngr_t *pQosMngr, TPsRxStreaming *
 	if (pNewParams->bEnabled  &&
 	    !pCurrTidParams->bEnabled  &&
 	    pQosMngr->uNumEnabledPsRxStreams == MAX_ENABLED_PS_RX_STREAMS) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_SetPsRxStreaming: Can't have more than %d TIDs enabled -> Ignoring request !!!\n", MAX_ENABLED_PS_RX_STREAMS);
 		return PARAM_VALUE_NOT_VALID;
 	}
 
@@ -2075,25 +1998,21 @@ TI_STATUS qosMngr_requestAdmission(TI_HANDLE			hQosMngr,
 
 	/* check if STA is already connected to AP */
 	if(pQosMngr->isConnected == TI_FALSE) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_requestAdmission: Not connected - Ignoring request !!!\n");
 		return NOT_CONNECTED;
 	}
 
 	/* check if AP support QOS_WME */
 	if(pQosMngr->activeProtocol != QOS_WME) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_requestAdmission: Not connected to a QOS AP - Ignoring request !!!\n");
 		return NO_QOS_AP;
 	}
 
 	/* check if Traffic Admission Control is enable */
 	if(pQosMngr->trafficAdmCtrlEnable == TI_FALSE) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_requestAdmission: Admission-Control is disabled - Ignoring request !!!\n");
 		return ADM_CTRL_DISABLE;
 	}
 
 	/* check UP validity */
 	if( addTspecParams->uUserPriority > MAX_USER_PRIORITY) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "uUserPriority = %d > 7 !!!\n",addTspecParams->uUserPriority);
 		return TI_NOK;
 	}
 
@@ -2102,7 +2021,6 @@ TI_STATUS qosMngr_requestAdmission(TI_HANDLE			hQosMngr,
 
 	/* check if signaling is already in process for this AC */
 	if(pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].trafficAdmState == AC_WAIT_ADMISSION) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_requestAdmission: AC = %d , signaling is in process -> Ignore Request !!!\n",acID);
 		return TRAFIC_ADM_PENDING;
 	}
 
@@ -2110,23 +2028,19 @@ TI_STATUS qosMngr_requestAdmission(TI_HANDLE			hQosMngr,
 	if( (pQosMngr->resourceMgmtTable.currentTspecInfo[acID].trafficAdmState == AC_ADMITTED) &&
 	    (pQosMngr->resourceMgmtTable.currentTspecInfo[acID].userPriority <= MAX_USER_PRIORITY) &&
 	    (pQosMngr->resourceMgmtTable.currentTspecInfo[acID].userPriority != addTspecParams->uUserPriority) ) {
-		TRACE2(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_requestAdmission: AC = %d , another UP (%d) on same AC is already admited -> Ignoring request !!!\n",			acID, pQosMngr->resourceMgmtTable.currentTspecInfo[acID].userPriority);
 		return AC_ALREADY_IN_USE;
 	}
 
 	/* check msdu size validity */
 	if( addTspecParams->uNominalMSDUsize > MAX_DATA_BODY_LENGTH) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "uNominalMSDUsize = %d > 2312, !!!\n",addTspecParams->uNominalMSDUsize);
 		return TI_NOK;
 	}
 
 	/* check PS mode validity */
 	if( (addTspecParams->uAPSDFlag == PS_SCHEME_UPSD_TRIGGER) && (pQosMngr->currentPsMode != PS_SCHEME_UPSD_TRIGGER) ) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "The STA's current status does not support UPSD -> Ignoring TSPEC request that has UPSD on !!!\n");
 		return TI_NOK;
 	}
 
-	TRACE2(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_requestAdmission: UP = %d , acID = %d\n",addTspecParams->uUserPriority, acID);
 
 	/* set tspec parameters in candidateTspecInfo table */
 	qosMngr_storeTspecCandidateParams (&(pQosMngr->resourceMgmtTable.candidateTspecInfo[acID]),
@@ -2147,11 +2061,9 @@ TI_STATUS qosMngr_requestAdmission(TI_HANDLE			hQosMngr,
 	if(status == TI_OK) {
 		/* request transmitted TI_OK */
 		pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].trafficAdmState = AC_WAIT_ADMISSION;
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_requestAdmission: UP = %d , request TI_OK !!!\n",addTspecParams->uUserPriority);
 	} else {
 		/* reaquest not transmitted TI_OK */
 		pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].trafficAdmState = AC_NOT_ADMITTED;
-		TRACE2(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "qosMngr_requestAdmission: UP = %d , request  NOT TI_OK status=%d!!!\n",addTspecParams->uUserPriority, status);
 		return TI_NOK;
 	}
 
@@ -2179,19 +2091,16 @@ TI_STATUS qosMngr_deleteAdmission(TI_HANDLE hQosMngr, OS_802_11_QOS_DELETE_TSPEC
 
 	/* check UP validity */
 	if( delAdmissionParams->uUserPriority > MAX_USER_PRIORITY ) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: userPriority > 7 -> Ignore !!!");
 		return TI_NOK;
 	}
 
 	/* check if STA is already connected to AP */
 	if(pQosMngr->isConnected == TI_FALSE) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: pQosMngr->connected == TI_FALSE -> Ignore !!!");
 		return NOT_CONNECTED;
 	}
 
 	/* check if AP support QOS_WME */
 	if(pQosMngr->activeProtocol != QOS_WME) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: activeProtocol != QOS_WME -> Ignore !!!");
 		return NO_QOS_AP;
 	}
 
@@ -2200,19 +2109,16 @@ TI_STATUS qosMngr_deleteAdmission(TI_HANDLE hQosMngr, OS_802_11_QOS_DELETE_TSPEC
 
 	/* check if tspec is already addmited for this AC */
 	if(pQosMngr->resourceMgmtTable.currentTspecInfo[acID].trafficAdmState != AC_ADMITTED) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: AC is not ADMITED -> Ignore !!!");
 		return TI_NOK;
 	}
 
 	/* check if AC is already admited with the same UP */
 	if(pQosMngr->resourceMgmtTable.currentTspecInfo[acID].userPriority != delAdmissionParams->uUserPriority) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: user priority is invalid. -> Ignore !!!\n");
 		return USER_PRIORITY_NOT_ADMITTED;
 	}
 
 	/* check if signaling is already in procces for this AC */
 	if(pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].trafficAdmState == AC_WAIT_ADMISSION) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_deleteAdmission: AC is under negotiation -> Ignore !!!");
 		return TRAFIC_ADM_PENDING;
 	}
 
@@ -2390,7 +2296,6 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
 
 	/* Check if the updated AC is in WAIT state */
 	if(pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].trafficAdmState != AC_WAIT_ADMISSION) {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setAdmissionInfo: acID = %d, trafficAdmState != WAIT. IGNORE !!!\n", acID);
 
 		return TI_NOK;
 	}
@@ -2405,7 +2310,6 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
 	case STATUS_TRAFFIC_ADM_REQUEST_ACCEPT:
 		/* Received admission response with status accept */
 
-		TRACE3(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setAdmissionInfo: admCtrl status =  REQUEST_ACCEPT [ acID = %d, mediumTime = %d, minimumPHYRate = %d ]\n", acID, pTspecInfo->mediumTime, pTspecInfo->minimumPHYRate);
 
 		/* Set the event params */
 		addtsReasonCode.uAPSDFlag = pTspecInfo->UPSDFlag;
@@ -2471,7 +2375,6 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
 			buildQosNullDataTemplate (pQosMngr->hSiteMgr, &templateStruct, pQosMngr->QosNullDataTemplateUserPriority);
 			TWD_CmdTemplate (pQosMngr->hTWD, &templateStruct, NULL, NULL);
 
-			TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setAdmissionInfo: Setting QOS null data for UserPriority=%d (due to TSPEC ACCEPT response)\n", addtsReasonCode.uUserPriority);
 		}
 
 		/* Set params to TX */
@@ -2511,7 +2414,6 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
 	case STATUS_TRAFFIC_ADM_REQUEST_REJECT:
 		/* Received admission response with status reject */
 
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setAdmissionInfo: admCtrl status = REQUEST_REJECT [ acID = %d ]\n", acID);
 
 		/* Validate tid matching */
 		if (pTspecInfo->tid == pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].tid) {
@@ -2541,7 +2443,6 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
 		break;
 
 	case STATUS_TRAFFIC_ADM_REQUEST_TIMEOUT:
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "qosMngr_setAdmissionInfo: admCtrl status = REQUEST_TIMEOUT [ acID = %d ]\n", acID);
 
 		/* Free the candidate parameters */
 		pQosMngr->resourceMgmtTable.candidateTspecInfo[acID].trafficAdmState = AC_NOT_ADMITTED;
@@ -2565,7 +2466,6 @@ TI_STATUS qosMngr_setAdmissionInfo(TI_HANDLE    hQosMngr,
 		break;
 
 	default:
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setAdmissionInfo: receive state from admCtrl = unknown !!! \n");
 		break;
 	}
 
@@ -2594,7 +2494,6 @@ TI_STATUS QosMngr_receiveActionFrames(TI_HANDLE hQosMngr, TI_UINT8* pData, TI_UI
 	if( (pQosMngr->isConnected == TI_FALSE) ||
 	    (pQosMngr->activeProtocol != QOS_WME) ||
 	    (pQosMngr->trafficAdmCtrlEnable == TI_FALSE) ) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "QosMngr_receiveActionFrames:  Ignore  !!!");
 		return TI_NOK;
 	}
 
@@ -2619,7 +2518,6 @@ TI_STATUS QosMngr_receiveActionFrames(TI_HANDLE hQosMngr, TI_UINT8* pData, TI_UI
 		acID = WMEQosTagToACTable[userPriority];
 
 
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_INFORMATION, "QosMngr_receiveActionFrames: DELTS [ acID = %d ] \n", acID);
 
 
 		/* check if this AC is admitted with the correct userPriority */
@@ -2640,9 +2538,6 @@ TI_STATUS QosMngr_receiveActionFrames(TI_HANDLE hQosMngr, TI_UINT8* pData, TI_UI
 			addtsReasonCode.uMediumTime = 0;
 
 			EvHandlerSendEvent(pQosMngr->hEvHandler, IPC_EVENT_TSPEC_STATUS, (TI_UINT8*)(&addtsReasonCode), sizeof(OS_802_11_QOS_TSPEC_PARAMS));
-		} else {
-			TRACE3(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "QosMngr_receiveActionFrames: DELTS [ acID = %d userPriority = %d  currentUserPriority = %d] Current State in not ADMITED !! \n", acID, userPriority,pQosMngr->resourceMgmtTable.currentTspecInfo[acID].userPriority);
-
 		}
 	}
 	/* if action code is ADDTS call trafficAdmCtrl object API function */
@@ -2678,8 +2573,6 @@ TI_STATUS QosMngr_receiveActionFrames(TI_HANDLE hQosMngr, TI_UINT8* pData, TI_UI
 			XCCMngr_setXCCQoSParams(pQosMngr->hXCCMgr, &XCCIE, acID);
 #endif
 		}
-	} else {
-		TRACE1(pQosMngr->hReport, REPORT_SEVERITY_WARNING, "QosMngr_receiveActionFrames: Receive unknown action code = %d  -> Ignore !! \n",action);
 	}
 
 	return TI_OK;
@@ -2704,19 +2597,16 @@ static TI_STATUS qosMngr_getCurrAcStatus(TI_HANDLE hQosMngr, OS_802_11_AC_UPSD_S
 
 	/* check AC validity */
 	if( pAcStatusParams->uAC > MAX_NUM_OF_AC - 1 ) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getCurrAcStatus: acID > 3 -> Ignore !!!");
 		return TI_NOK;
 	}
 
 	/* check if sta is connected to AP */
 	if(pQosMngr->isConnected == TI_FALSE) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getCurrAcStatus: pQosMngr->connected == TI_FALSE -> Ignore !!!");
 		return NOT_CONNECTED;
 	}
 
 	/* check if AP support QOS_WME */
 	if(pQosMngr->activeProtocol != QOS_WME) {
-		TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_getCurrAcStatus: activeProtocol != QOS_WME -> Ignore !!!");
 		return NO_QOS_AP;
 	}
 

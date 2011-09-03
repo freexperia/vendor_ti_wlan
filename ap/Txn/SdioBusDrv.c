@@ -247,14 +247,12 @@ TI_STATUS busDrv_ConnectBus (TI_HANDLE        hBusDrv,
 	*pTxDmaBufLen = pBusDrv->uTxDmaBufLen;
 
 	if ((pBusDrv->pRxDmaBuf == NULL) || (pBusDrv->pTxDmaBuf == NULL)) {
-		TRACE0(pBusDrv->hReport, REPORT_SEVERITY_ERROR, "busDrv_ConnectBus: Didn't get DMA buffer from SDIO driver!!");
 		return TI_NOK;
 	}
 
 	if (iStatus == 0) {
 		return TI_OK;
 	} else {
-		TRACE2(pBusDrv->hReport, REPORT_SEVERITY_ERROR, "busDrv_ConnectBus: Status = 0x%x, BlkSize = %d\n", iStatus, pBusDrv->uBlkSize);
 		return TI_NOK;
 	}
 }
@@ -273,9 +271,7 @@ TI_STATUS busDrv_ConnectBus (TI_HANDLE        hBusDrv,
  */
 TI_STATUS busDrv_DisconnectBus (TI_HANDLE hBusDrv)
 {
-	TBusDrvObj *pBusDrv = (TBusDrvObj*)hBusDrv;
 
-	TRACE0(pBusDrv->hReport, REPORT_SEVERITY_INFORMATION, "busDrv_DisconnectBus()\n");
 
 	/* Disconnect SDIO driver */
 	return sdioAdapt_DisconnectBus ();
@@ -300,7 +296,6 @@ ETxnStatus busDrv_Transact (TI_HANDLE hBusDrv, TTxnStruct *pTxn)
 {
 	TBusDrvObj *pBusDrv = (TBusDrvObj*)hBusDrv;
 	TI_BOOL     bWithinAggregation;
-	CL_TRACE_START_L4();
 
 	pBusDrv->pCurrTxn               = pTxn;
 	pBusDrv->uCurrTxnPartsCount     = 0;
@@ -313,17 +308,13 @@ ETxnStatus busDrv_Transact (TI_HANDLE hBusDrv, TTxnStruct *pTxn)
 
 	/* If in the middle of Tx aggregation, return Complete (current Txn was coppied to buffer but not sent) */
 	if (bWithinAggregation) {
-		TRACE1(pBusDrv->hReport, REPORT_SEVERITY_INFORMATION, "busDrv_Transact: In aggregation so exit, uTxnLength=%d\n", pBusDrv->uTxnLength);
-		CL_TRACE_END_L4("tiwlan_drv.ko", "INHERIT", "TXN", ".Transact");
 		return TXN_STATUS_COMPLETE;
 	}
 
 	/* Send the prepared transaction parts. */
 	busDrv_SendTxnParts (pBusDrv);
 
-	TRACE1(pBusDrv->hReport, REPORT_SEVERITY_INFORMATION, "busDrv_Transact: Status = %d\n", pBusDrv->eCurrTxnStatus);
 
-	CL_TRACE_END_L4("tiwlan_drv.ko", "INHERIT", "TXN", ".Transact");
 
 	/* return transaction status - COMPLETE, PENDING or ERROR */
 	/* The status is updated in busDrv_SendTxnParts(). It is Async (pending) if not completed in this context */
@@ -378,7 +369,6 @@ static TI_BOOL busDrv_PrepareTxnParts (TBusDrvObj *pBusDrv, TTxnStruct *pTxn)
 
 	/* If in a Tx aggregation, return TRUE (need to accumulate all parts before sending the transaction) */
 	if (TXN_PARAM_GET_AGGREGATE(pTxn) == TXN_AGGREGATE_ON) {
-		TRACE6(pBusDrv->hReport, REPORT_SEVERITY_INFORMATION, "busDrv_PrepareTxnParts: In aggregation so exit, uTxnLength=%d, bWrite=%d, Len0=%d, Len1=%d, Len2=%d, Len3=%d\n", pBusDrv->uTxnLength, bWrite, pTxn->aLen[0], pTxn->aLen[1], pTxn->aLen[2], pTxn->aLen[3]);
 		return TI_TRUE;
 	}
 
@@ -440,7 +430,6 @@ static TI_BOOL busDrv_PrepareTxnParts (TBusDrvObj *pBusDrv, TTxnStruct *pTxn)
 	pBusDrv->aTxnParts[uPartNum - 1].bMore = TXN_PARAM_GET_MORE(pTxn);
 	pBusDrv->uCurrTxnPartsNum = uPartNum;
 
-	TRACE9(pBusDrv->hReport, REPORT_SEVERITY_INFORMATION, "busDrv_PrepareTxnParts: Txn prepared, PartsNum=%d, bWrite=%d, uTxnLength=%d, uRemainderLen=%d, uHwAddr=0x%x, Len0=%d, Len1=%d, Len2=%d, Len3=%d\n", uPartNum, bWrite, pBusDrv->uTxnLength, uRemainderLen, pTxn->uHwAddr, pTxn->aLen[0], pTxn->aLen[1], pTxn->aLen[2], pTxn->aLen[3]);
 
 	pBusDrv->uTxnLength = 0;
 
@@ -496,7 +485,6 @@ static void busDrv_SendTxnParts (TBusDrvObj *pBusDrv)
 				                                   pTxnPart->uLength,
 				                                   TXN_PARAM_GET_DIRECTION(pTxn),
 				                                   pTxnPart->bMore);
-				TRACE0(pBusDrv->hReport, REPORT_SEVERITY_WARNING, "busDrv_SendTxnParts: SDIO Single-Step transaction failed once so try again");
 			}
 		} else {
 			eStatus = sdioAdapt_Transact (TXN_PARAM_GET_FUNC_ID(pTxn),
@@ -509,7 +497,6 @@ static void busDrv_SendTxnParts (TBusDrvObj *pBusDrv)
 			                              pTxnPart->bMore);
 		}
 
-		TRACE7(pBusDrv->hReport, REPORT_SEVERITY_INFORMATION, "busDrv_SendTxnParts: PartNum = %d, SingleStep = %d, Direction = %d, HwAddr = 0x%x, HostAddr = 0x%x, Length = %d, BlkMode = %d\n", pBusDrv->uCurrTxnPartsCount-1, TXN_PARAM_GET_SINGLE_STEP(pTxn), TXN_PARAM_GET_DIRECTION(pTxn), pTxnPart->uHwAddr, pTxnPart->pHostAddr, pTxnPart->uLength, pTxnPart->bBlkMode);
 
 		/* If pending TxnDone (Async), continue this loop in the next TxnDone interrupt */
 		if (eStatus == TXN_STATUS_PENDING) {
@@ -530,8 +517,6 @@ static void busDrv_SendTxnParts (TBusDrvObj *pBusDrv)
 		}
 	}
 
-	/* If we got here we sent all buffers and we don't pend transaction end */
-	TRACE3(pBusDrv->hReport, REPORT_SEVERITY_INFORMATION, "busDrv_SendTxnParts: Txn finished successfully, Status = %d, PartsCount = %d, SyncCount = %d\n", pBusDrv->eCurrTxnStatus, pBusDrv->uCurrTxnPartsCount, pBusDrv->uCurrTxnPartsCountSync);
 
 	/* For read transaction, copy the data from the DMA-able buffer to the host buffer(s) */
 	if (TXN_PARAM_GET_DIRECTION(pTxn) == TXN_DIRECTION_READ) {
@@ -575,24 +560,19 @@ static void busDrv_SendTxnParts (TBusDrvObj *pBusDrv)
 static void busDrv_TxnDoneCb (TI_HANDLE hBusDrv, int iStatus)
 {
 	TBusDrvObj *pBusDrv = (TBusDrvObj*)hBusDrv;
-	CL_TRACE_START_L1();
 
 	/* If last transaction part failed, set error in Txn struct, call TxnDone CB and exit. */
 	if (iStatus != 0) {
-		TRACE1(pBusDrv->hReport, REPORT_SEVERITY_ERROR, "busDrv_TxnDoneCb: Status = 0x%x\n", iStatus);
 
 		TXN_PARAM_SET_STATUS(pBusDrv->pCurrTxn, TXN_PARAM_STATUS_ERROR);
 		pBusDrv->fTxnDoneCb (pBusDrv->hCbHandle, pBusDrv->pCurrTxn);
-		CL_TRACE_END_L1("tiwlan_drv.ko", "TXN_DONE", "BusDrvCB", "");
 		return;
 	}
 
-	TRACE0(pBusDrv->hReport, REPORT_SEVERITY_INFORMATION, "busDrv_TxnDoneCb()\n");
 
 	/* Continue sending the remained transaction parts. */
 	busDrv_SendTxnParts (pBusDrv);
 
-	CL_TRACE_END_L1("tiwlan_drv.ko", "TXN_DONE", "BusDrvCB", "");
 }
 
 
